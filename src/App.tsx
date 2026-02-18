@@ -330,7 +330,9 @@ export default function App() {
   const [textInput, setTextInput] = useState('');
   const swipeTouchStart = useRef<number | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(
+    typeof window !== 'undefined' && window.innerWidth < 1024
+  );
 
   const T = getTheme(theme);
   const isDark = theme === 'dark';
@@ -598,13 +600,27 @@ export default function App() {
                 Kaique<span style={{ color: T.textDim }}>.</span>Editor
               </h2>
               <p className="text-sm font-light leading-relaxed mt-3" style={{ color: T.textDim }}>
-                Cole seu roteiro na sidebar e clique em Gerar — ou use o Agente de Texto para criar do zero.
+                Cole seu roteiro e gere um carrossel completo em segundos.
               </p>
             </div>
 
+            {/* Mobile: abre a sidebar onde fica o roteiro */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden flex items-center gap-2.5 px-7 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all active:scale-95"
+              style={{
+                background: T.accent,
+                color: T.accentText,
+                boxShadow: `0 10px 32px ${T.accentGlow}`,
+              }}
+            >
+              <FileText size={18} /> Começar agora
+            </button>
+
+            {/* Desktop: abre o agente de texto */}
             <button
               onClick={() => setAgentOpen(true)}
-              className="flex items-center gap-2.5 px-7 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all active:scale-95"
+              className="hidden lg:flex items-center gap-2.5 px-7 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all active:scale-95"
               style={{
                 background: T.accent,
                 color: T.accentText,
