@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(export PATH=\"$PATH:/usr/local/bin:/opt/homebrew/bin:/usr/bin\")",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(chmod:*)",
+      "Bash(open:*)",
+      "Bash(echo:*)",
+      "Bash(__NEW_LINE_9a39768e08b5e13f__ echo \"\")",
+      "mcp__Desktop_Commander__force_terminate"
+    ]
+  }
+}

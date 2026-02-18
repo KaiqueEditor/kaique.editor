@@ -1,0 +1,12 @@
+export const APP_CONFIG = {
+  MIN_SLIDES: 6,
+  MAX_SLIDES: 10,
+  DEFAULT_SLIDES: 10,
+  AUTO_SAVE_INTERVAL: 30000, // 30 seconds
+  IMAGE_GENERATION_DELAY: 1500, // Rate limiting between image requests
+  MAX_IMAGE_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_VIDEO_SIZE: 50 * 1024 * 1024, // 50MB
+  EXPORT_QUALITY: 1.0,
+  VIDEO_DURATION: 3000, // 3 seconds
+  UNDO_HISTORY_LIMIT: 50,
+} as const;
