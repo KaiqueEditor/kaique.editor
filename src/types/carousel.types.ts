@@ -28,6 +28,8 @@ export interface Section {
   // Social Post specific
   showSocialImage: boolean;
   avatarUrl?: string;
+  // Video trim
+  videoTrimStart?: number; // segundos — ponto de início da janela de 15s
 }
 
 export interface ColorPalette {

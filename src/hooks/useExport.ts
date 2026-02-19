@@ -3,6 +3,7 @@ import * as htmlToImage from 'html-to-image';
 import JSZip from 'jszip';
 import saveAs from 'file-saver';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
+import * as MP4Box from 'mp4box';
 import { Section } from '../types';
 import { useStore } from '../store';
 
@@ -38,10 +39,9 @@ export const useExport = () => {
   }, []);
 
   const recordSlideAsMp4 = useCallback(async (node: HTMLDivElement, videoUrl: string): Promise<Blob> => {
-    const parent = node.parentElement;
-
-    // ── 1. Captura overlay (textos, cores) sem o vídeo ──────────────────────
+    // ── 1. Captura overlay (textos/cores) sem o vídeo ──────────────────────
     const existingVideo = node.querySelector('video') as HTMLVideoElement | null;
+    const parent = node.parentElement;
     if (parent) parent.style.opacity = '1';
     if (existingVideo) existingVideo.style.opacity = '0';
     const overlayDataUrl = await htmlToImage.toPng(node, { pixelRatio: 1, width: 1080, height: 1440 });
@@ -52,33 +52,18 @@ export const useExport = () => {
     overlayImg.src = overlayDataUrl;
     await new Promise(r => { overlayImg.onload = r; overlayImg.onerror = r; });
 
-    // ── 2. Cria vídeo dedicado fora do DOM ───────────────────────────────────
-    // Nunca entra no DOM — o browser não suspende o decode por visibilidade
-    const offVideo = document.createElement('video');
-    offVideo.src = videoUrl;
-    offVideo.muted = true;
-    offVideo.playsInline = true;
-    offVideo.crossOrigin = 'anonymous';
-    offVideo.currentTime = 0;
+    // ── 2. Fetch do vídeo como ArrayBuffer ───────────────────────────────────
+    // Decodificação 100% off-screen via WebCodecs — sem dependência de DOM ou viewport
+    const response = await fetch(videoUrl);
+    const arrayBuffer = await response.arrayBuffer();
 
-    // Aguarda metadados e seek para o início
-    await new Promise<void>((res, rej) => {
-      offVideo.onloadedmetadata = () => res();
-      offVideo.onerror = () => rej(new Error('Erro ao carregar vídeo para export'));
-      offVideo.load();
-    });
-    await new Promise<void>(res => {
-      offVideo.onseeked = () => res();
-      offVideo.currentTime = 0;
-    });
-
-    // ── 3. Canvas composto ───────────────────────────────────────────────────
+    // ── 3. Canvas de composição ───────────────────────────────────────────────
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1440;
     const ctx = canvas.getContext('2d')!;
 
-    // ── 4. Muxer + Encoder ───────────────────────────────────────────────────
+    // ── 4. Muxer + Encoder de saída ───────────────────────────────────────────
     const target = new ArrayBufferTarget();
     const muxer = new Muxer({
       target,
@@ -86,59 +71,103 @@ export const useExport = () => {
       fastStart: 'in-memory',
     });
 
-    const encConfig = { codec: 'avc1.42002a', width: 1080, height: 1440, bitrate: 8_000_000, framerate: 30 };
+    const encConfig = {
+      codec: 'avc1.42002a',
+      width: 1080,
+      height: 1440,
+      bitrate: 8_000_000,
+      framerate: 30,
+    };
     const supported = await VideoEncoder.isConfigSupported(encConfig);
     if (!supported.supported) throw new Error('Codec H.264 não suportado neste browser.');
+
     const encoder = new VideoEncoder({
       output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-      error: (e) => { throw e; },
+      error: (e) => console.error('VideoEncoder error:', e),
     });
     encoder.configure(encConfig);
 
-    // ── 5. captureStream + MediaStreamTrackProcessor ─────────────────────────
-    // Lê frames diretamente do decoder — independente de viewport/visibilidade
-    await offVideo.play();
-    const stream = (offVideo as any).captureStream() as MediaStream;
-    const [track] = stream.getVideoTracks();
-    const processor = new (window as any).MediaStreamTrackProcessor({ track });
-    const reader = processor.readable.getReader() as ReadableStreamDefaultReader<VideoFrame>;
-
-    const DURATION = 15; // segundos
+    // ── 5. VideoDecoder + mp4box — decodifica frames direto do arquivo ────────
+    // Sem <video> no DOM, sem viewport, sem throttle do Chrome
+    const DURATION = 15; // primeiros 15 segundos
     let firstTs = -1;
     let lastKeyFrameOffset = -Infinity;
+    let resolved = false;
 
-    while (true) {
-      const { done, value: srcFrame } = await reader.read();
-      if (done) break;
+    await new Promise<void>((resolve, reject) => {
+      const mp4boxFile = MP4Box.createFile();
 
-      const elapsed = srcFrame.timestamp / 1_000_000; // µs → s
+      const decoder = new VideoDecoder({
+        output: (frame: VideoFrame) => {
+          if (resolved) { frame.close(); return; }
 
-      if (firstTs < 0) firstTs = elapsed;
-      const relativeTime = elapsed - firstTs;
+          const tsSeconds = frame.timestamp / 1_000_000;
+          if (firstTs < 0) firstTs = tsSeconds;
+          const elapsed = tsSeconds - firstTs;
 
-      if (relativeTime >= DURATION) {
-        srcFrame.close();
-        break;
-      }
+          if (elapsed >= DURATION) {
+            frame.close();
+            if (!resolved) { resolved = true; resolve(); }
+            return;
+          }
 
-      // Desenha frame do vídeo + overlay de texto no canvas
-      ctx.drawImage(srcFrame, 0, 0, 1080, 1440);
-      ctx.drawImage(overlayImg, 0, 0, 1080, 1440);
-      srcFrame.close();
+          // Compõe: frame do vídeo + overlay de texto no canvas
+          ctx.drawImage(frame, 0, 0, 1080, 1440);
+          ctx.drawImage(overlayImg, 0, 0, 1080, 1440);
+          frame.close();
 
-      const outFrame = new VideoFrame(canvas, {
-        timestamp: Math.round(relativeTime * 1_000_000),
-        duration: Math.round(1_000_000 / 30),
+          const outFrame = new VideoFrame(canvas, {
+            timestamp: Math.round(elapsed * 1_000_000),
+            duration: Math.round(1_000_000 / 30),
+          });
+          const needsKeyFrame = elapsed - lastKeyFrameOffset >= 5;
+          if (needsKeyFrame) lastKeyFrameOffset = elapsed;
+          encoder.encode(outFrame, { keyFrame: needsKeyFrame });
+          outFrame.close();
+        },
+        error: (e) => reject(e),
       });
-      const needsKeyFrame = relativeTime - lastKeyFrameOffset >= 5;
-      if (needsKeyFrame) lastKeyFrameOffset = relativeTime;
-      encoder.encode(outFrame, { keyFrame: needsKeyFrame });
-      outFrame.close();
-    }
 
-    offVideo.pause();
-    track.stop();
-    await reader.cancel();
+      mp4boxFile.onReady = (info: any) => {
+        const videoTrack = info.tracks.find((t: any) => t.type === 'video');
+        if (!videoTrack) { reject(new Error('Nenhuma track de vídeo encontrada')); return; }
+
+        decoder.configure({
+          codec: videoTrack.codec,
+          codedWidth: videoTrack.video.width,
+          codedHeight: videoTrack.video.height,
+          description: getAvcDescription(mp4boxFile, videoTrack),
+        });
+
+        mp4boxFile.setExtractionOptions(videoTrack.id, null, { nbSamples: Infinity });
+        mp4boxFile.start();
+      };
+
+      mp4boxFile.onSamples = async (_id: number, _user: any, samples: any[]) => {
+        for (const sample of samples) {
+          if (resolved) break;
+          const chunk = new EncodedVideoChunk({
+            type: sample.is_sync ? 'key' : 'delta',
+            timestamp: (sample.cts / sample.timescale) * 1_000_000,
+            duration: (sample.duration / sample.timescale) * 1_000_000,
+            data: sample.data,
+          });
+          decoder.decode(chunk);
+        }
+        if (!resolved) {
+          await decoder.flush();
+          if (!resolved) { resolved = true; resolve(); }
+        }
+      };
+
+      mp4boxFile.onError = (e: any) => reject(new Error(String(e)));
+
+      // Alimenta o mp4box com o ArrayBuffer do arquivo de vídeo
+      const buf = arrayBuffer as any;
+      buf.fileStart = 0;
+      mp4boxFile.appendBuffer(buf);
+      mp4boxFile.flush();
+    });
 
     await encoder.flush();
     encoder.close();
@@ -222,3 +251,21 @@ export const useExport = () => {
     exportStep,
   };
 };
+
+// Extrai o AVCDecoderConfigurationRecord (parâmetro obrigatório para decodificar H.264)
+function getAvcDescription(mp4boxFile: any, videoTrack: any): Uint8Array | undefined {
+  try {
+    const trak = mp4boxFile.getTrackById(videoTrack.id);
+    for (const entry of trak.mdia.minf.stbl.stsd.entries) {
+      const box = entry.avcC || entry.hvcC || entry.vpcC || entry.av1C;
+      if (box) {
+        const stream = new (MP4Box as any).DataStream(undefined, 0, (MP4Box as any).DataStream.BIG_ENDIAN);
+        box.write(stream);
+        return new Uint8Array(stream.buffer, 8); // pula os primeiros 8 bytes do box header
+      }
+    }
+  } catch {
+    // Se falhar, retorna undefined — o decoder tenta sem description
+  }
+  return undefined;
+}

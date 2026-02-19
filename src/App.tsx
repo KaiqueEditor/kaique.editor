@@ -42,7 +42,7 @@ interface SidebarContentProps {
   setImageAgentOpen: (open: boolean, id?: string | null) => void;
   setActiveSlide: (idx: number) => void;
   toggleTheme: () => void;
-  onDownloadSlide: (idx: number, s: Section) => void;
+  onDownloadSlide: (idx: number, s: Section) => Promise<void>;
 }
 
 function SidebarContent({
@@ -295,7 +295,7 @@ function SidebarContent({
               theme={isDark ? 'dark' : 'light'}
               T={T}
               onOpenImageAgent={(id) => setImageAgentOpen(true, id)}
-              onDownload={() => onDownloadSlide(idx, s)}
+              onDownload={async () => { await onDownloadSlide(idx, s); }}
             />
           ))}
         </div>
@@ -363,9 +363,9 @@ export default function App() {
     handleAvatarUpload, setAgentOpen,
     setImageAgentOpen,
     setActiveSlide, toggleTheme,
-    onDownloadSlide: (idx: number, s: Section) => {
+    onDownloadSlide: async (idx: number, s: Section) => {
       const node = exportRefs.current[idx];
-      if (node) downloadSlide(node, s, `slide-${idx + 1}`);
+      if (node) await downloadSlide(node, s, `slide-${idx + 1}`);
     },
   };
 

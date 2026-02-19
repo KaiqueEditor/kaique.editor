@@ -9,7 +9,20 @@
       "Bash(open:*)",
       "Bash(echo:*)",
       "Bash(__NEW_LINE_9a39768e08b5e13f__ echo \"\")",
-      "mcp__Desktop_Commander__force_terminate"
+      "mcp__Desktop_Commander__force_terminate",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:developer.chrome.com)",
+      "WebFetch(domain:web.dev)",
+      "Bash(/Users/kaiquetorres/Downloads/Carrossel/src/constants/theme.ts << 'EOF'\n\n// Fallback escuro para componentes que recebem T como prop opcional\nexport const DARK_FALLBACK: ThemeTokens = DARK;\nEOF)",
+      "Bash(python3:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: export MP4 via captureStream + MediaStreamTrackProcessor, limpeza geral\n\n- Export de vídeo: substitui requestVideoFrameCallback por captureStream\\(\\) +\n  MediaStreamTrackProcessor para ler frames diretamente do decoder, independente\n  de viewport/visibilidade \\(resolve vídeo congelado no MP4\\)\n- Container de export: zIndex 0 + opacity 0.0001 \\(mantém decode ativo no Chrome\\)\n- Fix API_KEY: AgentChat e ImageAgentChat agora usam GEMINI_API_KEY com fallback\n- Limpeza de tipos: remove googleSearchTerm, signatureColor, gradient*, foreground layout\n- Remove signature legacy de ProjectConfig e fallbacks mortos no CarouselSlide\n- Centraliza DARK_FALLBACK no theme.ts, remove duplicatas nos componentes\n- Fix import React faltando no useFileUpload.ts\n- Remove campos de gradiente do DEFAULT_SECTION em useProcessText.ts\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "WebFetch(domain:devtails.xyz)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:sabigara.com)",
+      "Bash(node -e:*)"
     ]
   }
 }
