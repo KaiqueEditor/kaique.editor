@@ -21,9 +21,6 @@ const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePro
   overlayOpacity: 0.4,
   textPosY: 85,
   showSocialImage: true,
-  gradientStrength: 0.85,
-  gradientDirection: 'bottom',
-  gradientReach: 60,
 };
 
 export const useProcessText = () => {

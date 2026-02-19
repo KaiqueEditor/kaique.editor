@@ -15,8 +15,17 @@ export const useStore = create<StoreState>()(
       {
         name: 'kaique-editor-store',
         partialize: (state) => ({
-          sections: state.sections,
-          config: state.config,
+          // Salva sections SEM imageUrl/videoUrl (base64 enche o localStorage)
+          sections: state.sections.map(s => ({
+            ...s,
+            imageUrl: undefined,
+            videoUrl: undefined,
+          })),
+          config: {
+            ...state.config,
+            // Avatar também pode ser base64 grande — salva só se for URL externa
+            avatarUrl: state.config.avatarUrl?.startsWith('data:') ? '' : state.config.avatarUrl,
+          },
           activeSlide: state.activeSlide,
         }),
       }

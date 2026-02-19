@@ -76,7 +76,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
               <span className="font-bold" style={{ fontSize: `${20 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: finalBrandingColor }}>{config.branding || 'Seu Nome Completo'}</span>
               <VerifiedBadge size={16 * scaleFactor} />
             </div>
-            <span style={{ fontSize: `${16 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: '#64748b' }}>{config.handle || config.signature || '@seuusuario'}</span>
+            <span style={{ fontSize: `${16 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: '#64748b' }}>{config.handle || '@seuusuario'}</span>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60">IA Criando...</span>
                   </div>
                 ) : section.videoUrl ? (
-                  <video src={section.videoUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
+                  <video src={section.videoUrl} autoPlay muted playsInline className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} onTimeUpdate={e => { if (e.currentTarget.currentTime > 15) e.currentTarget.currentTime = 0; }} />
                 ) : section.imageUrl ? (
                   <img src={section.imageUrl} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
                 ) : (
@@ -127,7 +127,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             )}
           </div>
         </div>
-        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || config.signature || ''} isSocial={true} />
+        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} />
       </div>
     );
   }
@@ -146,7 +146,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             <Loader2 className="animate-spin text-white opacity-40" size={64 * scaleFactor} />
           </div>
         ) : section.videoUrl ? (
-          <video src={section.videoUrl} autoPlay loop muted playsInline crossOrigin="anonymous" className="w-full h-full object-cover transition-all" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
+          <video src={section.videoUrl} autoPlay muted playsInline crossOrigin="anonymous" className="w-full h-full object-cover transition-all" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} onTimeUpdate={e => { if (e.currentTarget.currentTime > 15) e.currentTarget.currentTime = 0; }} />
         ) : section.imageUrl ? (
           <img src={section.imageUrl} crossOrigin="anonymous" alt="" className="w-full h-full object-cover transition-all" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
         ) : (
@@ -203,7 +203,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           )}
         </div>
       </div>
-      <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || config.signature || ''} />
+      <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} />
     </div>
   );
 });

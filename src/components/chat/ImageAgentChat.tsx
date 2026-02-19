@@ -73,7 +73,7 @@ const ImageAgentChat: React.FC<ImageAgentChatProps> = ({ isOpen, onClose, sectio
       setCurrentPrompt(section.imagePrompt || section.title || '');
       chatRef.current = null;
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
       chatRef.current = ai.chats.create({
         model: 'gemini-2.0-flash',
         config: {

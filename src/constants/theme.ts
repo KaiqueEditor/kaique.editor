@@ -87,3 +87,6 @@ export const LIGHT: ThemeTokens = {
 
 export const getTheme = (theme: Theme): ThemeTokens =>
   theme === 'dark' ? DARK : LIGHT;
+
+// Fallback escuro para componentes que recebem T como prop opcional
+export const DARK_FALLBACK: ThemeTokens = DARK;

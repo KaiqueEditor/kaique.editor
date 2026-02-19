@@ -3,7 +3,7 @@ import { Bot, X, Send, Loader2, ArrowRight } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { renderFormattedText } from '../../utils/formatters';
 import { GoogleGenAI } from "@google/genai";
-import { ThemeTokens } from '../../constants/theme';
+import { ThemeTokens, DARK_FALLBACK } from '../../constants/theme';
 
 interface AgentChatProps {
   isOpen: boolean;
@@ -12,15 +12,6 @@ interface AgentChatProps {
   T?: ThemeTokens;
 }
 
-const DARK_FALLBACK: ThemeTokens = {
-  bg: '#000000', bgCanvas: '#000000', sidebar: '#0a0a0a', card: '#111111', cardHover: '#1a1a1a',
-  glass: 'rgba(255,255,255,0.04)', glassMd: 'rgba(255,255,255,0.07)',
-  border: 'rgba(255,255,255,0.07)', borderStrong: 'rgba(255,255,255,0.15)',
-  accent: '#ffffff', accentText: '#000000', accentHover: 'rgba(255,255,255,0.9)', accentGlow: 'rgba(255,255,255,0.12)',
-  textPrimary: '#ffffff', textSub: 'rgba(255,255,255,0.7)', textDim: 'rgba(255,255,255,0.4)', textFaint: 'rgba(255,255,255,0.18)',
-  inputBg: 'rgba(255,255,255,0.05)', inputBorder: 'rgba(255,255,255,0.08)', inputFocus: 'rgba(255,255,255,0.3)',
-  success: '#30d158', shadow: '0 4px 24px rgba(0,0,0,0.6)', shadowStrong: '0 20px 60px rgba(0,0,0,0.8)',
-};
 
 const AgentChat: React.FC<AgentChatProps> = ({ isOpen, onClose, onApplyText, T: TProp }) => {
   const T = TProp || DARK_FALLBACK;
@@ -57,7 +48,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ isOpen, onClose, onApplyText, T: 
 
   useEffect(() => {
     if (isOpen && !chatRef.current) {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
       chatRef.current = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {

@@ -42,13 +42,14 @@ interface SidebarContentProps {
   setImageAgentOpen: (open: boolean, id?: string | null) => void;
   setActiveSlide: (idx: number) => void;
   toggleTheme: () => void;
+  onDownloadSlide: (idx: number, s: Section) => void;
 }
 
 function SidebarContent({
   T, isDark, textInput, setTextInput, profileOpen, setProfileOpen,
   setMobileSidebarOpen, config, sections, activeSlide, isProcessing,
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
-  setAgentOpen, setImageAgentOpen, setActiveSlide, toggleTheme,
+  setAgentOpen, setImageAgentOpen, setActiveSlide, toggleTheme, onDownloadSlide,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -294,6 +295,7 @@ function SidebarContent({
               theme={isDark ? 'dark' : 'light'}
               T={T}
               onOpenImageAgent={(id) => setImageAgentOpen(true, id)}
+              onDownload={() => onDownloadSlide(idx, s)}
             />
           ))}
         </div>
@@ -322,7 +324,7 @@ export default function App() {
   const setImageAgentOpen = useStore(state => state.setImageAgentOpen);
 
   const { processText, isProcessing } = useProcessText();
-  const { exportRefs, exportAll, isExporting, exportStep } = useExport();
+  const { exportRefs, exportAll, downloadSlide, isExporting, exportStep } = useExport();
   const { handleAvatarUpload } = useFileUpload();
   useKeyboardShortcuts();
 
@@ -361,6 +363,10 @@ export default function App() {
     handleAvatarUpload, setAgentOpen,
     setImageAgentOpen,
     setActiveSlide, toggleTheme,
+    onDownloadSlide: (idx: number, s: Section) => {
+      const node = exportRefs.current[idx];
+      if (node) downloadSlide(node, s, `slide-${idx + 1}`);
+    },
   };
 
   return (
@@ -461,19 +467,46 @@ export default function App() {
           </button>
         </div>
 
-        {/* Nós de exportação ocultos */}
-        <div className="fixed -left-[10000px] -top-[10000px]">
+        {/* Nós de exportação — tecnicamente visíveis para o browser (decode ativo), invisíveis para o usuário */}
+        {/* IMPORTANTE: zIndex >= 0 e opacity > 0 são obrigatórios para o Chrome decodificar frames de vídeo */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: 0,
+            height: 0,
+            overflow: 'visible',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        >
           {sections.map((s, idx) => (
-            <CarouselSlide
+            <div
               key={`exp-${s.id}`}
-              innerRef={el => { exportRefs.current[idx] = el; }}
-              section={s}
-              config={config}
-              index={idx}
-              total={sections.length}
-              isExport={true}
-              isGenerating={generatingIds.includes(s.id)}
-            />
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: `${idx * 1100}px`,
+                width: '1080px',
+                height: '1440px',
+                // opacity: 0.0001 — quase invisível mas mantém o pipeline de render ativo
+                // NÃO usar 0, display:none, visibility:hidden ou zIndex negativo
+                opacity: 0.0001,
+                pointerEvents: 'none',
+              }}
+            >
+              <CarouselSlide
+                innerRef={el => { exportRefs.current[idx] = el; }}
+                section={s}
+                config={config}
+                index={idx}
+                total={sections.length}
+                isExport={true}
+                isGenerating={generatingIds.includes(s.id)}
+              />
+            </div>
           ))}
         </div>
 

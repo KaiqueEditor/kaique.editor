@@ -14,7 +14,7 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string 
 };
 
 export const validateVideoFile = (file: File): { valid: boolean; error?: string } => {
-  const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+  const MAX_SIZE = 200 * 1024 * 1024; // 200MB
   const ALLOWED_TYPES = ['video/mp4', 'video/webm'];
 
   if (!ALLOWED_TYPES.includes(file.type)) {
@@ -22,7 +22,7 @@ export const validateVideoFile = (file: File): { valid: boolean; error?: string 
   }
 
   if (file.size > MAX_SIZE) {
-    return { valid: false, error: 'Vídeo muito grande. Máximo 50MB.' };
+    return { valid: false, error: 'Vídeo muito grande. Máximo 200MB.' };
   }
 
   return { valid: true };

@@ -6,7 +6,6 @@ interface SlideFooterProps {
   total: number;
   isExport: boolean;
   signature: string;
-  color?: string;
   isSocial?: boolean;
 }
 

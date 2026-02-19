@@ -5,9 +5,8 @@ export interface Section {
   imageUrl?: string;
   videoUrl?: string;
   imagePrompt?: string;
-  googleSearchTerm?: string;
   alignment: 'left' | 'center' | 'right';
-  layoutType: 'background' | 'foreground' | 'storytelling' | 'social-post';
+  layoutType: 'background' | 'storytelling' | 'social-post';
   titleFont: string;
   bodyFont: string;
   ctaText?: string;
@@ -16,7 +15,6 @@ export interface Section {
   bodyColor: string;
   bgColor: string;
   brandingColor: string;
-  signatureColor?: string;
   // Individual size overrides
   titleSize: number;
   bodySize: number;
@@ -25,10 +23,6 @@ export interface Section {
   imagePosY: number;
   imageScale: number;
   overlayOpacity: number;
-  // Gradient Controls
-  gradientStrength?: number;      // 0 = sem gradiente, 1 = full black (default: 0.85)
-  gradientDirection?: 'bottom' | 'top' | 'both' | 'none';  // default: 'bottom'
-  gradientReach?: number;         // 0–100: até onde o gradiente se estende (default: 60)
   // Text Adjustments
   textPosY: number;
   // Social Post specific
@@ -52,8 +46,6 @@ export interface ProjectConfig {
   watermark: string;   // Marca d'água discreta no rodapé de todos os slides
   avatarUrl: string;
   numSlides: number;
-  // Legacy (mantido para compatibilidade)
-  signature?: string;
 }
 
 export interface Project {

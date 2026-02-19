@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
   Trash2, ImageIcon, PanelsTopLeft,
   MessageSquareText, Minus, Plus, UploadCloud, Sparkles,
-  Loader2, EyeOff, Image as LucideImage,
+  Loader2, EyeOff, Image as LucideImage, Video, Download,
 } from 'lucide-react';
 import { Section } from '../../types';
 import { FONT_OPTIONS } from '../../constants/fonts';
 import { useStore } from '../../store';
 import { useImageGeneration } from '../../hooks/useImageGeneration';
 import { useFileUpload } from '../../hooks/useFileUpload';
-import { Theme, ThemeTokens } from '../../constants/theme';
+import { Theme, ThemeTokens, DARK_FALLBACK } from '../../constants/theme';
 
 interface SlideEditorProps {
   section: Section;
@@ -19,25 +19,16 @@ interface SlideEditorProps {
   theme?: Theme;
   T?: ThemeTokens;
   onOpenImageAgent?: (sectionId: string) => void;
+  onDownload?: () => void;
 }
 
-// Fallback dark tokens
-const DARK_T: ThemeTokens = {
-  bg: '#000', bgCanvas: '#000', sidebar: '#0a0a0a', card: '#111', cardHover: '#1a1a1a',
-  glass: 'rgba(255,255,255,0.04)', glassMd: 'rgba(255,255,255,0.07)',
-  border: 'rgba(255,255,255,0.07)', borderStrong: 'rgba(255,255,255,0.15)',
-  accent: '#ffffff', accentText: '#000000', accentHover: 'rgba(255,255,255,0.9)', accentGlow: 'rgba(255,255,255,0.12)',
-  textPrimary: '#ffffff', textSub: 'rgba(255,255,255,0.7)', textDim: 'rgba(255,255,255,0.4)', textFaint: 'rgba(255,255,255,0.18)',
-  inputBg: 'rgba(255,255,255,0.05)', inputBorder: 'rgba(255,255,255,0.08)', inputFocus: 'rgba(255,255,255,0.3)',
-  success: '#30d158', shadow: '0 4px 24px rgba(0,0,0,0.6)', shadowStrong: '0 20px 60px rgba(0,0,0,0.8)',
-};
 
 type Tab = 'texto' | 'design' | 'imagem';
 
 export const SlideEditor: React.FC<SlideEditorProps> = ({
-  section, index, isActive, onClick, T: TProp, onOpenImageAgent
+  section, index, isActive, onClick, T: TProp, onOpenImageAgent, onDownload
 }) => {
-  const T = TProp || DARK_T;
+  const T = TProp || DARK_FALLBACK;
   const sections = useStore(state => state.sections);
   const updateSection = useStore(state => state.updateSection);
   const deleteSection = useStore(state => state.deleteSection);
@@ -96,7 +87,12 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center"
           style={{ background: s.bgColor || '#000', border: `2px solid ${T.border}` }}
         >
-          {hasImage && <span style={{ fontSize: 10 }}>🖼</span>}
+          {s.videoUrl
+            ? <span style={{ fontSize: 10 }}>🎬</span>
+            : s.imageUrl
+              ? <span style={{ fontSize: 10 }}>🖼</span>
+              : null
+          }
         </div>
 
         {/* Info */}
@@ -120,33 +116,48 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           </p>
         </div>
 
-        {/* Delete com confirmação */}
-        {confirmDelete ? (
-          <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        {/* Botões de ação */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Download individual */}
+          {onDownload && (
             <button
-              onClick={e => { e.stopPropagation(); deleteSection(s.id); }}
-              className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all active:scale-95"
-              style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
+              onClick={e => { e.stopPropagation(); onDownload(); }}
+              className="p-1.5 rounded-lg transition-all active:scale-90 active:opacity-60"
+              style={{ color: T.textFaint }}
+              title={section.videoUrl ? 'Baixar MP4' : 'Baixar PNG'}
             >
-              Deletar
+              <Download size={13} />
             </button>
+          )}
+
+          {/* Delete com confirmação */}
+          {confirmDelete ? (
+            <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={e => { e.stopPropagation(); deleteSection(s.id); }}
+                className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all active:scale-95"
+                style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
+              >
+                Deletar
+              </button>
+              <button
+                onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}
+                className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all active:scale-95"
+                style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}
-              className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all active:scale-95"
-              style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+              onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}
+              className="p-1.5 rounded-lg transition-all active:scale-90 active:opacity-60"
+              style={{ color: T.textFaint }}
             >
-              Cancelar
+              <Trash2 size={13} />
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}
-            className="p-1.5 rounded-lg transition-all active:scale-90 active:opacity-60 flex-shrink-0"
-            style={{ color: T.textFaint }}
-          >
-            <Trash2 size={13} />
-          </button>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Painel expandido (só quando ativo) ── */}
@@ -229,10 +240,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               { name: 'Creme',    bg: '#faf7f2', title: '#1a1a1a', body: '#555555', brand: '#1a1a1a' },
               { name: 'Roxo',     bg: '#f0e6ff', title: '#2d1b69', body: '#6b46c1', brand: '#2d1b69' },
             ] : [
-              { name: 'Midnight', bg: '#000000', title: '#ffffff', body: '#aaaaaa', brand: '#ffffff' },
-              { name: 'Dourado',  bg: '#0d0b00', title: '#F5A623', body: '#c8860f', brand: '#F5A623' },
-              { name: 'Cinza',    bg: '#1a1a1a', title: '#ffffff', body: '#888888', brand: '#ffffff' },
-              { name: 'Bege',     bg: '#1c1410', title: '#e8d5b0', body: '#b5936a', brand: '#e8d5b0' },
+              { name: 'Midnight', bg: '#000000', title: '#ffffff',  body: '#aaaaaa', brand: '#ffffff'  },
+              { name: 'Dourado',  bg: '#000000', title: '#F5A623',  body: '#c8860f', brand: '#F5A623'  },
+              { name: 'Cinza',    bg: '#000000', title: '#cccccc',  body: '#888888', brand: '#cccccc'  },
+              { name: 'Bege',     bg: '#000000', title: '#e8d5b0',  body: '#b5936a', brand: '#e8d5b0'  },
             ];
             const colorFields = [
               { label: 'Fundo',  key: 'bgColor',       def: isSocial ? '#ffffff' : '#000000' },
@@ -451,13 +462,31 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 ))}
               </div>
 
+              {/* Aviso MP4 quando há vídeo */}
+              {s.videoUrl && (
+                <div
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[9px] font-bold"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${T.borderStrong}`, color: T.textSub }}
+                >
+                  <Video size={11} />
+                  Este frame será exportado como <strong>.mp4</strong> (15s)
+                </div>
+              )}
+
               {/* Upload + Gerar IA */}
               <div className="flex gap-2">
                 <label
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wide cursor-pointer transition-all active:scale-95 active:opacity-70"
-                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+                  style={{
+                    background: s.videoUrl ? 'rgba(255,255,255,0.08)' : T.glass,
+                    border: `1px solid ${s.videoUrl ? T.borderStrong : T.border}`,
+                    color: s.videoUrl ? T.textSub : T.textDim,
+                  }}
                 >
-                  <UploadCloud size={13} /> Upload
+                  {s.videoUrl
+                    ? <><Video size={13} /> Trocar vídeo</>
+                    : <><UploadCloud size={13} /> Imagem / Vídeo</>
+                  }
                   <input type="file" className="hidden" accept="image/*,video/*" onChange={e => handleFileUpload(s.id, e)} />
                 </label>
                 <button
