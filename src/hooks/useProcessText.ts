@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { toast } from 'react-hot-toast';
 import { geminiService } from '../services/api/geminiService';
 import { Section } from '../types';
 import { useStore } from '../store';
@@ -32,6 +33,7 @@ export const useProcessText = () => {
   const { generateAll } = useImageGeneration();
 
   const processText = useCallback(async (rawText: string) => {
+    if (isProcessing) return;
     if (!rawText.trim()) return;
     setIsProcessing(true);
 
@@ -89,7 +91,7 @@ export const useProcessText = () => {
       }
     } catch (error) {
       console.error("Text processing error:", error);
-      alert("Falha ao processar o texto. Verifique sua API key.");
+      toast.error('Falha ao processar o texto. Verifique sua API key.');
       setIsProcessing(false);
       return;
     }
@@ -100,7 +102,7 @@ export const useProcessText = () => {
     // Start generating images sequentially
     setGeneratingIds(finalSections.map(s => s.id));
     generateAll(finalSections);
-  }, [setSections, setIsProcessing, numSlides, generateAll, setGeneratingIds]);
+  }, [setSections, setIsProcessing, numSlides, generateAll, setGeneratingIds, isProcessing]);
 
   return {
     processText,

@@ -3,8 +3,6 @@ import { Section } from "../../types";
 
 class GeminiServiceClass {
   private ai: GoogleGenAI;
-  private requestQueue: Array<() => Promise<any>> = [];
-  private isProcessing = false;
   private cache = new Map<string, any>();
 
   constructor() {

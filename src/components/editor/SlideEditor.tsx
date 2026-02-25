@@ -17,13 +17,10 @@ interface SlideEditorProps {
   onClick: () => void;
   theme?: Theme;
   T?: ThemeTokens;
-  onOpenImageAgent?: (sectionId: string) => void;
   onDownload?: () => Promise<void> | void;
   onVideoUpload?: (sectionId: string, file: File) => void;
   onImageUpload?: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
 }
-
-type Tab = 'texto' | 'design';
 
 // ── Pad de foco da imagem (opção B — miniatura como fundo) ──────────────────
 interface FocusPadProps {
@@ -56,7 +53,6 @@ const FocusPad: React.FC<FocusPadProps> = ({ imageUrl, videoUrl, posX, posY, onC
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [getPos]);
 
-  const bgSrc = imageUrl || (videoUrl ? undefined : undefined);
   const hasMedia = !!(imageUrl || videoUrl);
 
   return (
@@ -137,7 +133,7 @@ const FocusPad: React.FC<FocusPadProps> = ({ imageUrl, videoUrl, posX, posY, onC
 
 // ── SlideEditor ─────────────────────────────────────────────────────────────
 export const SlideEditor: React.FC<SlideEditorProps> = ({
-  section, index, isActive, onClick, T: TProp, onOpenImageAgent, onDownload,
+  section, index, isActive, onClick, T: TProp, onDownload,
   onVideoUpload, onImageUpload,
 }) => {
   const T = TProp || DARK_FALLBACK;
@@ -152,7 +148,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const label = index === 0 ? 'CAPA' : index === sections.length - 1 ? 'FINAL' : `FRAME ${index + 1}`;
   const hasImage = !!(s.imageUrl || s.videoUrl);
 
-  const [activeTab, setActiveTab] = useState<Tab>('texto');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,10 +157,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     const t = setTimeout(() => setConfirmDelete(false), 3000);
     return () => clearTimeout(t);
   }, [confirmDelete]);
-
-  useEffect(() => {
-    if (isActive) setActiveTab('texto');
-  }, [isActive]);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -181,7 +172,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type.startsWith('video/') && onVideoUpload) {
+    const isVideoByType = file.type.startsWith('video/');
+    const isVideoByName = /\.(mp4|mov|m4v|webm|mkv|avi|wmv|flv|mpeg|mpg|3gp)$/i.test(file.name);
+    if ((isVideoByType || isVideoByName) && onVideoUpload) {
       onVideoUpload(s.id, file);
     } else if (onImageUpload) {
       onImageUpload(s.id, e);
@@ -189,11 +182,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     // Reset input para permitir re-upload do mesmo arquivo
     e.target.value = '';
   };
-
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'texto',  label: 'Texto'           },
-    { id: 'design', label: 'Design + Imagem' },
-  ];
 
   return (
     <div
@@ -277,25 +265,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
       {isActive && (
         <div className="p-4 space-y-3">
 
-          {/* Tabs */}
-          <div className="flex p-1 gap-1 rounded-xl" style={{ background: T.glass, border: `1px solid ${T.border}` }}>
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={e => { e.stopPropagation(); setActiveTab(tab.id); }}
-                className="flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wide transition-all"
-                style={{
-                  background: activeTab === tab.id ? T.accent : 'transparent',
-                  color: activeTab === tab.id ? T.accentText : T.textDim,
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* ══ TAB: TEXTO ══ */}
-          {activeTab === 'texto' && (() => {
+          {/* Texto */}
+          {(() => {
             const fontSlots = [
               { label: 'Título', fontKey: 'titleFont', sizeKey: 'titleSize', defaultFont: 'druk',       defaultSize: 30, sizeMin: 10, sizeMax: 120, sizeStep: 2 },
               { label: 'Corpo',  fontKey: 'bodyFont',  sizeKey: 'bodySize',  defaultFont: 'montserrat', defaultSize: 20, sizeMin: 10, sizeMax: 60,  sizeStep: 1 },
@@ -439,8 +410,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             );
           })()}
 
-          {/* ══ TAB: DESIGN + IMAGEM ══ */}
-          {activeTab === 'design' && (() => {
+          {/* Design + imagem */}
+          {(() => {
             const isSocial = s.layoutType === 'social-post';
             const PALETTES = isSocial ? [
               { name: 'Twitter', bg: '#ffffff', title: '#0f1419', body: '#536471', brand: '#0f1419' },

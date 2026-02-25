@@ -22,7 +22,9 @@
       "WebFetch(domain:devtails.xyz)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:sabigara.com)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

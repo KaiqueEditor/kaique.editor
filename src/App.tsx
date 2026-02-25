@@ -12,13 +12,14 @@ import { useProcessText } from './hooks/useProcessText';
 import { useExport } from './hooks/useExport';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useFileUpload } from './hooks/useFileUpload';
-import { ExportPreview } from './components/export/ExportPreview';
+import { VideoTrimModal } from './components/editor/VideoTrimModal';
 import { getTheme } from './constants/theme';
 import type { ThemeTokens } from './constants/theme';
 import type { Section, ProjectConfig } from './types/carousel.types';
 
 const AgentChat = lazy(() => import('./components/chat/AgentChat'));
 const ImageAgentChat = lazy(() => import('./components/chat/ImageAgentChat'));
+const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
 
 // ── Sidebar inner content (reutilizado no desktop e no mobile sheet) ──────────
 interface SidebarContentProps {
@@ -40,16 +41,21 @@ interface SidebarContentProps {
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>, cb: (url: string) => void) => void;
   setAgentOpen: (v: boolean) => void;
   setImageAgentOpen: (open: boolean, id?: string | null) => void;
+  isAgentOpen: boolean;
+  isImageAgentOpen: boolean;
   setActiveSlide: (idx: number) => void;
   toggleTheme: () => void;
   onDownloadSlide: (idx: number, s: Section) => Promise<void>;
+  onImageUpload: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
+  onVideoUpload: (sectionId: string, file: File) => void;
 }
 
 function SidebarContent({
   T, isDark, textInput, setTextInput, profileOpen, setProfileOpen,
   setMobileSidebarOpen, config, sections, activeSlide, isProcessing,
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
-  setAgentOpen, setImageAgentOpen, setActiveSlide, toggleTheme, onDownloadSlide,
+  setAgentOpen, setImageAgentOpen, isAgentOpen, isImageAgentOpen,
+  setActiveSlide, toggleTheme, onDownloadSlide, onImageUpload, onVideoUpload,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -82,14 +88,49 @@ function SidebarContent({
 
           {/* Ações do header */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div
+              className="hidden sm:flex items-center gap-1 p-1 rounded-xl"
+              style={{ background: T.glass, border: `1px solid ${T.border}` }}
+            >
+              <button
+                onClick={() => setAgentOpen(true)}
+                title="Abrir agente de texto"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                style={{
+                  background: isAgentOpen ? T.accent : 'transparent',
+                  color: isAgentOpen ? T.accentText : T.textSub,
+                  boxShadow: isAgentOpen ? `0 6px 18px ${T.accentGlow}` : 'none',
+                }}
+              >
+                <FileText size={13} />
+                <span className="text-[9px] font-black uppercase tracking-wide">Texto</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const id = sections[activeSlide]?.id;
+                  setImageAgentOpen(true, id || null);
+                }}
+                title="Abrir agente de imagem"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                style={{
+                  background: isImageAgentOpen ? T.accent : 'transparent',
+                  color: isImageAgentOpen ? T.accentText : T.textSub,
+                  boxShadow: isImageAgentOpen ? `0 6px 18px ${T.accentGlow}` : 'none',
+                }}
+              >
+                <Palette size={13} />
+                <span className="text-[9px] font-black uppercase tracking-wide">Imagem</span>
+              </button>
+            </div>
+
             <button
               onClick={() => setAgentOpen(true)}
-              title="Agente de Texto"
-              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl transition-all active:scale-95 active:opacity-70"
+              title="Abrir agente de texto"
+              className="sm:hidden p-2 rounded-xl transition-all active:scale-95"
               style={{ background: T.card, border: `1px solid ${T.border}`, color: T.textSub }}
             >
               <FileText size={14} />
-              <span className="text-[9px] font-black uppercase tracking-wide hidden sm:inline">Texto</span>
             </button>
 
             <button
@@ -97,12 +138,11 @@ function SidebarContent({
                 const id = sections[activeSlide]?.id;
                 setImageAgentOpen(true, id || null);
               }}
-              title="Agente de Imagem"
-              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl transition-all active:scale-95 active:opacity-70"
+              title="Abrir agente de imagem"
+              className="sm:hidden p-2 rounded-xl transition-all active:scale-95"
               style={{ background: T.card, border: `1px solid ${T.border}`, color: T.textSub }}
             >
               <Palette size={14} />
-              <span className="text-[9px] font-black uppercase tracking-wide hidden sm:inline">Imagem</span>
             </button>
 
             <button
@@ -294,8 +334,9 @@ function SidebarContent({
               }}
               theme={isDark ? 'dark' : 'light'}
               T={T}
-              onOpenImageAgent={(id) => setImageAgentOpen(true, id)}
               onDownload={async () => { await onDownloadSlide(idx, s); }}
+              onImageUpload={onImageUpload}
+              onVideoUpload={onVideoUpload}
             />
           ))}
         </div>
@@ -325,7 +366,7 @@ export default function App() {
 
   const { processText, isProcessing } = useProcessText();
   const { exportRefs, exportAll, downloadSlide, isExporting, exportStep } = useExport();
-  const { handleAvatarUpload } = useFileUpload();
+  const { handleAvatarUpload, handleImageUpload, validateVideoUpload, applyVideoClip } = useFileUpload();
   useKeyboardShortcuts();
 
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
@@ -335,6 +376,7 @@ export default function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(
     typeof window !== 'undefined' && window.innerWidth < 1024
   );
+  const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
 
   const T = getTheme(theme);
   const isDark = theme === 'dark';
@@ -354,6 +396,11 @@ export default function App() {
     toast.success('Roteiro aplicado! Gerando carrossel...');
   };
 
+  const handleVideoUploadRequest = (sectionId: string, file: File) => {
+    if (!validateVideoUpload(file)) return;
+    setPendingVideo({ sectionId, file });
+  };
+
   // Props compartilhadas para SidebarContent
   const sidebarProps: SidebarContentProps = {
     T, isDark, textInput, setTextInput, profileOpen, setProfileOpen,
@@ -361,8 +408,10 @@ export default function App() {
     isProcessing, globalAvatarInputRef, handleProcessText,
     updateConfig,
     handleAvatarUpload, setAgentOpen,
-    setImageAgentOpen,
+    setImageAgentOpen, isAgentOpen, isImageAgentOpen,
     setActiveSlide, toggleTheme,
+    onImageUpload: handleImageUpload,
+    onVideoUpload: handleVideoUploadRequest,
     onDownloadSlide: async (idx: number, s: Section) => {
       const node = exportRefs.current[idx];
       if (node) await downloadSlide(node, s, `slide-${idx + 1}`);
@@ -528,7 +577,7 @@ export default function App() {
               }}
               style={{
                 width: '100%',
-                maxWidth: 'min(420px, 88vw)',
+                maxWidth: 'min(500px, 88vw)',
                 aspectRatio: '1080 / 1440',
                 borderRadius: '2rem',
                 boxShadow: isDark
@@ -589,23 +638,34 @@ export default function App() {
             </div>
 
             {/* ── Ações ── */}
-            <div className="flex gap-3 w-full" style={{ maxWidth: 'min(420px, 88vw)' }}>
+            <div className="flex gap-3 w-full" style={{ maxWidth: 'min(500px, 88vw)' }}>
               <button
                 onClick={() => setShowExportPreview(true)}
+                disabled={isProcessing || isExporting}
                 className="flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 active:opacity-70"
-                style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textSub }}
+                style={{
+                  background: T.glass,
+                  border: `1px solid ${T.border}`,
+                  color: isProcessing || isExporting ? T.textFaint : T.textSub,
+                  cursor: isProcessing || isExporting ? 'not-allowed' : 'pointer',
+                }}
               >
                 <Eye size={15} /> Revisar
               </button>
               <button
-                onClick={() => exportAll(sections)}
-                disabled={isExporting}
+                onClick={() => {
+                  if (generatingIds.length > 0) {
+                    toast('Alguns slides ainda estão gerando imagens.');
+                  }
+                  exportAll(sections);
+                }}
+                disabled={isExporting || isProcessing}
                 className="flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
                 style={{
-                  background: isExporting ? T.glassMd : T.accent,
-                  color: isExporting ? T.textDim : T.accentText,
-                  boxShadow: isExporting ? 'none' : `0 8px 28px ${T.accentGlow}`,
-                  border: `1px solid ${isExporting ? T.border : 'transparent'}`,
+                  background: isExporting || isProcessing ? T.glassMd : T.accent,
+                  color: isExporting || isProcessing ? T.textDim : T.accentText,
+                  boxShadow: isExporting || isProcessing ? 'none' : `0 8px 28px ${T.accentGlow}`,
+                  border: `1px solid ${isExporting || isProcessing ? T.border : 'transparent'}`,
                 }}
               >
                 {isExporting
@@ -715,17 +775,42 @@ export default function App() {
         )}
       </Suspense>
 
-      {showExportPreview && (
-        <ExportPreview
-          sections={sections}
-          config={config}
-          generatingIds={generatingIds}
-          isExporting={isExporting}
-          exportStep={exportStep}
-          onClose={() => setShowExportPreview(false)}
-          onExport={() => exportAll(sections)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {showExportPreview && (
+          <ExportPreview
+            sections={sections}
+            config={config}
+            generatingIds={generatingIds}
+            isExporting={isExporting}
+            exportStep={exportStep}
+            onClose={() => {
+              if (isExporting) return;
+              setShowExportPreview(false);
+            }}
+            onExport={() => {
+              if (generatingIds.length > 0) {
+                toast('Alguns slides ainda estão gerando imagens.');
+              }
+              exportAll(sections);
+            }}
+          />
+        )}
+      </Suspense>
+
+      <VideoTrimModal
+        isOpen={!!pendingVideo}
+        file={pendingVideo?.file ?? null}
+        T={T}
+        onCancel={() => setPendingVideo(null)}
+        onConfirm={async (trimStart) => {
+          if (!pendingVideo) return;
+          const toastId = toast.loading('Processando trecho de 15 segundos...');
+          await applyVideoClip(pendingVideo.sectionId, pendingVideo.file, trimStart);
+          toast.dismiss(toastId);
+          setPendingVideo(null);
+          toast.success('Vídeo aplicado com trecho de 15 segundos.');
+        }}
+      />
     </div>
   );
 }

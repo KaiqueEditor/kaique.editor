@@ -4,6 +4,7 @@ export interface Section {
   content: string;
   imageUrl?: string;
   videoUrl?: string;
+  videoMimeType?: string;
   imagePrompt?: string;
   alignment: 'left' | 'center' | 'right';
   layoutType: 'background' | 'storytelling' | 'social-post';

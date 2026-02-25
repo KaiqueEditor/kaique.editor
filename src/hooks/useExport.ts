@@ -1,11 +1,123 @@
-import { useRef, useCallback } from 'react';
-import * as htmlToImage from 'html-to-image';
-import JSZip from 'jszip';
-import saveAs from 'file-saver';
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
-import * as MP4Box from 'mp4box';
+import { useRef, useCallback, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { Section } from '../types';
 import { useStore } from '../store';
+import ffmpegCoreURL from '@ffmpeg/core?url';
+import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
+
+type ExportDeps = {
+  htmlToImage: { toPng: (node: HTMLElement, options?: any) => Promise<string> };
+  JSZip: any;
+  saveAs: (data: Blob | string, filename?: string, options?: any) => void;
+};
+
+let exportDepsPromise: Promise<ExportDeps> | null = null;
+let ffmpegBridgePromise: Promise<{
+  toMp4: (input: Blob) => Promise<Blob>;
+}> | null = null;
+
+const loadExportDeps = async (): Promise<ExportDeps> => {
+  if (!exportDepsPromise) {
+    exportDepsPromise = Promise.all([
+      import('html-to-image'),
+      import('jszip'),
+      import('file-saver'),
+    ]).then(([htmlToImageMod, jszipMod, fileSaverMod]) => ({
+      htmlToImage: htmlToImageMod,
+      JSZip: (jszipMod as any).default ?? jszipMod,
+      saveAs: ((fileSaverMod as any).default ?? (fileSaverMod as any).saveAs) as ExportDeps['saveAs'],
+    }));
+  }
+  return exportDepsPromise;
+};
+
+const loadFfmpegBridge = async () => {
+  if (!ffmpegBridgePromise) {
+    ffmpegBridgePromise = (async () => {
+      const [{ FFmpeg }, { fetchFile }] = await Promise.all([
+        import('@ffmpeg/ffmpeg'),
+        import('@ffmpeg/util'),
+      ]);
+
+      const ffmpeg = new FFmpeg();
+      await withTimeout(
+        ffmpeg.load({
+          coreURL: ffmpegCoreURL,
+          wasmURL: ffmpegWasmURL,
+        }),
+        120000,
+        'carregando ffmpeg'
+      );
+
+      const toMp4 = async (input: Blob): Promise<Blob> => {
+        const stamp = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const inName = `in-${stamp}.webm`;
+        const outName = `out-${stamp}.mp4`;
+
+        await ffmpeg.writeFile(inName, await fetchFile(input));
+        await ffmpeg.exec([
+          '-i', inName,
+          '-c:v', 'libx264',
+          '-pix_fmt', 'yuv420p',
+          '-movflags', '+faststart',
+          '-an',
+          outName,
+        ]);
+
+        const output = await ffmpeg.readFile(outName);
+        await ffmpeg.deleteFile(inName);
+        await ffmpeg.deleteFile(outName);
+
+        return new Blob([output], { type: 'video/mp4' });
+      };
+
+      return { toMp4 };
+    })();
+  }
+
+  return ffmpegBridgePromise;
+};
+
+const waitForEvent = (el: EventTarget, event: string, timeoutMs: number) =>
+  new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timeout aguardando evento ${event}`));
+    }, timeoutMs);
+
+    const done = () => {
+      cleanup();
+      resolve();
+    };
+
+    const fail = () => {
+      cleanup();
+      reject(new Error(`Erro aguardando evento ${event}`));
+    };
+
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      el.removeEventListener(event, done as EventListener);
+      el.removeEventListener('error', fail as EventListener);
+    };
+
+    el.addEventListener(event, done as EventListener, { once: true });
+    el.addEventListener('error', fail as EventListener, { once: true });
+  });
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> => {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error(`Timeout: ${label}`)), timeoutMs);
+    }),
+  ]);
+};
+
+const seekVideo = async (video: HTMLVideoElement, time: number) => {
+  video.currentTime = Math.max(0, time);
+  await waitForEvent(video, 'seeked', 4000);
+};
 
 export const useExport = () => {
   const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -14,7 +126,15 @@ export const useExport = () => {
   const isExporting = useStore(state => state.isExporting);
   const exportStep = useStore(state => state.exportStep);
 
-  const captureSlideAsPng = useCallback(async (node: HTMLDivElement): Promise<string> => {
+  useEffect(() => {
+    // Pré-carrega o motor de export em background para reduzir timeout no primeiro download.
+    void loadFfmpegBridge().catch(() => {
+      // Erro aqui não bloqueia uso; será tratado no fluxo de export.
+    });
+  }, []);
+
+  const captureSlideAsPng = useCallback(async (node: HTMLDivElement, pixelRatio = 1): Promise<string> => {
+    const { htmlToImage } = await loadExportDeps();
     const parent = node.parentElement;
     if (parent) parent.style.opacity = '1';
     try {
@@ -22,15 +142,18 @@ export const useExport = () => {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           dataUrl = await htmlToImage.toPng(node, {
-            pixelRatio: 1,
+            pixelRatio,
             cacheBust: true,
             width: 1080,
             height: 1440,
           });
           if (dataUrl && dataUrl.length > 200) break;
         } catch {
-          await new Promise(r => setTimeout(r, 400));
+          await new Promise(r => setTimeout(r, 300));
         }
+      }
+      if (!dataUrl) {
+        throw new Error('Falha ao capturar slide como PNG.');
       }
       return dataUrl;
     } finally {
@@ -38,192 +161,214 @@ export const useExport = () => {
     }
   }, []);
 
-  const recordSlideAsMp4 = useCallback(async (node: HTMLDivElement, videoUrl: string): Promise<Blob> => {
-    // ── 1. Captura overlay (textos/cores) sem o vídeo ──────────────────────
+  const captureOverlay = useCallback(async (node: HTMLDivElement): Promise<HTMLImageElement> => {
+    const { htmlToImage } = await loadExportDeps();
     const existingVideo = node.querySelector('video') as HTMLVideoElement | null;
     const parent = node.parentElement;
+
     if (parent) parent.style.opacity = '1';
     if (existingVideo) existingVideo.style.opacity = '0';
-    const overlayDataUrl = await htmlToImage.toPng(node, { pixelRatio: 1, width: 1080, height: 1440 });
+
+    const overlayDataUrl = await htmlToImage.toPng(node, {
+      pixelRatio: 1,
+      width: 1080,
+      height: 1440,
+      cacheBust: true,
+      backgroundColor: 'transparent',
+    });
+
     if (existingVideo) existingVideo.style.opacity = '1';
     if (parent) parent.style.opacity = '0.0001';
 
-    const overlayImg = new Image();
-    overlayImg.src = overlayDataUrl;
-    await new Promise(r => { overlayImg.onload = r; overlayImg.onerror = r; });
+    const img = new Image();
+    img.src = overlayDataUrl;
+    await new Promise<void>(resolve => {
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+    });
 
-    // ── 2. Fetch do vídeo como ArrayBuffer ───────────────────────────────────
-    // Decodificação 100% off-screen via WebCodecs — sem dependência de DOM ou viewport
-    const response = await fetch(videoUrl);
-    const arrayBuffer = await response.arrayBuffer();
+    return img;
+  }, []);
 
-    // ── 3. Canvas de composição ───────────────────────────────────────────────
+  const composeVideoAsWebM = useCallback(async (node: HTMLDivElement, section: Section): Promise<Blob> => {
+    const videoUrl = section.videoUrl;
+    if (!videoUrl) throw new Error('Slide sem vídeo.');
+
+    const trimStart = Math.max(0, section.videoTrimStart ?? 0);
+    const clipDuration = 15;
+
+    const overlay = await captureOverlay(node);
+
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1440;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas indisponível para exportação.');
 
-    // ── 4. Muxer + Encoder de saída ───────────────────────────────────────────
-    const target = new ArrayBufferTarget();
-    const muxer = new Muxer({
-      target,
-      video: { codec: 'avc', width: 1080, height: 1440 },
-      fastStart: 'in-memory',
-    });
+    const video = document.createElement('video');
+    video.src = videoUrl;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.crossOrigin = 'anonymous';
+    video.style.position = 'fixed';
+    video.style.top = '0';
+    video.style.left = '0';
+    video.style.width = '2px';
+    video.style.height = '2px';
+    video.style.opacity = '0.0001';
+    video.style.pointerEvents = 'none';
+    video.style.zIndex = '1';
+    document.body.appendChild(video);
 
-    const encConfig = {
-      codec: 'avc1.42002a',
-      width: 1080,
-      height: 1440,
-      bitrate: 8_000_000,
-      framerate: 30,
-    };
-    const supported = await VideoEncoder.isConfigSupported(encConfig);
-    if (!supported.supported) throw new Error('Codec H.264 não suportado neste browser.');
+    try {
+      await waitForEvent(video, 'loadedmetadata', 8000);
 
-    const encoder = new VideoEncoder({
-      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-      error: (e) => console.error('VideoEncoder error:', e),
-    });
-    encoder.configure(encConfig);
+      const start = Math.min(trimStart, Math.max(0, (video.duration || trimStart + clipDuration) - 0.05));
+      const end = Math.min(start + clipDuration, video.duration || start + clipDuration);
+      const fps = 30;
 
-    // ── 5. VideoDecoder + mp4box — decodifica frames direto do arquivo ────────
-    // Sem <video> no DOM, sem viewport, sem throttle do Chrome
-    const DURATION = 15; // primeiros 15 segundos
-    let firstTs = -1;
-    let lastKeyFrameOffset = -Infinity;
-    let resolved = false;
+      const stream = canvas.captureStream(fps);
+      const mimeType = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm',
+      ].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) || 'video/webm';
 
-    await new Promise<void>((resolve, reject) => {
-      const mp4boxFile = MP4Box.createFile();
+      if (typeof MediaRecorder === 'undefined') {
+        throw new Error('MediaRecorder não suportado neste navegador.');
+      }
 
-      const decoder = new VideoDecoder({
-        output: (frame: VideoFrame) => {
-          if (resolved) { frame.close(); return; }
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+      };
 
-          const tsSeconds = frame.timestamp / 1_000_000;
-          if (firstTs < 0) firstTs = tsSeconds;
-          const elapsed = tsSeconds - firstTs;
+      const stopPromise = new Promise<void>((resolve, reject) => {
+        recorder.onstop = () => resolve();
+        recorder.onerror = () => reject(new Error('Falha ao gravar vídeo do canvas.'));
+      });
 
-          if (elapsed >= DURATION) {
-            frame.close();
-            if (!resolved) { resolved = true; resolve(); }
+      recorder.start(250);
+      await seekVideo(video, start);
+      await video.play();
+
+      await new Promise<void>((resolve, reject) => {
+        let done = false;
+        let lastT = -1;
+        let stagnantFrames = 0;
+        const hardTimeout = window.setTimeout(() => {
+          done = true;
+          reject(new Error('Timeout renderizando frames do vídeo.'));
+        }, 30000);
+
+        const finish = () => {
+          window.clearTimeout(hardTimeout);
+          done = true;
+          resolve();
+        };
+
+        const step = () => {
+          if (done) return;
+          const t = video.currentTime;
+
+          ctx.clearRect(0, 0, 1080, 1440);
+          ctx.drawImage(video, 0, 0, 1080, 1440);
+          ctx.drawImage(overlay, 0, 0, 1080, 1440);
+
+          if (Math.abs(t - lastT) < 0.0005) stagnantFrames += 1;
+          else stagnantFrames = 0;
+          lastT = t;
+
+          if (stagnantFrames > 240) {
+            finish();
             return;
           }
 
-          // Compõe: frame do vídeo + overlay de texto no canvas
-          ctx.drawImage(frame, 0, 0, 1080, 1440);
-          ctx.drawImage(overlayImg, 0, 0, 1080, 1440);
-          frame.close();
+          if (t >= end || video.ended) {
+            finish();
+            return;
+          }
 
-          const outFrame = new VideoFrame(canvas, {
-            timestamp: Math.round(elapsed * 1_000_000),
-            duration: Math.round(1_000_000 / 30),
-          });
-          const needsKeyFrame = elapsed - lastKeyFrameOffset >= 5;
-          if (needsKeyFrame) lastKeyFrameOffset = elapsed;
-          encoder.encode(outFrame, { keyFrame: needsKeyFrame });
-          outFrame.close();
-        },
-        error: (e) => reject(e),
+          if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+            (video as any).requestVideoFrameCallback(() => step());
+          } else {
+            requestAnimationFrame(step);
+          }
+        };
+
+        if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+          (video as any).requestVideoFrameCallback(() => step());
+        } else {
+          requestAnimationFrame(step);
+        }
       });
 
-      mp4boxFile.onReady = (info: any) => {
-        const videoTrack = info.tracks.find((t: any) => t.type === 'video');
-        if (!videoTrack) { reject(new Error('Nenhuma track de vídeo encontrada')); return; }
+      video.pause();
+      recorder.stop();
+      await withTimeout(stopPromise, 6000, 'finalizando gravação webm');
 
-        decoder.configure({
-          codec: videoTrack.codec,
-          codedWidth: videoTrack.video.width,
-          codedHeight: videoTrack.video.height,
-          description: getAvcDescription(mp4boxFile, videoTrack),
-        });
+      const blob = new Blob(chunks, { type: mimeType });
+      if (blob.size < 4096) {
+        throw new Error('Gravação de vídeo ficou vazia.');
+      }
+      return blob;
+    } finally {
+      video.pause();
+      video.remove();
+    }
+  }, [captureOverlay]);
 
-        mp4boxFile.setExtractionOptions(videoTrack.id, null, { nbSamples: Infinity });
-        mp4boxFile.start();
-      };
-
-      mp4boxFile.onSamples = async (_id: number, _user: any, samples: any[]) => {
-        for (const sample of samples) {
-          if (resolved) break;
-          const chunk = new EncodedVideoChunk({
-            type: sample.is_sync ? 'key' : 'delta',
-            timestamp: (sample.cts / sample.timescale) * 1_000_000,
-            duration: (sample.duration / sample.timescale) * 1_000_000,
-            data: sample.data,
-          });
-          decoder.decode(chunk);
-        }
-        if (!resolved) {
-          await decoder.flush();
-          if (!resolved) { resolved = true; resolve(); }
-        }
-      };
-
-      mp4boxFile.onError = (e: any) => reject(new Error(String(e)));
-
-      // Alimenta o mp4box com o ArrayBuffer do arquivo de vídeo
-      const buf = arrayBuffer as any;
-      buf.fileStart = 0;
-      mp4boxFile.appendBuffer(buf);
-      mp4boxFile.flush();
-    });
-
-    await encoder.flush();
-    encoder.close();
-    muxer.finalize();
-
-    return new Blob([target.buffer], { type: 'video/mp4' });
-  }, []);
+  const composeVideoAsMp4 = useCallback(async (node: HTMLDivElement, section: Section) => {
+    const webm = await composeVideoAsWebM(node, section);
+    const ffmpeg = await withTimeout(loadFfmpegBridge(), 120000, 'inicializando ffmpeg');
+    const mp4 = await withTimeout(ffmpeg.toMp4(webm), 120000, 'convertendo para mp4');
+    return mp4;
+  }, [composeVideoAsWebM]);
 
   const downloadSlide = useCallback(async (node: HTMLDivElement, section: Section, label: string) => {
+    const { saveAs } = await loadExportDeps();
+
     try {
       if (section.videoUrl) {
-        const mp4Blob = await recordSlideAsMp4(node, section.videoUrl);
-        saveAs(mp4Blob, `${label}.mp4`);
+        const mp4 = await withTimeout(
+          composeVideoAsMp4(node, section),
+          180000,
+          'exportando vídeo'
+        );
+        saveAs(mp4, `${label}.mp4`);
       } else {
-        const parent = node.parentElement;
-        if (parent) parent.style.opacity = '1';
-        try {
-          const dataUrl = await htmlToImage.toPng(node, {
-            pixelRatio: 2,
-            cacheBust: true,
-            width: 1080,
-            height: 1440,
-          });
-          saveAs(dataUrl, `${label}.png`);
-        } finally {
-          if (parent) parent.style.opacity = '0.0001';
-        }
+        const dataUrl = await captureSlideAsPng(node, 2);
+        saveAs(dataUrl, `${label}.png`);
       }
     } catch (e) {
       console.error('Erro ao baixar slide:', e);
-      alert('Erro ao baixar. Veja o console para detalhes.');
+      toast.error('Erro ao baixar slide.');
     }
-  }, [recordSlideAsMp4]);
+  }, [composeVideoAsMp4, captureSlideAsPng]);
 
   const exportAll = useCallback(async (sections: Section[]) => {
-    if (sections.length === 0) return;
+    if (sections.length === 0 || isExporting) return;
     setIsExporting(true);
-    const zip = new JSZip();
 
     try {
-      setExportStep('preparando');
+      setExportStep('carregando módulos');
+      const { JSZip, saveAs } = await loadExportDeps();
+      const zip = new JSZip();
 
       for (let i = 0; i < sections.length; i++) {
         const node = exportRefs.current[i];
         if (!node) continue;
 
         if (sections[i].videoUrl) {
-          setExportStep(`gravando vídeo ${i + 1} de ${sections.length}`);
-          try {
-            const mp4Blob = await recordSlideAsMp4(node, sections[i].videoUrl!);
-            zip.file(`slide-${i + 1}.mp4`, mp4Blob);
-          } catch (vErr) {
-            console.warn(`Vídeo ${i + 1} falhou, exportando como PNG`, vErr);
-            const rawDataUrl = await captureSlideAsPng(node);
-            zip.file(`slide-${i + 1}.png`, rawDataUrl.split(',')[1], { base64: true });
-          }
+          setExportStep(`renderizando vídeo ${i + 1} de ${sections.length}`);
+          const mp4 = await withTimeout(
+            composeVideoAsMp4(node, sections[i]),
+            180000,
+            `exportando vídeo do slide ${i + 1}`
+          );
+          zip.file(`slide-${i + 1}.mp4`, mp4);
         } else {
           setExportStep(`renderizando slide ${i + 1} de ${sections.length}`);
           const rawDataUrl = await captureSlideAsPng(node);
@@ -236,12 +381,12 @@ export const useExport = () => {
       saveAs(content, `kaique-editor-${Date.now()}.zip`);
     } catch (e) {
       console.error('Erro na exportação:', e);
-      alert('Erro ao exportar. Veja o console para detalhes.');
+      toast.error('Erro ao exportar arquivo ZIP.');
     } finally {
       setIsExporting(false);
       setExportStep(null);
     }
-  }, [recordSlideAsMp4, captureSlideAsPng, setIsExporting, setExportStep]);
+  }, [composeVideoAsMp4, captureSlideAsPng, setIsExporting, setExportStep, isExporting]);
 
   return {
     exportRefs,
@@ -251,21 +396,3 @@ export const useExport = () => {
     exportStep,
   };
 };
-
-// Extrai o AVCDecoderConfigurationRecord (parâmetro obrigatório para decodificar H.264)
-function getAvcDescription(mp4boxFile: any, videoTrack: any): Uint8Array | undefined {
-  try {
-    const trak = mp4boxFile.getTrackById(videoTrack.id);
-    for (const entry of trak.mdia.minf.stbl.stsd.entries) {
-      const box = entry.avcC || entry.hvcC || entry.vpcC || entry.av1C;
-      if (box) {
-        const stream = new (MP4Box as any).DataStream(undefined, 0, (MP4Box as any).DataStream.BIG_ENDIAN);
-        box.write(stream);
-        return new Uint8Array(stream.buffer, 8); // pula os primeiros 8 bytes do box header
-      }
-    }
-  } catch {
-    // Se falhar, retorna undefined — o decoder tenta sem description
-  }
-  return undefined;
-}

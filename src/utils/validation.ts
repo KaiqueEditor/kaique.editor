@@ -14,15 +14,15 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string 
 };
 
 export const validateVideoFile = (file: File): { valid: boolean; error?: string } => {
-  const MAX_SIZE = 200 * 1024 * 1024; // 200MB
-  const ALLOWED_TYPES = ['video/mp4', 'video/webm'];
+  const MAX_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
+  const byExtension = /\.(mp4|mov|m4v|webm|mkv|avi|wmv|flv|mpeg|mpg|3gp)$/i.test(file.name);
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { valid: false, error: 'Formato não suportado. Use MP4 ou WEBM.' };
+  if (!(file.type.startsWith('video/') || byExtension)) {
+    return { valid: false, error: 'Formato não suportado. Escolha um arquivo de vídeo.' };
   }
 
   if (file.size > MAX_SIZE) {
-    return { valid: false, error: 'Vídeo muito grande. Máximo 200MB.' };
+    return { valid: false, error: 'Vídeo muito grande. Máximo 2GB.' };
   }
 
   return { valid: true };

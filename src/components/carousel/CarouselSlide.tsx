@@ -36,7 +36,10 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
     : { width: '100%', aspectRatio: '1080/1440' };
 
   const scaleFactor = isExport ? 2.16 : 1;
-  const paddingX = isExport ? 100 : 40;
+  // Mantém proporção idêntica entre preview e export (1080x1440),
+  // evitando quebra de linha diferente por largura útil do texto.
+  const basePaddingX = 40;
+  const paddingX = basePaddingX * scaleFactor;
 
   const finalTitleColor = section.titleColor || (isSocial ? '#000000' : '#ffffff');
   const finalBodyColor = section.bodyColor || (isSocial ? '#000000' : '#ffffff');
@@ -51,6 +54,8 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
   const imgPosY = section.imagePosY ?? 50;
   const imgScale = section.imageScale ?? 1;
   const overlayOpacity = section.overlayOpacity ?? (isFullBg ? 0.4 : isSocial ? 0 : 0.2);
+  const clipStart = Math.max(0, section.videoTrimStart ?? 0);
+  const clipEnd = clipStart + 15;
 
   const manualTextOffset = (section.textPosY ?? 85);
   const contentPaddingBottom = (isExport ? manualTextOffset * 2.16 : manualTextOffset);
@@ -115,7 +120,25 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60">IA Criando...</span>
                   </div>
                 ) : section.videoUrl ? (
-                  <video src={section.videoUrl} autoPlay muted playsInline className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} onTimeUpdate={e => { if (e.currentTarget.currentTime > 15) e.currentTarget.currentTime = 0; }} />
+                  <video
+                    key={`${section.videoUrl}-${clipStart}`}
+                    src={section.videoUrl}
+                    autoPlay
+                    muted
+                    playsInline
+                    preload="auto"
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }}
+                    onLoadedData={e => {
+                      e.currentTarget.currentTime = clipStart;
+                      void e.currentTarget.play().catch(() => {});
+                    }}
+                    onTimeUpdate={e => {
+                      if (e.currentTarget.currentTime >= clipEnd) {
+                        e.currentTarget.currentTime = clipStart;
+                      }
+                    }}
+                  />
                 ) : section.imageUrl ? (
                   <img src={section.imageUrl} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
                 ) : (
@@ -146,7 +169,26 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             <Loader2 className="animate-spin text-white opacity-40" size={64 * scaleFactor} />
           </div>
         ) : section.videoUrl ? (
-          <video src={section.videoUrl} autoPlay muted playsInline crossOrigin="anonymous" className="w-full h-full object-cover transition-all" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} onTimeUpdate={e => { if (e.currentTarget.currentTime > 15) e.currentTarget.currentTime = 0; }} />
+          <video
+            key={`${section.videoUrl}-${clipStart}`}
+            src={section.videoUrl}
+            autoPlay
+            muted
+            playsInline
+            crossOrigin="anonymous"
+            preload="auto"
+            className="w-full h-full object-cover transition-all"
+            style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }}
+            onLoadedData={e => {
+              e.currentTarget.currentTime = clipStart;
+              void e.currentTarget.play().catch(() => {});
+            }}
+            onTimeUpdate={e => {
+              if (e.currentTarget.currentTime >= clipEnd) {
+                e.currentTarget.currentTime = clipStart;
+              }
+            }}
+          />
         ) : section.imageUrl ? (
           <img src={section.imageUrl} crossOrigin="anonymous" alt="" className="w-full h-full object-cover transition-all" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
         ) : (

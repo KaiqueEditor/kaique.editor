@@ -20,7 +20,7 @@ export const SlideFooter: React.FC<SlideFooterProps> = ({
   const isLast = index === total - 1;
 
   const ctaColor = isSocial ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)';
-  const watermarkColor = isSocial ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+  const watermarkColor = isSocial ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)';
 
   const paddingBottom = isExport ? 64 : 26;
   const ctaFontSize = isExport ? '20px' : '8px';

@@ -2,7 +2,6 @@ import React from 'react';
 import { X, Download, Loader2 } from 'lucide-react';
 import { Section, ProjectConfig } from '../../types';
 import { CarouselSlide } from '../carousel/CarouselSlide';
-import { COLOR_PALETTES } from '../../constants/colors';
 
 interface ExportPreviewProps {
   sections: Section[];
@@ -42,7 +41,11 @@ export const ExportPreview: React.FC<ExportPreviewProps> = ({
               : <><Download size={20} />Exportar ZIP</>
             }
           </button>
-          <button onClick={onClose} className="text-white p-5 hover:bg-white/10 rounded-full border border-white/10 transition-all">
+          <button
+            onClick={onClose}
+            disabled={isExporting}
+            className="text-white p-5 hover:bg-white/10 rounded-full border border-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
             <X size={54} />
           </button>
         </div>

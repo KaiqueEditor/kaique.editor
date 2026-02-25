@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Loader2, ArrowRight } from 'lucide-react';
+import { Bot, X, Send, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { renderFormattedText } from '../../utils/formatters';
 import { GoogleGenAI } from "@google/genai";
@@ -11,6 +11,12 @@ interface AgentChatProps {
   onApplyText: (text: string) => void;
   T?: ThemeTokens;
 }
+
+const QUICK_ACTIONS = [
+  { label: 'Roteiro 8 frames', prompt: 'Quero um roteiro para 8 frames com gancho forte.' },
+  { label: 'Versão polêmica', prompt: 'Crie uma versão mais polêmica desse tema.' },
+  { label: '3 CTAs finais', prompt: 'Me dê 3 opções de CTA final.' },
+];
 
 
 const AgentChat: React.FC<AgentChatProps> = ({ isOpen, onClose, onApplyText, T: TProp }) => {
@@ -117,8 +123,8 @@ texto X - CTA final`,
       <div
         className="fixed inset-0 z-[140]"
         style={{
-          background: 'rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(3, 6, 12, 0.62)',
+          backdropFilter: 'blur(8px)',
           opacity: visible ? 1 : 0,
           transition: 'opacity 300ms ease',
         }}
@@ -129,62 +135,99 @@ texto X - CTA final`,
       <div
         className="fixed right-0 top-0 h-screen z-[150] flex flex-col"
         style={{
-          width: 'min(400px, 92vw)',
-          background: T.sidebar,
+          width: 'min(460px, 96vw)',
+          background: `radial-gradient(circle at 15% 0%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 30%), linear-gradient(180deg, ${T.sidebar} 0%, ${T.bg} 100%)`,
           borderLeft: `1px solid ${T.border}`,
-          boxShadow: T.shadowStrong,
+          boxShadow: `-28px 0 80px rgba(0,0,0,0.45), ${T.shadowStrong}`,
           transform: visible ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 300ms cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-6 py-5 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${T.border}` }}
+          className="flex items-center justify-between px-6 py-4 flex-shrink-0"
+          style={{ borderBottom: `1px solid ${T.border}`, background: 'rgba(255,255,255,0.02)' }}
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center"
-              style={{ background: T.accent, color: T.accentText }}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ background: T.accent, boxShadow: `0 8px 22px ${T.accentGlow}`, color: T.accentText }}
             >
               <Bot size={20} />
             </div>
             <div>
-              <h3 className="font-black text-base" style={{ color: T.textPrimary }}>Agente de Texto</h3>
-              <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: T.success }}>Estrategista Viral</p>
+              <h3 className="font-black text-[24px] leading-none" style={{ color: T.textPrimary }}>Agente de Texto</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[12px] font-semibold" style={{ color: T.success }}>Estrategista Viral</span>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: T.success }} />
+              </div>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2.5 rounded-xl transition-all active:scale-90 active:opacity-70"
-            style={{ color: T.textDim }}
+            style={{ color: T.textDim, background: T.glass, border: `1px solid ${T.border}` }}
           >
             <X size={20} />
           </button>
         </div>
 
+        <div className="px-4 py-3.5 flex flex-wrap gap-2 flex-shrink-0" style={{ borderBottom: `1px solid ${T.border}`, background: 'rgba(255,255,255,0.01)' }}>
+          {QUICK_ACTIONS.map(action => (
+            <button
+              key={action.label}
+              onClick={() => sendMessage(action.prompt)}
+              disabled={isTyping}
+              className="px-3.5 py-2 rounded-full text-[11px] font-bold transition-all active:scale-95 disabled:opacity-40"
+              style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textSub }}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar" style={{ minHeight: 0 }}>
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-5 space-y-3 no-scrollbar"
+          style={{ minHeight: 0, background: 'linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(0,0,0,0.08) 100%)' }}
+        >
           {messages.map((m, i) => (
             <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
               <div
-                className="max-w-[90%] px-4 py-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap"
+                className="max-w-[96%] px-4 py-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap"
                 style={
                   m.role === 'user'
-                    ? { background: T.accent, color: T.accentText, borderBottomRightRadius: 4 }
-                    : { background: T.glass, color: T.textSub, border: `1px solid ${T.border}`, borderBottomLeftRadius: 4 }
+                    ? {
+                        background: `linear-gradient(135deg, ${T.accent} 0%, ${T.accent}CC 100%)`,
+                        color: T.accentText,
+                        borderBottomRightRadius: 4,
+                        boxShadow: `0 8px 20px ${T.accentGlow}`,
+                      }
+                    : {
+                        background: T.glass,
+                        color: T.textSub,
+                        border: `1px solid ${T.border}`,
+                        borderBottomLeftRadius: 4,
+                      }
                 }
               >
+                {m.role === 'model' && (
+                  <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: T.textFaint }}>
+                    <Sparkles size={10} />
+                    Assistente
+                  </div>
+                )}
                 {renderFormattedText(m.text)}
               </div>
               {m.role === 'model' && (m.text.toLowerCase().includes('texto 1 -') || m.text.toLowerCase().includes('roteiro pronto')) && (
                 <button
                   onClick={() => handleApply(m.text)}
-                  className="mt-3 flex items-center gap-2 px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                  className="mt-3 flex items-center gap-2 px-5 py-3 rounded-full text-[11px] font-bold transition-all active:scale-95"
                   style={{
                     background: T.accent,
                     color: T.accentText,
-                    boxShadow: `0 4px 16px ${T.accentGlow}`,
+                    boxShadow: `0 8px 22px ${T.accentGlow}`,
                   }}
                 >
                   <ArrowRight size={14} /> Aplicar ao editor
@@ -193,7 +236,10 @@ texto X - CTA final`,
             </div>
           ))}
           {isTyping && (
-            <div className="flex items-center gap-2 text-sm font-bold animate-pulse px-2" style={{ color: T.textDim }}>
+            <div
+              className="inline-flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-full animate-pulse"
+              style={{ color: T.textDim, background: T.glass, border: `1px solid ${T.border}` }}
+            >
               <Loader2 className="animate-spin" size={14} /> Estrategista pensando...
             </div>
           )}
@@ -201,10 +247,10 @@ texto X - CTA final`,
 
         {/* Input */}
         <div className="p-4 flex-shrink-0" style={{ borderTop: `1px solid ${T.border}` }}>
-          <div
-            className="flex gap-2 items-center rounded-2xl p-2"
-            style={{ background: T.inputBg, border: `1px solid ${T.inputBorder}` }}
-          >
+          <div className="mb-1 px-1 text-[10px] font-semibold" style={{ color: T.textFaint }}>
+            Pergunta atual
+          </div>
+          <div className="flex gap-2 items-center rounded-2xl p-2" style={{ background: T.inputBg, border: `1px solid ${T.inputBorder}`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}>
             <input
               ref={inputRef}
               type="text"
@@ -212,14 +258,14 @@ texto X - CTA final`,
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && sendMessage()}
               placeholder="Responda ao estrategista..."
-              className="flex-1 bg-transparent border-none px-3 py-3 text-sm outline-none"
+              className="flex-1 bg-transparent border-none px-3 py-3 text-[15px] outline-none"
               style={{ color: T.textPrimary }}
             />
             <button
               onClick={() => sendMessage()}
               disabled={!input.trim() || isTyping}
               className="p-3 rounded-xl transition-all active:scale-95 disabled:opacity-20"
-              style={{ background: T.accent, color: T.accentText }}
+              style={{ background: T.accent, color: T.accentText, boxShadow: `0 8px 18px ${T.accentGlow}` }}
             >
               <Send size={16} />
             </button>
