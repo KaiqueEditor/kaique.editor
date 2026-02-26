@@ -20,7 +20,7 @@ const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePro
   imagePosY: 0,
   imageScale: 1,
   overlayOpacity: 0,
-  textPosY: 85,
+  textPosY: 70,
   showSocialImage: true,
 };
 
@@ -68,7 +68,7 @@ export const useProcessText = () => {
               alignment: 'center',
               titleSize: 30,
               bodySize: 10,
-              textPosY: 85,
+              textPosY: 70,
               imagePrompt: dataMap[1]
             });
           }
