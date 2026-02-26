@@ -8,18 +8,18 @@ import { useImageGeneration } from './useImageGeneration';
 const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePrompt'> = {
   alignment: 'left',
   layoutType: 'storytelling',
-  titleFont: 'anton',
+  titleFont: 'montserrat',
   bodyFont: 'montserrat',
   bgColor: '#000000',
   titleColor: '#ffffff',
   bodyColor: '#ffffff',
   brandingColor: '#ffffff',
   titleSize: 30,
-  bodySize: 20,
+  bodySize: 16,
   imagePosX: 50,
-  imagePosY: 50,
+  imagePosY: 0,
   imageScale: 1,
-  overlayOpacity: 0.4,
+  overlayOpacity: 0,
   textPosY: 85,
   showSocialImage: true,
 };
@@ -30,7 +30,11 @@ export const useProcessText = () => {
   const setIsProcessing = useStore(state => state.setIsProcessing);
   const numSlides = useStore(state => state.config.numSlides);
   const setGeneratingIds = useStore(state => state.setGeneratingIds);
+  const useAI = useStore(state => state.useAI);
   const { generateAll } = useImageGeneration();
+
+  // Detecta se o texto já está no formato estruturado "Texto N ..." (com ou sem traço)
+  const isStructuredRoteiro = (text: string) => /^texto\s+\d+/im.test(text);
 
   const processText = useCallback(async (rawText: string) => {
     if (isProcessing) return;
@@ -40,12 +44,12 @@ export const useProcessText = () => {
     let finalSections: Section[] = [];
 
     try {
-      if (rawText.toLowerCase().includes('texto 1 -')) {
-        // Parse structured roteiro format
+      if (!useAI || isStructuredRoteiro(rawText)) {
+        // Parse structured roteiro format (com ou sem traço)
         const lines = rawText.split(/\n+/);
         const dataMap: Record<number, string> = {};
         lines.forEach(line => {
-          const match = line.match(/texto (\d+) - (.*)/i);
+          const match = line.match(/^texto\s+(\d+)\s*[-–:]?\s*(.*)/i);
           if (match) dataMap[parseInt(match[1])] = match[2].trim();
         });
 
@@ -59,9 +63,11 @@ export const useProcessText = () => {
               title: dataMap[1] || '',
               content: '',
               layoutType: 'storytelling',
-              titleFont: 'druk',
+              titleFont: 'wide',
+              bodyFont: 'montserrat',
               alignment: 'center',
-              titleSize: 40,
+              titleSize: 30,
+              bodySize: 10,
               textPosY: 85,
               imagePrompt: dataMap[1]
             });
@@ -85,8 +91,10 @@ export const useProcessText = () => {
           ...DEFAULT_SECTION_BASE,
           ...s,
           alignment: idx === 0 ? 'center' as const : 'left' as const,
-          titleFont: idx === 0 ? 'druk' : 'anton',
-          titleSize: idx === 0 ? 40 : 30,
+          titleFont: idx === 0 ? 'wide' : 'montserrat',
+          bodyFont: 'montserrat',
+          titleSize: 30,
+          ...(idx === 0 ? { bodySize: 10 } : {}),
         }));
       }
     } catch (error) {
@@ -102,7 +110,7 @@ export const useProcessText = () => {
     // Start generating images sequentially
     setGeneratingIds(finalSections.map(s => s.id));
     generateAll(finalSections);
-  }, [setSections, setIsProcessing, numSlides, generateAll, setGeneratingIds, isProcessing]);
+  }, [setSections, setIsProcessing, numSlides, generateAll, setGeneratingIds, isProcessing, useAI]);
 
   return {
     processText,
