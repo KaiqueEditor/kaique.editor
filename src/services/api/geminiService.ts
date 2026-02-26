@@ -91,8 +91,8 @@ Retorne APENAS um JSON array válido, sem explicações.`
         imagePrompt: item.imagePrompt,
         alignment: index === 0 ? 'center' : 'left',
         layoutType: 'storytelling',
-        titleFont: index === 0 ? 'druk' : 'anton',
-        bodyFont: 'sans',
+        titleFont: index === 0 ? 'wide' : 'montserrat',
+        bodyFont: 'montserrat',
         bgColor: '#000000',
         titleColor: '#ffffff',
         bodyColor: '#ffffff',
@@ -112,10 +112,43 @@ Retorne APENAS um JSON array válido, sem explicações.`
     return result;
   }
 
+  async generateTitleVariations(title: string, context: string): Promise<string[]> {
+    return this.retryWithBackoff(async () => {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: {
+          parts: [{
+            text: `Você é um especialista em headlines virais para carrosséis do Instagram.
+
+Gere 4 variações criativas do headline abaixo, mantendo o impacto e a essência do conteúdo.
+
+Headline original: "${title}"
+Contexto do slide: "${context}"
+
+REGRAS:
+1. SEMPRE em CAIXA ALTA
+2. Máximo 15 palavras cada
+3. Use números concretos se o contexto tiver
+4. Pode usar fórmulas: Número Chocante, Rejeição→Vingança, Contrarian, Bastidor
+5. Retorne APENAS um JSON array com as 4 variações, sem explicações`
+          }]
+        },
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+        },
+      });
+      return JSON.parse(response.text.trim()) as string[];
+    });
+  }
+
   async generateImageForSection(prompt: string, context: string): Promise<string> {
     return this.retryWithBackoff(async () => {
       const response = await this.ai.models.generateImages({
-        model: 'imagen-3.0-generate-002',
+        model: 'imagen-3.0-generate-001',
         prompt: `${prompt}. Style: modern, professional, eye-catching, suitable for Instagram. Context: ${context}`,
         config: {
           numberOfImages: 1,
@@ -127,6 +160,7 @@ Retorne APENAS um JSON array válido, sem explicações.`
       if (imgBytes) {
         return `data:image/png;base64,${imgBytes}`;
       }
+      console.error('generateImages response:', JSON.stringify(response));
       throw new Error('No image generated');
     });
   }

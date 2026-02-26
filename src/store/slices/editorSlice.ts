@@ -9,6 +9,7 @@ export interface EditorSlice {
   exportStep: string | null;
   isProcessing: boolean;
   generatingIds: string[];
+  useAI: boolean;
 
   // Theme
   theme: Theme;
@@ -29,6 +30,7 @@ export interface EditorSlice {
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setImageAgentOpen: (open: boolean, sectionId?: string | null) => void;
+  setUseAI: (v: boolean) => void;
 }
 
 export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
@@ -38,6 +40,7 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
   exportStep: null,
   isProcessing: false,
   generatingIds: [],
+  useAI: true,
   theme: 'dark',
   isImageAgentOpen: false,
   imageAgentSectionId: null,
@@ -65,4 +68,5 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
     isImageAgentOpen: open,
     imageAgentSectionId: open ? sectionId : null,
   }),
+  setUseAI: (v) => set({ useAI: v }),
 });

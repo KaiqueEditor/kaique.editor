@@ -146,8 +146,10 @@ REGRAS:
       await generate(sectionId, currentPrompt, section?.content || '');
       setGenerated(true);
       setMessages(prev => [...prev, { role: 'agent', text: '✅ Imagem gerada! Confira no slide ao lado.' }]);
-    } catch (e) {
-      setMessages(prev => [...prev, { role: 'agent', text: '❌ Erro ao gerar imagem. Tente novamente.' }]);
+    } catch (e: any) {
+      console.error('Image generation error:', e);
+      const msg = e?.message || e?.toString() || 'Erro desconhecido';
+      setMessages(prev => [...prev, { role: 'agent', text: `❌ Erro ao gerar imagem: ${msg}` }]);
     } finally {
       setIsGenerating(false);
     }

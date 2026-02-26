@@ -2,7 +2,7 @@ import React, { useRef, lazy, Suspense, useState } from 'react';
 import {
   Type as TypeIcon, ChevronLeft, ChevronRight,
   Upload, Wand2, Eye, Download, Loader2, Sun, Moon, Palette, FileText, ChevronDown,
-  PanelLeft, X,
+  PanelLeft, X, Sparkles,
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { CarouselSlide } from './components/carousel/CarouselSlide';
@@ -48,6 +48,8 @@ interface SidebarContentProps {
   onDownloadSlide: (idx: number, s: Section) => Promise<void>;
   onImageUpload: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   onVideoUpload: (sectionId: string, file: File) => void;
+  useAI: boolean;
+  setUseAI: (v: boolean) => void;
 }
 
 function SidebarContent({
@@ -56,6 +58,7 @@ function SidebarContent({
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
   setAgentOpen, setImageAgentOpen, isAgentOpen, isImageAgentOpen,
   setActiveSlide, toggleTheme, onDownloadSlide, onImageUpload, onVideoUpload,
+  useAI, setUseAI,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -210,6 +213,19 @@ function SidebarContent({
                 >+</button>
               </div>
               <button
+                onClick={() => setUseAI(!useAI)}
+                title={useAI ? 'IA ativa — clique para desativar' : 'IA desativada — clique para ativar'}
+                className="p-2.5 rounded-xl transition-all active:scale-90 flex-shrink-0"
+                style={{
+                  background: useAI ? T.accent : T.glass,
+                  color: useAI ? T.accentText : T.textFaint,
+                  border: `1px solid ${useAI ? 'transparent' : T.border}`,
+                  boxShadow: useAI ? `0 4px 14px ${T.accentGlow}` : 'none',
+                }}
+              >
+                <Sparkles size={14} />
+              </button>
+              <button
                 onClick={handleProcessText}
                 disabled={isProcessing || !textInput.trim()}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
@@ -363,6 +379,8 @@ export default function App() {
   const updateConfig = useStore(state => state.updateConfig);
   const toggleTheme = useStore(state => state.toggleTheme);
   const setImageAgentOpen = useStore(state => state.setImageAgentOpen);
+  const useAI = useStore(state => state.useAI);
+  const setUseAI = useStore(state => state.setUseAI);
 
   const { processText, isProcessing } = useProcessText();
   const { exportRefs, exportAll, downloadSlide, isExporting, exportStep } = useExport();
@@ -412,6 +430,7 @@ export default function App() {
     setActiveSlide, toggleTheme,
     onImageUpload: handleImageUpload,
     onVideoUpload: handleVideoUploadRequest,
+    useAI, setUseAI,
     onDownloadSlide: async (idx: number, s: Section) => {
       const node = exportRefs.current[idx];
       if (node) await downloadSlide(node, s, `slide-${idx + 1}`);

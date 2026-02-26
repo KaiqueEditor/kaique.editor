@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Trash2, ImageIcon, PanelsTopLeft,
   MessageSquareText, Minus, Plus, UploadCloud, Sparkles,
-  Loader2, EyeOff, Image as LucideImage, Video, Download,
+  Loader2, EyeOff, Image as LucideImage, Video, Download, RefreshCw,
 } from 'lucide-react';
 import { Section } from '../../types';
 import { FONT_OPTIONS } from '../../constants/fonts';
 import { useStore } from '../../store';
 import { useImageGeneration } from '../../hooks/useImageGeneration';
+import { geminiService } from '../../services/api/geminiService';
 import { Theme, ThemeTokens, DARK_FALLBACK } from '../../constants/theme';
 
 interface SlideEditorProps {
@@ -150,6 +151,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [titleVariations, setTitleVariations] = useState<string[]>([]);
+  const [variationIndex, setVariationIndex] = useState(0);
+  const [isLoadingVariations, setIsLoadingVariations] = useState(false);
+  const originalTitleRef = useRef(s.title);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -157,6 +162,34 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     const t = setTimeout(() => setConfirmDelete(false), 3000);
     return () => clearTimeout(t);
   }, [confirmDelete]);
+
+  const handleCycleTitle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isLoadingVariations) return;
+
+    // Se já temos variações, apenas cicla
+    if (titleVariations.length > 0) {
+      const next = (variationIndex + 1) % (titleVariations.length + 1);
+      setVariationIndex(next);
+      // índice igual ao total = volta ao original
+      update({ title: next === titleVariations.length ? originalTitleRef.current : titleVariations[next] });
+      return;
+    }
+
+    // Primeira chamada: gera variações
+    originalTitleRef.current = s.title;
+    setIsLoadingVariations(true);
+    try {
+      const variations = await geminiService.generateTitleVariations(s.title, s.content);
+      setTitleVariations(variations);
+      setVariationIndex(0);
+      if (variations.length > 0) update({ title: variations[0] });
+    } catch {
+      // silently fail
+    } finally {
+      setIsLoadingVariations(false);
+    }
+  };
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -275,7 +308,17 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               <div className="space-y-3">
                 {/* Título */}
                 <div>
-                  <p className="text-[8px] font-bold uppercase mb-1.5" style={{ color: T.textFaint }}>Título</p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[8px] font-bold uppercase" style={{ color: T.textFaint }}>Título</p>
+                    <button
+                      onClick={handleCycleTitle}
+                      title={titleVariations.length > 0 ? `Variação ${variationIndex + 1}/${titleVariations.length} — clique para próxima` : 'Gerar variações de headline'}
+                      className="p-1 rounded-lg transition-all active:scale-90"
+                      style={{ color: isLoadingVariations ? T.accent : T.textFaint, background: 'transparent' }}
+                    >
+                      <RefreshCw size={11} className={isLoadingVariations ? 'animate-spin' : ''} />
+                    </button>
+                  </div>
                   <textarea
                     value={s.title}
                     onChange={e => update({ title: e.target.value })}

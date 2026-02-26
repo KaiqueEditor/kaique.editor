@@ -4,6 +4,7 @@ import { ChatMessage } from '../../types';
 import { renderFormattedText } from '../../utils/formatters';
 import { GoogleGenAI } from "@google/genai";
 import { ThemeTokens, DARK_FALLBACK } from '../../constants/theme';
+import { AGENT_KNOWLEDGE } from '../../knowledge/agentKnowledge';
 
 interface AgentChatProps {
   isOpen: boolean;
@@ -56,7 +57,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ isOpen, onClose, onApplyText, T: 
     if (isOpen && !chatRef.current) {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
       chatRef.current = ai.chats.create({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         config: {
           systemInstruction: `Você é um estrategista especialista em carrosséis virais para redes sociais.
 
@@ -70,7 +71,7 @@ NUNCA use colchetes [ ] ou chaves { } nos valores dos textos. Os textos devem vi
 1. Comece saudando e pergunte: "Qual o tema ou história principal do seu carrossel?"
 2. Após ele responder o tema, pergunte sobre NÚMEROS: "Você tem números específicos (valores R$, anos, porcentagens) ou quer que eu sugira dados impactantes sobre o tema?"
 3. Após ele responder os números, pergunte a QUANTIDADE DE FRAMES: "Quantos frames (cards) você prefere no carrossel? (Recomendo entre 8 e 10 para máxima retenção)."
-4. Após ele responder a quantidade, gere o roteiro final usando fórmulas de headline virais comprovadas.
+4. Após ele responder a quantidade, gere o roteiro final aplicando OBRIGATORIAMENTE as fórmulas e estruturas da BASE DE CONHECIMENTO abaixo.
 
 ## FORMATO DE ENTREGA FINAL:
 Apenas quando tiver todas as respostas, entregue o roteiro exatamente neste formato:
@@ -80,7 +81,10 @@ texto 1 - headline do slide 1
 texto 2 - rótulo/contexto curto do slide 2
 texto 3 - narrativa principal (grande) do slide 2
 ...
-texto X - CTA final`,
+texto X - CTA final
+
+## BASE DE CONHECIMENTO — SIGA SEMPRE:
+${AGENT_KNOWLEDGE}`,
         },
       });
       if (messages.length === 0) {
