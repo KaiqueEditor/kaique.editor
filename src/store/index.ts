@@ -13,7 +13,7 @@ export const useStore = create<StoreState>()(
         ...createEditorSlice(...a),
       }),
       {
-        name: 'kaique-editor-store',
+        name: 'carrosselpro-store',
         partialize: (state) => ({
           // Salva sections SEM imageUrl/videoUrl (base64 enche o localStorage)
           sections: state.sections.map(s => ({
@@ -27,9 +27,13 @@ export const useStore = create<StoreState>()(
             avatarUrl: state.config.avatarUrl?.startsWith('data:') ? '' : state.config.avatarUrl,
           },
           activeSlide: state.activeSlide,
+          presets: state.presets,
+          carouselTemplates: state.carouselTemplates,
+          brandKits: state.brandKits,
+          exportFormat: state.exportFormat,
         }),
       }
     ),
-    { name: 'KaiqueEditor' }
+    { name: 'CarrosselPro' }
   )
 );

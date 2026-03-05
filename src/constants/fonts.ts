@@ -176,7 +176,7 @@ export const FONT_OPTIONS: FontOption[] = [
 
 // ── Agrupado por categoria (para UI) ──────────────────────────────────────
 export const FONT_CATEGORIES = [
-  { key: 'favorita', label: '⭐ Suas Favoritas' },
+  { key: 'favorita', label: '⭐ Populares' },
   { key: 'display',  label: 'Display / Impacto' },
   { key: 'sans',     label: 'Sans-Serif' },
   { key: 'serif',    label: 'Serif' },

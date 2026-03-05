@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================
-# Kaique.Editor - Script de Inicialização
+# CarrosselPro - Script de Inicialização
 # Clique duplo neste arquivo para rodar o app!
 # =============================================
 
@@ -8,7 +8,7 @@
 cd "$(dirname "$0")"
 
 echo ""
-echo "🚀 Kaique.Editor - Iniciando..."
+echo "🚀 CarrosselPro - Iniciando..."
 echo ""
 
 # Tentar encontrar npm em locais comuns

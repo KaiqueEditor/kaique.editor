@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Theme } from '../../constants/theme';
+import { StylePreset, ExportFormatKey } from '../../types/carousel.types';
 
 export interface EditorSlice {
   // UI state
@@ -31,6 +32,15 @@ export interface EditorSlice {
   toggleTheme: () => void;
   setImageAgentOpen: (open: boolean, sectionId?: string | null) => void;
   setUseAI: (v: boolean) => void;
+
+  // Export format
+  exportFormat: ExportFormatKey;
+  setExportFormat: (format: ExportFormatKey) => void;
+
+  // Style Presets
+  presets: StylePreset[];
+  savePreset: (preset: StylePreset) => void;
+  deletePreset: (id: string) => void;
 }
 
 export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
@@ -69,4 +79,11 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
     imageAgentSectionId: open ? sectionId : null,
   }),
   setUseAI: (v) => set({ useAI: v }),
+
+  exportFormat: 'carousel',
+  setExportFormat: (format) => set({ exportFormat: format }),
+
+  presets: [],
+  savePreset: (preset) => set(state => ({ presets: [...state.presets, preset] })),
+  deletePreset: (id) => set(state => ({ presets: state.presets.filter(p => p.id !== id) })),
 });

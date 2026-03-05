@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       open: true,
     },
+    // Evita que o Vite optimize os módulos ffmpeg (usa dynamic imports internamente)
+    optimizeDeps: {
+      exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util', '@ffmpeg/core', '@ffmpeg/core-mt'],
+    },
     plugins: [react()],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),

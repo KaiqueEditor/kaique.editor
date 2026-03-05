@@ -216,13 +216,13 @@ PARTE 3: ESPECIFICIDADE — Listar habilidades/conhecimentos específicos
 Exemplo: "prompt engineering, automação, integração, governança"
 
 PARTE 4: SOLUÇÃO — Apresentar como solução para o gap
-Exemplo: "MyHub.ia: 11 IAs + 40 cursos especializados pra você não só usar, mas dominar"
+Exemplo: "[Nome do produto/curso/serviço] para você não só usar, mas dominar"
 
 PARTE 5: INCENTIVO (quando aplicável)
-Exemplo: "15% OFF com KAIQUE15"
+Exemplo: "[X]% OFF com [SEUCUPOM]"
 
 PARTE 6: AÇÃO — SEMPRE finalizar com direcionamento claro
-Exemplo: "Link na bio" ou "Siga @primorico para mais conteúdos como esse"
+Exemplo: "Link na bio" ou "Siga @[seuperfil] para mais conteúdos como esse"
 
 
 ═══════════════════════════════════════════════════════════════════════════════
@@ -316,7 +316,7 @@ texto 9
 A Alfa disse "não" a Ferrari. A Ferrari menosprezou Lamborghini. A Lamborghini rejeitou Pagani. E a Pagani ignorou Hennessey. Cada recusa virou combustível. Cada rejeição, um motor ligado.
 
 texto 10
-Essas histórias provam que o "não" certo pode acelerar mais do que qualquer aprovação. Siga @primorico para mais conteúdos como esse
+Essas histórias provam que o "não" certo pode acelerar mais do que qualquer aprovação. Siga @[seuperfil] para mais conteúdos como esse
 
 
 EXEMPLO 2: NÚMERO CHOCANTE (8 slides)
@@ -343,7 +343,7 @@ texto 7
 ChatGPT tem 800 milhões de usuários ativos semanais. Mas apenas 15-25 milhões pagam US$ 20/mês. Taxa de conversão de 5% mostra o gap: todo mundo usa, quase ninguém domina de verdade.
 
 texto 8
-O problema não é acesso — é saber usar. ChatGPT, Claude, Gemini — as ferramentas estão aí. O que separa quem cresce de quem fica parado é domínio estratégico: prompt engineering, automação, integração. MyHub.ia: 11 IAs + 40 cursos especializados. 15% OFF com KAIQUE15. Link na bio.
+O problema não é acesso — é saber usar. ChatGPT, Claude, Gemini — as ferramentas estão aí. O que separa quem cresce de quem fica parado é domínio estratégico: prompt engineering, automação, integração. [Apresente seu produto/curso/serviço aqui]. Link na bio.
 
 
 EXEMPLO 3: CONTRARIAN (7 slides)
@@ -367,5 +367,5 @@ texto 6
 1) Ela praticamente ignora o e-commerce (apenas 0,5% das vendas vêm da internet). 2) Ela evita as capitais e domina o interior (cidades menores, custos menores, margens maiores). 3) Não tem acionistas públicos (nada de Bolsa, todo lucro reinvestido).
 
 texto 7
-Às vezes, pra ganhar, você precisa fazer exatamente o oposto do que todo mundo está fazendo. Siga @primorico para mais conteúdos como esse.
+Às vezes, pra ganhar, você precisa fazer exatamente o oposto do que todo mundo está fazendo. Siga @[seuperfil] para mais conteúdos como esse.
 `;

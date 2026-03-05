@@ -7,6 +7,7 @@ interface SlideFooterProps {
   isExport: boolean;
   signature: string;
   isSocial?: boolean;
+  formatHeight?: number;
 }
 
 export const SlideFooter: React.FC<SlideFooterProps> = ({
@@ -15,6 +16,7 @@ export const SlideFooter: React.FC<SlideFooterProps> = ({
   isExport,
   signature,
   isSocial = false,
+  formatHeight = 1440,
 }) => {
   const isFirst = index === 0;
   const isLast = index === total - 1;
@@ -22,11 +24,12 @@ export const SlideFooter: React.FC<SlideFooterProps> = ({
   const ctaColor = isSocial ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)';
   const watermarkColor = isSocial ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)';
 
-  const paddingBottom = isExport ? 64 : 26;
-  const ctaFontSize = isExport ? '20px' : '8px';
-  const watermarkFontSize = isExport ? '14px' : '6px';
-  const chevronSize = isExport ? 16 : 7;
-  const gap = isExport ? 6 : 2;
+  const hScale = formatHeight / 1440;
+  const paddingBottom = isExport ? Math.round(64 * hScale) : 26;
+  const ctaFontSize = isExport ? `${Math.round(20 * hScale)}px` : '8px';
+  const watermarkFontSize = isExport ? `${Math.round(14 * hScale)}px` : '6px';
+  const chevronSize = isExport ? Math.round(16 * hScale) : 7;
+  const gap = isExport ? Math.round(6 * hScale) : 2;
 
   const ctaText = isLast ? 'SALVE PARA DEPOIS' : 'ARRASTA PRO LADO';
 

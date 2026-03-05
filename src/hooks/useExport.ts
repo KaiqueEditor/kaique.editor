@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { Section } from '../types';
+import { Section, EXPORT_FORMATS } from '../types';
 import { useStore } from '../store';
 import ffmpegCoreURL from '@ffmpeg/core?url';
 import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
@@ -11,9 +11,24 @@ type ExportDeps = {
   saveAs: (data: Blob | string, filename?: string, options?: any) => void;
 };
 
+type CompositeOpts = {
+  videoUrl: string;
+  videoMimeType?: string;
+  overlayData: Uint8Array;
+  drawW: number;
+  drawH: number;
+  cropX: number;
+  cropY: number;
+  videoH: number;
+  isStorytelling: boolean;
+  bgColor: string;
+  trimStart: number;
+  duration: number;
+};
+
 let exportDepsPromise: Promise<ExportDeps> | null = null;
 let ffmpegBridgePromise: Promise<{
-  toMp4: (input: Blob) => Promise<Blob>;
+  compositeToMp4: (opts: CompositeOpts) => Promise<Blob>;
 }> | null = null;
 
 const loadExportDeps = async (): Promise<ExportDeps> => {
@@ -49,61 +64,83 @@ const loadFfmpegBridge = async () => {
         'carregando ffmpeg'
       );
 
-      const toMp4 = async (input: Blob): Promise<Blob> => {
+      const compositeToMp4 = async (opts: CompositeOpts): Promise<Blob> => {
+        const {
+          videoUrl, videoMimeType, overlayData,
+          drawW, drawH, cropX, cropY,
+          videoH, isStorytelling, bgColor,
+          trimStart, duration,
+        } = opts;
+
         const stamp = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        const inName = `in-${stamp}.webm`;
+        const ext = (videoMimeType || '').includes('webm') ? 'webm' : 'mp4';
+        const inName = `in-${stamp}.${ext}`;
+        const overlayName = `ov-${stamp}.png`;
         const outName = `out-${stamp}.mp4`;
 
-        await ffmpeg.writeFile(inName, await fetchFile(input));
+        await ffmpeg.writeFile(inName, await fetchFile(videoUrl));
+        await ffmpeg.writeFile(overlayName, overlayData);
+
+        // Usa trim filter para seeking preciso (evita pular frames por keyframe)
+        // scale com lanczos para melhor qualidade
+        // H.264 exige dimensões pares — drawW/drawH já vêm arredondados para par
+        const trimFilter = trimStart > 0
+          ? `trim=start=${trimStart}:duration=${duration},setpts=PTS-STARTPTS,`
+          : '';
+
+        let filter: string;
+        if (isStorytelling) {
+          const padColor = bgColor.replace('#', '0x');
+          filter = [
+            `[0:v]${trimFilter}scale=${drawW}:${drawH}:flags=lanczos[s]`,
+            `[s]crop=1080:${videoH}:${cropX}:${cropY}[c]`,
+            `[c]pad=1080:1440:0:0:${padColor}[p]`,
+            `[p][1:v]overlay=0:0:shortest=1[out]`,
+          ].join(';');
+        } else {
+          filter = [
+            `[0:v]${trimFilter}scale=${drawW}:${drawH}:flags=lanczos[s]`,
+            `[s]crop=1080:1440:${cropX}:${cropY}[c]`,
+            `[c][1:v]overlay=0:0:shortest=1[out]`,
+          ].join(';');
+        }
+
         await ffmpeg.exec([
           '-i', inName,
+          '-loop', '1',        // overlay PNG repete por toda a duração
+          '-i', overlayName,
+          '-filter_complex', filter,
+          '-map', '[out]',
+          '-map', '0:a?',      // copia áudio original se existir (? = opcional)
+          ...(trimStart === 0 ? ['-t', String(duration)] : []),
+          '-r', '30',          // força 30fps constante (elimina VFR)
           '-c:v', 'libx264',
+          '-crf', '18',        // Alta qualidade (menor = melhor, 18 ≈ visually lossless)
+          '-preset', 'ultrafast', // Máximo desempenho no browser
           '-pix_fmt', 'yuv420p',
+          '-c:a', 'aac',       // codec de áudio compatível
+          '-b:a', '128k',      // bitrate de áudio
           '-movflags', '+faststart',
-          '-an',
           outName,
         ]);
 
         const output = await ffmpeg.readFile(outName);
-        await ffmpeg.deleteFile(inName);
-        await ffmpeg.deleteFile(outName);
+        await ffmpeg.deleteFile(inName).catch(() => { });
+        await ffmpeg.deleteFile(overlayName).catch(() => { });
+        await ffmpeg.deleteFile(outName).catch(() => { });
 
-        return new Blob([output], { type: 'video/mp4' });
+        return new Blob([output as Uint8Array], { type: 'video/mp4' });
       };
 
-      return { toMp4 };
-    })();
+      return { compositeToMp4 };
+    })().catch(e => {
+      ffmpegBridgePromise = null; // reseta para permitir retry
+      throw e;
+    });
   }
 
   return ffmpegBridgePromise;
 };
-
-const waitForEvent = (el: EventTarget, event: string, timeoutMs: number) =>
-  new Promise<void>((resolve, reject) => {
-    const timeout = window.setTimeout(() => {
-      cleanup();
-      reject(new Error(`Timeout aguardando evento ${event}`));
-    }, timeoutMs);
-
-    const done = () => {
-      cleanup();
-      resolve();
-    };
-
-    const fail = () => {
-      cleanup();
-      reject(new Error(`Erro aguardando evento ${event}`));
-    };
-
-    const cleanup = () => {
-      window.clearTimeout(timeout);
-      el.removeEventListener(event, done as EventListener);
-      el.removeEventListener('error', fail as EventListener);
-    };
-
-    el.addEventListener(event, done as EventListener, { once: true });
-    el.addEventListener('error', fail as EventListener, { once: true });
-  });
 
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> => {
   return await Promise.race([
@@ -114,10 +151,25 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: str
   ]);
 };
 
-const seekVideo = async (video: HTMLVideoElement, time: number) => {
-  video.currentTime = Math.max(0, time);
-  await waitForEvent(video, 'seeked', 4000);
-};
+/**
+ * Carrega metadados do vídeo sem criar canvas nem reproduzir.
+ * Retorna largura, altura e duração.
+ */
+const getVideoInfo = (url: string): Promise<{ vW: number; vH: number; dur: number }> =>
+  new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.001;pointer-events:none;z-index:1;';
+    document.body.appendChild(video);
+    const cleanup = () => video.remove();
+    video.onloadedmetadata = () => {
+      const result = { vW: video.videoWidth, vH: video.videoHeight, dur: video.duration || 0 };
+      cleanup();
+      resolve(result);
+    };
+    video.onerror = () => { cleanup(); reject(new Error('Falha ao carregar metadados do vídeo.')); };
+    video.src = url;
+  });
 
 export const useExport = () => {
   const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -125,6 +177,10 @@ export const useExport = () => {
   const setExportStep = useStore(state => state.setExportStep);
   const isExporting = useStore(state => state.isExporting);
   const exportStep = useStore(state => state.exportStep);
+  const exportFormatKey = useStore(state => state.exportFormat);
+  const fmt = EXPORT_FORMATS.find(f => f.key === exportFormatKey) || EXPORT_FORMATS[0];
+  const EW = fmt.width;
+  const EH = fmt.height;
 
   useEffect(() => {
     // Pré-carrega o motor de export em background para reduzir timeout no primeiro download.
@@ -144,8 +200,8 @@ export const useExport = () => {
           dataUrl = await htmlToImage.toPng(node, {
             pixelRatio,
             cacheBust: true,
-            width: 1080,
-            height: 1440,
+            width: EW,
+            height: EH,
           });
           if (dataUrl && dataUrl.length > 200) break;
         } catch {
@@ -163,22 +219,54 @@ export const useExport = () => {
 
   const captureOverlay = useCallback(async (node: HTMLDivElement): Promise<HTMLImageElement> => {
     const { htmlToImage } = await loadExportDeps();
-    const existingVideo = node.querySelector('video') as HTMLVideoElement | null;
+    const hasVideo = !!node.querySelector('video');
     const parent = node.parentElement;
 
     if (parent) parent.style.opacity = '1';
-    if (existingVideo) existingVideo.style.opacity = '0';
 
-    const overlayDataUrl = await htmlToImage.toPng(node, {
-      pixelRatio: 1,
-      width: 1080,
-      height: 1440,
-      cacheBust: true,
-      backgroundColor: 'transparent',
-    });
+    // Para slides com vídeo: torna o fundo do container transparente e exclui o
+    // elemento <video> da captura (filter). Assim o frame congelado do vídeo não
+    // aparece na overlay — os frames reais vêm do canvas abaixo.
+    const originalBg = node.style.backgroundColor;
+    let textAreaEl: HTMLElement | null = null;
 
-    if (existingVideo) existingVideo.style.opacity = '1';
-    if (parent) parent.style.opacity = '0.0001';
+    if (hasVideo) {
+      node.style.backgroundColor = 'transparent';
+      const bgContainer = node.firstElementChild as HTMLElement | null;
+      const isFullBg = bgContainer?.classList.contains('h-full') ?? false;
+      if (!isFullBg) {
+        textAreaEl = node.lastElementChild as HTMLElement | null;
+        if (textAreaEl) textAreaEl.style.backgroundColor = originalBg;
+      }
+    }
+
+    const restore = () => {
+      node.style.backgroundColor = originalBg;
+      if (textAreaEl) textAreaEl!.style.backgroundColor = '';
+      if (parent) parent.style.opacity = '0.0001';
+    };
+
+    let overlayDataUrl: string;
+    try {
+      overlayDataUrl = await htmlToImage.toPng(node, {
+        pixelRatio: 1,
+        width: EW,
+        height: EH,
+        cacheBust: true,
+        backgroundColor: 'transparent',
+        // Para slides com vídeo: exclui <video> e <img> da overlay.
+        filter: (el: Element) => {
+          if (el instanceof HTMLVideoElement) return false;
+          if (hasVideo && el instanceof HTMLImageElement) return false;
+          return true;
+        },
+      });
+    } catch (e) {
+      restore();
+      throw e;
+    }
+
+    restore();
 
     const img = new Image();
     img.src = overlayDataUrl;
@@ -190,142 +278,62 @@ export const useExport = () => {
     return img;
   }, []);
 
-  const composeVideoAsWebM = useCallback(async (node: HTMLDivElement, section: Section): Promise<Blob> => {
-    const videoUrl = section.videoUrl;
-    if (!videoUrl) throw new Error('Slide sem vídeo.');
-
+  /**
+   * Compõe o vídeo final em MP4 usando FFmpeg diretamente.
+   * Elimina a etapa de gravação canvas/MediaRecorder (era ~10s a mais).
+   * Pipeline: overlay PNG + vídeo original → filter_complex → H.264 MP4.
+   */
+  const composeVideoAsMp4 = useCallback(async (node: HTMLDivElement, section: Section): Promise<Blob> => {
+    const videoUrl = section.videoUrl!;
     const trimStart = Math.max(0, section.videoTrimStart ?? 0);
-    const clipDuration = 15;
+    const posX = section.imagePosX ?? 50;
+    const posY = section.imagePosY ?? 50;
+    const userScale = section.imageScale ?? 1;
+    const isStorytelling = section.layoutType === 'storytelling';
+    const videoH = isStorytelling ? Math.round(1440 * 0.55) : 1440;
+    const bgColor = section.bgColor || '#000000';
 
-    const overlay = await captureOverlay(node);
+    // Paraleliza: carrega metadados do vídeo e captura overlay ao mesmo tempo
+    const [{ vW, vH, dur }, overlay] = await Promise.all([
+      withTimeout(getVideoInfo(videoUrl), 10000, 'carregando metadados do vídeo'),
+      captureOverlay(node),
+    ]);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 1080;
-    canvas.height = 1440;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas indisponível para exportação.');
-
-    const video = document.createElement('video');
-    video.src = videoUrl;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.crossOrigin = 'anonymous';
-    video.style.position = 'fixed';
-    video.style.top = '0';
-    video.style.left = '0';
-    video.style.width = '2px';
-    video.style.height = '2px';
-    video.style.opacity = '0.0001';
-    video.style.pointerEvents = 'none';
-    video.style.zIndex = '1';
-    document.body.appendChild(video);
-
-    try {
-      await waitForEvent(video, 'loadedmetadata', 8000);
-
-      const start = Math.min(trimStart, Math.max(0, (video.duration || trimStart + clipDuration) - 0.05));
-      const end = Math.min(start + clipDuration, video.duration || start + clipDuration);
-      const fps = 30;
-
-      const stream = canvas.captureStream(fps);
-      const mimeType = [
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=vp8',
-        'video/webm',
-      ].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) || 'video/webm';
-
-      if (typeof MediaRecorder === 'undefined') {
-        throw new Error('MediaRecorder não suportado neste navegador.');
-      }
-
-      const recorder = new MediaRecorder(stream, { mimeType });
-      const chunks: BlobPart[] = [];
-      recorder.ondataavailable = (ev) => {
-        if (ev.data && ev.data.size > 0) chunks.push(ev.data);
-      };
-
-      const stopPromise = new Promise<void>((resolve, reject) => {
-        recorder.onstop = () => resolve();
-        recorder.onerror = () => reject(new Error('Falha ao gravar vídeo do canvas.'));
-      });
-
-      recorder.start(250);
-      await seekVideo(video, start);
-      await video.play();
-
-      await new Promise<void>((resolve, reject) => {
-        let done = false;
-        let lastT = -1;
-        let stagnantFrames = 0;
-        const hardTimeout = window.setTimeout(() => {
-          done = true;
-          reject(new Error('Timeout renderizando frames do vídeo.'));
-        }, 30000);
-
-        const finish = () => {
-          window.clearTimeout(hardTimeout);
-          done = true;
-          resolve();
-        };
-
-        const step = () => {
-          if (done) return;
-          const t = video.currentTime;
-
-          ctx.clearRect(0, 0, 1080, 1440);
-          ctx.drawImage(video, 0, 0, 1080, 1440);
-          ctx.drawImage(overlay, 0, 0, 1080, 1440);
-
-          if (Math.abs(t - lastT) < 0.0005) stagnantFrames += 1;
-          else stagnantFrames = 0;
-          lastT = t;
-
-          if (stagnantFrames > 240) {
-            finish();
-            return;
-          }
-
-          if (t >= end || video.ended) {
-            finish();
-            return;
-          }
-
-          if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
-            (video as any).requestVideoFrameCallback(() => step());
-          } else {
-            requestAnimationFrame(step);
-          }
-        };
-
-        if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
-          (video as any).requestVideoFrameCallback(() => step());
-        } else {
-          requestAnimationFrame(step);
-        }
-      });
-
-      video.pause();
-      recorder.stop();
-      await withTimeout(stopPromise, 6000, 'finalizando gravação webm');
-
-      const blob = new Blob(chunks, { type: mimeType });
-      if (blob.size < 4096) {
-        throw new Error('Gravação de vídeo ficou vazia.');
-      }
-      return blob;
-    } finally {
-      video.pause();
-      video.remove();
+    if (!vW || !vH) {
+      throw new Error(
+        'Codec do vídeo não suportado para exportação. ' +
+        'Use H.264 (MP4 padrão). Vídeos HEVC/H.265 precisam ser convertidos antes de subir.'
+      );
     }
-  }, [captureOverlay]);
 
-  const composeVideoAsMp4 = useCallback(async (node: HTMLDivElement, section: Section) => {
-    const webm = await composeVideoAsWebM(node, section);
-    const ffmpeg = await withTimeout(loadFfmpegBridge(), 120000, 'inicializando ffmpeg');
-    const mp4 = await withTimeout(ffmpeg.toMp4(webm), 120000, 'convertendo para mp4');
-    return mp4;
-  }, [composeVideoAsWebM]);
+    // Calcula box de recorte object-cover (idêntico ao comportamento CSS)
+    // drawW/drawH arredondados para número par (H.264 exige dimensões pares)
+    const coverScale = Math.max(1080 / vW, videoH / vH) * userScale;
+    const drawW = Math.round(Math.round(vW * coverScale) / 2) * 2;
+    const drawH = Math.round(Math.round(vH * coverScale) / 2) * 2;
+    const cropX = Math.round(Math.max(0, drawW - 1080) * posX / 100);
+    const cropY = Math.round(Math.max(0, drawH - videoH) * posY / 100);
+
+    const duration = Math.min(15, Math.max(0.5, Math.min(trimStart + 15, dur || 15) - trimStart));
+
+    // Converte overlay HTMLImageElement → Uint8Array para o ffmpeg
+    const overlayResp = await fetch(overlay.src);
+    const overlayData = new Uint8Array(await overlayResp.arrayBuffer());
+
+    const ffmpegBridge = await withTimeout(loadFfmpegBridge(), 120000, 'inicializando ffmpeg');
+    return withTimeout(
+      ffmpegBridge.compositeToMp4({
+        videoUrl,
+        videoMimeType: section.videoMimeType,
+        overlayData,
+        drawW, drawH, cropX, cropY,
+        videoH, isStorytelling, bgColor,
+        trimStart, duration,
+      }),
+      180000,
+      'compondo vídeo'
+    );
+  }, [captureOverlay]);
 
   const downloadSlide = useCallback(async (node: HTMLDivElement, section: Section, label: string) => {
     const { saveAs } = await loadExportDeps();
@@ -378,7 +386,7 @@ export const useExport = () => {
 
       setExportStep('finalizando zip');
       const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, `kaique-editor-${Date.now()}.zip`);
+      saveAs(content, `carrossel-pro-${Date.now()}.zip`);
     } catch (e) {
       console.error('Erro na exportação:', e);
       toast.error('Erro ao exportar arquivo ZIP.');

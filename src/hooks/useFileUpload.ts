@@ -48,113 +48,14 @@ export const useFileUpload = () => {
     removeGeneratingId(id);
 
     const clipStart = Math.max(0, trimStart);
-    const clipEnd = clipStart + 15;
+    const videoObjectUrl = URL.createObjectURL(file);
 
-    const srcUrl = URL.createObjectURL(file);
-    const video = document.createElement('video');
-    video.src = srcUrl;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.style.position = 'fixed';
-    video.style.width = '2px';
-    video.style.height = '2px';
-    video.style.opacity = '0.0001';
-    video.style.pointerEvents = 'none';
-    video.style.zIndex = '1';
-    document.body.appendChild(video);
-
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const onLoaded = () => { cleanup(); resolve(); };
-        const onError = () => { cleanup(); reject(new Error('Falha ao carregar vídeo.')); };
-        const cleanup = () => {
-          video.removeEventListener('loadedmetadata', onLoaded);
-          video.removeEventListener('error', onError);
-        };
-        video.addEventListener('loadedmetadata', onLoaded, { once: true });
-        video.addEventListener('error', onError, { once: true });
-      });
-
-      if (!(video as any).captureStream || typeof MediaRecorder === 'undefined') {
-        const videoObjectUrl = URL.createObjectURL(file);
-        updateSection(id, {
-          videoUrl: videoObjectUrl,
-          videoMimeType: file.type || 'video/mp4',
-          imageUrl: undefined,
-          videoTrimStart: clipStart,
-        });
-        return;
-      }
-
-      const stream = (video as any).captureStream() as MediaStream;
-      const candidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
-      const mimeType = candidates.find(t => MediaRecorder.isTypeSupported(t)) || '';
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      const chunks: BlobPart[] = [];
-      recorder.ondataavailable = (ev) => {
-        if (ev.data && ev.data.size > 0) chunks.push(ev.data);
-      };
-
-      await new Promise<void>((resolve, reject) => {
-        const onSeeked = () => { cleanup(); resolve(); };
-        const onError = () => { cleanup(); reject(new Error('Falha ao buscar ponto de corte.')); };
-        const cleanup = () => {
-          video.removeEventListener('seeked', onSeeked);
-          video.removeEventListener('error', onError);
-        };
-        video.addEventListener('seeked', onSeeked, { once: true });
-        video.addEventListener('error', onError, { once: true });
-        video.currentTime = Math.min(clipStart, Math.max(0, (video.duration || 0) - 0.05));
-      });
-
-      const stopPromise = new Promise<void>((resolve) => {
-        recorder.onstop = () => resolve();
-      });
-
-      recorder.start(250);
-      await video.play();
-
-      await new Promise<void>((resolve) => {
-        const check = () => {
-          if (video.currentTime >= clipEnd || video.ended) {
-            resolve();
-            return;
-          }
-          requestAnimationFrame(check);
-        };
-        check();
-      });
-
-      recorder.stop();
-      video.pause();
-      await stopPromise;
-
-      const clippedBlob = new Blob(chunks, { type: mimeType || 'video/webm' });
-      if (clippedBlob.size < 2048) {
-        throw new Error('Clip ficou vazio.');
-      }
-      const videoObjectUrl = URL.createObjectURL(clippedBlob);
-      updateSection(id, {
-        videoUrl: videoObjectUrl,
-        videoMimeType: clippedBlob.type || 'video/webm',
-        imageUrl: undefined,
-        videoTrimStart: 0,
-      });
-    } catch (error) {
-      console.warn('Falha ao recortar no upload, usando arquivo original:', error);
-      const videoObjectUrl = URL.createObjectURL(file);
-      updateSection(id, {
-        videoUrl: videoObjectUrl,
-        videoMimeType: file.type || 'video/mp4',
-        imageUrl: undefined,
-        videoTrimStart: clipStart,
-      });
-    } finally {
-      video.pause();
-      video.remove();
-      URL.revokeObjectURL(srcUrl);
-    }
+    updateSection(id, {
+      videoUrl: videoObjectUrl,
+      videoMimeType: file.type || 'video/mp4',
+      imageUrl: undefined,
+      videoTrimStart: clipStart,
+    });
   }, [updateSection, removeGeneratingId]);
 
   const handleAvatarUpload = useCallback((

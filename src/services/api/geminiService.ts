@@ -164,6 +164,36 @@ REGRAS:
       throw new Error('No image generated');
     });
   }
+  async generateCaption(slides: { title: string; content: string }[]): Promise<string> {
+    const context = slides.map((s, i) => `Slide ${i + 1}: ${s.title} - ${s.content}`).join('\n');
+
+    return this.retryWithBackoff(async () => {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: {
+          parts: [{
+            text: `Você é um especialista em copywriting para Instagram.
+
+Baseado no conteúdo deste carrossel, gere UMA legenda perfeita para o post:
+
+${context}
+
+REGRAS:
+1. Comece com um gancho forte (primeira linha que prende a atenção)
+2. Use emojis estrategicamente (não exagere)
+3. Inclua um CTA claro (ex: "Salva esse post", "Comenta SIM")
+4. Adicione 5-8 hashtags relevantes no final
+5. Tom: profissional mas acessível, como se fosse um amigo expert
+6. Máximo 300 palavras
+7. Use quebras de linha para facilitar a leitura
+
+Retorne APENAS a legenda, sem explicações adicionais.`
+          }]
+        },
+      });
+      return response.text?.trim() || 'Erro ao gerar legenda';
+    });
+  }
 }
 
 export const geminiService = new GeminiServiceClass();

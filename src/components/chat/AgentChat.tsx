@@ -75,7 +75,7 @@ NUNCA use colchetes [ ] ou chaves { } nos valores dos textos. Os textos devem vi
 
 ## FORMATO DE ENTREGA FINAL:
 Apenas quando tiver todas as respostas, entregue o roteiro exatamente neste formato:
-💾 ROTEIRO PRONTO — @Kaique.Editor
+💾 ROTEIRO PRONTO
 
 texto 1 - headline do slide 1
 texto 2 - rótulo/contexto curto do slide 2

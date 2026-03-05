@@ -15,6 +15,8 @@ interface CarouselSlideProps {
   isGenerating?: boolean;
   innerRef?: React.Ref<HTMLDivElement>;
   onAvatarClick?: () => void;
+  formatWidth?: number;
+  formatHeight?: number;
 }
 
 export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
@@ -26,16 +28,18 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
   isGenerating = false,
   innerRef,
   onAvatarClick,
+  formatWidth = 1080,
+  formatHeight = 1440,
 }) => {
   const layout = section.layoutType || 'storytelling';
   const isSocial = layout === 'social-post';
   const isFullBg = layout === 'background';
 
   const containerStyle: React.CSSProperties = isExport
-    ? { width: '1080px', height: '1440px' }
-    : { width: '100%', aspectRatio: '1080/1440' };
+    ? { width: `${formatWidth}px`, height: `${formatHeight}px` }
+    : { width: '100%', aspectRatio: `${formatWidth}/${formatHeight}` };
 
-  const scaleFactor = isExport ? 2.16 : 1;
+  const scaleFactor = isExport ? (formatHeight / 1440) * 2.16 : 1;
   // Mantém proporção idêntica entre preview e export (1080x1440),
   // evitando quebra de linha diferente por largura útil do texto.
   const basePaddingX = 40;
@@ -61,14 +65,17 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
   const contentPaddingBottom = (isExport ? manualTextOffset * 2.16 : manualTextOffset);
 
   if (isSocial) {
-    const avatar = section.avatarUrl || config.avatarUrl || "https://avatar.vercel.sh/kaique";
+    const avatar = section.avatarUrl || config.avatarUrl || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23334155'/><circle cx='20' cy='15' r='7' fill='%2394a3b8'/><ellipse cx='20' cy='33' rx='11' ry='8' fill='%2394a3b8'/></svg>`;
+    const showImage = section.showSocialImage !== false;
+    const hasImage = !!(section.imageUrl || section.videoUrl);
     return (
       <div
         ref={innerRef}
-        className={`flex flex-col relative overflow-hidden ${isExport ? '' : 'aspect-[1080/1440]'}`}
+        className={`flex flex-col relative overflow-hidden ${isExport ? '' : ''}`}
         style={{ ...containerStyle, backgroundColor: finalBrandingBgColor }}
       >
-        <div className="flex items-center gap-4 px-10 pt-16 mb-8" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px` }}>
+        {/* Header com avatar — espaço fixo */}
+        <div className="flex items-center gap-4 flex-shrink-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingTop: `${16 * scaleFactor}px`, paddingBottom: `${8 * scaleFactor}px` }}>
           <div
             onClick={!isExport ? onAvatarClick : undefined}
             className={`rounded-full overflow-hidden flex-shrink-0 ${!isExport ? 'cursor-pointer transition-all' : ''}`}
@@ -85,20 +92,31 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col px-10 gap-6" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingBottom: `${contentPaddingBottom}px`, justifyContent: 'flex-end' }}>
-          <div className="flex flex-col gap-6">
-            <h2
-              className="font-bold leading-[1.2]"
-              style={{
-                fontSize: finalTitleSize,
-                color: finalTitleColor,
-                fontFamily: getFontFamily(section.titleFont || 'anton'),
-                textAlign: textAlign as any
-              }}
-            >
-              {renderFormattedText(section.title)}
-            </h2>
+        {/* Conteúdo de texto — cresce mas nunca empurra a imagem pra fora */}
+        <div
+          className="flex flex-col gap-3 overflow-hidden"
+          style={{
+            paddingLeft: `${paddingX}px`,
+            paddingRight: `${paddingX}px`,
+            paddingBottom: `${8 * scaleFactor}px`,
+            flex: showImage && hasImage ? '0 1 auto' : '1 1 auto',
+            maxHeight: showImage && hasImage ? '50%' : undefined,
+          }}
+        >
+          <h2
+            className="font-bold leading-[1.2]"
+            style={{
+              fontSize: finalTitleSize,
+              color: finalTitleColor,
+              fontFamily: getFontFamily(section.titleFont || 'anton'),
+              textAlign: textAlign as any,
+              overflow: 'hidden',
+            }}
+          >
+            {renderFormattedText(section.title)}
+          </h2>
 
+          {section.content && (
             <p
               className="leading-relaxed"
               style={{
@@ -106,51 +124,58 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                 color: finalBodyColor,
                 fontFamily: getFontFamily(section.bodyFont || 'sans'),
                 textAlign: textAlign as any,
-                opacity: 1
+                overflow: 'hidden',
               }}
             >
               {renderFormattedText(section.content)}
             </p>
-
-            {(section.showSocialImage !== false) && (
-              <div className="relative w-full rounded-[1rem] overflow-hidden mt-4" style={{ aspectRatio: '1.77/1', background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)` }}>
-                {isGenerating ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
-                    <Loader2 className="animate-spin" size={32 * scaleFactor} />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">IA Criando...</span>
-                  </div>
-                ) : section.videoUrl ? (
-                  <video
-                    key={`${section.videoUrl}-${clipStart}`}
-                    src={section.videoUrl}
-                    autoPlay
-                    muted
-                    playsInline
-                    preload="auto"
-                    className="w-full h-full object-cover"
-                    style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }}
-                    onLoadedData={e => {
-                      e.currentTarget.currentTime = clipStart;
-                      void e.currentTarget.play().catch(() => {});
-                    }}
-                    onTimeUpdate={e => {
-                      if (e.currentTarget.currentTime >= clipEnd) {
-                        e.currentTarget.currentTime = clipStart;
-                      }
-                    }}
-                  />
-                ) : section.imageUrl ? (
-                  <img src={section.imageUrl} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/20">
-                    <ImageIcon size={48 * scaleFactor} />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
         </div>
-        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} />
+
+        {/* Imagem — flex-1 garante que sempre ocupa o espaço restante */}
+        {showImage && (
+          <div className="flex-1 min-h-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingBottom: `${contentPaddingBottom}px` }}>
+            <div className="relative w-full h-full rounded-[1rem] overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)`, minHeight: `${80 * scaleFactor}px` }}>
+              {isGenerating ? (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
+                  <Loader2 className="animate-spin" size={32 * scaleFactor} />
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">IA Criando...</span>
+                </div>
+              ) : section.videoUrl ? (
+                <video
+                  key={`${section.videoUrl}-${clipStart}`}
+                  src={section.videoUrl}
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }}
+                  onLoadedData={e => {
+                    e.currentTarget.currentTime = clipStart;
+                    void e.currentTarget.play().catch(() => { });
+                  }}
+                  onTimeUpdate={e => {
+                    if (e.currentTarget.currentTime >= clipEnd) {
+                      e.currentTarget.currentTime = clipStart;
+                    }
+                  }}
+                />
+              ) : section.imageUrl ? (
+                <img src={section.imageUrl} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/20">
+                  <ImageIcon size={48 * scaleFactor} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Se não tem imagem, o texto preenche e usamos o padding bottom */}
+        {!showImage && <div style={{ flex: '1' }} />}
+
+        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} formatHeight={formatHeight} />
       </div>
     );
   }
@@ -158,7 +183,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
   return (
     <div
       ref={innerRef}
-      className={`flex flex-col justify-between text-white relative overflow-hidden ${isExport ? '' : 'aspect-[1080/1440]'}`}
+      className={`flex flex-col justify-between text-white relative overflow-hidden ${isExport ? '' : ''}`}
       style={{ ...containerStyle, backgroundColor: section.bgColor || '#000000' }}
     >
       <div
@@ -181,7 +206,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }}
             onLoadedData={e => {
               e.currentTarget.currentTime = clipStart;
-              void e.currentTarget.play().catch(() => {});
+              void e.currentTarget.play().catch(() => { });
             }}
             onTimeUpdate={e => {
               if (e.currentTarget.currentTime >= clipEnd) {
@@ -195,7 +220,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           <div className="w-full h-full opacity-10" style={{ background: `linear-gradient(135deg, #ffffff, rgba(255,255,255,0.3))` }}></div>
         )}
         <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 12%, rgba(0,0,0,0.1) 22%, transparent 30%)' }}></div>
       </div>
 
       <div className="relative z-10 pt-12 flex flex-col items-center w-full">
@@ -245,7 +270,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           )}
         </div>
       </div>
-      <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} />
+      <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} formatHeight={formatHeight} />
     </div>
   );
 });

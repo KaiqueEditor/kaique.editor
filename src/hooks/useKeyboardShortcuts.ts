@@ -1,11 +1,15 @@
 import { useEffect } from 'react';
 import { useStore } from '../store';
 
-export const useKeyboardShortcuts = () => {
+interface ShortcutOptions {
+  onUndo?: () => void;
+  onRedo?: () => void;
+}
+
+export const useKeyboardShortcuts = (opts?: ShortcutOptions) => {
   const activeSlide = useStore(state => state.activeSlide);
   const setActiveSlide = useStore(state => state.setActiveSlide);
   const sections = useStore(state => state.sections);
-  const setAgentOpen = useStore(state => state.setAgentOpen);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -14,6 +18,20 @@ export const useKeyboardShortcuts = () => {
       // Skip if user is typing in an input/textarea
       const target = e.target as HTMLElement;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
+      // Undo: Ctrl+Z / Cmd+Z
+      if (isMeta && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        opts?.onUndo?.();
+        return;
+      }
+
+      // Redo: Ctrl+Shift+Z / Cmd+Shift+Z
+      if (isMeta && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        opts?.onRedo?.();
+        return;
+      }
 
       // Next slide: Arrow Right
       if (e.key === 'ArrowRight' && activeSlide < sections.length - 1) {
@@ -27,14 +45,14 @@ export const useKeyboardShortcuts = () => {
         setActiveSlide(activeSlide - 1);
       }
 
-      // Open Agent: Cmd+K
+      // Open Agente de Texto: Cmd+K
       if (isMeta && e.key === 'k') {
         e.preventDefault();
-        setAgentOpen(true);
+        window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeSlide, setActiveSlide, sections, setAgentOpen]);
+  }, [activeSlide, setActiveSlide, sections, opts]);
 };

@@ -44,8 +44,8 @@ export interface ColorPalette {
 }
 
 export interface ProjectConfig {
-  branding: string;    // Nome do criador: "Kaique Torres"
-  handle: string;      // @identificador: "@kaique.editor" — aparece nos slides social-post
+  branding: string;    // Nome do criador
+  handle: string;      // @identificador — aparece nos slides social-post
   watermark: string;   // Marca d'água discreta no rodapé de todos os slides
   avatarUrl: string;
   numSlides: number;
@@ -60,11 +60,65 @@ export interface Project {
   config: ProjectConfig;
 }
 
-export interface Template {
+export interface StylePreset {
   id: string;
   name: string;
-  description: string;
-  thumbnail: string;
-  sections: Section[];
-  config: ProjectConfig;
+  layoutType: Section['layoutType'];
+  titleFont: string;
+  bodyFont: string;
+  titleSize: number;
+  bodySize: number;
+  bgColor: string;
+  titleColor: string;
+  bodyColor: string;
+  brandingColor: string;
+  alignment: 'left' | 'center' | 'right';
+  overlayOpacity: number;
+  textPosY: number;
+  imageScale: number;
 }
+
+// Estilo de slide sem id/name (usado nos templates)
+export type SlideStyle = Omit<StylePreset, 'id' | 'name'>;
+
+export interface CarouselTemplate {
+  id: string;
+  name: string;
+  capaStyle: SlideStyle;
+  slidesStyle: SlideStyle;
+}
+
+// ── Export Formats ──
+export type ExportFormatKey = 'carousel' | 'stories' | 'feed' | 'linkedin';
+
+export interface ExportFormat {
+  key: ExportFormatKey;
+  label: string;
+  width: number;
+  height: number;
+  ratio: string;
+}
+
+export const EXPORT_FORMATS: ExportFormat[] = [
+  { key: 'carousel', label: 'Carrossel', width: 1080, height: 1440, ratio: '3:4' },
+  { key: 'stories', label: 'Stories', width: 1080, height: 1920, ratio: '9:16' },
+  { key: 'feed', label: 'Feed', width: 1080, height: 1350, ratio: '4:5' },
+  { key: 'linkedin', label: 'LinkedIn', width: 1080, height: 1080, ratio: '1:1' },
+];
+
+// ── Brand Kit ──
+export interface BrandKit {
+  id: string;
+  name: string;
+  branding: string;
+  handle: string;
+  watermark: string;
+  avatarUrl: string;
+  titleFont: string;
+  bodyFont: string;
+  titleColor: string;
+  bodyColor: string;
+  bgColor: string;
+  brandingColor: string;
+}
+
