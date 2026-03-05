@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 // Reusing editor design tokens for consistency
@@ -53,6 +54,21 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
             toast.error(error.message || 'Erro ao autenticar');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOAuthLogin = async (provider: 'google' | 'github') => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider,
+                options: {
+                    // Retorna pra mesma URL que a pessoa logou, em prod ou localhost, já no editor
+                    redirectTo: `${window.location.origin}/editor`
+                }
+            });
+            if (error) throw error;
+        } catch (error: any) {
+            toast.error(error.message || `Erro ao conectar com ${provider}`);
         }
     };
 
@@ -184,6 +200,35 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                 )}
                             </button>
                         </form>
+
+                        <div className="flex items-center w-full my-1">
+                            <div className="flex-1 h-px bg-white/10" />
+                            <span className="px-3 text-[10px] uppercase font-bold text-white/30 tracking-widest">
+                                ou entre com
+                            </span>
+                            <div className="flex-1 h-px bg-white/10" />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <button
+                                type="button"
+                                onClick={() => handleOAuthLogin('google')}
+                                className="w-full relative group py-3 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white/10 active:scale-95 border border-white/10"
+                                style={{ background: T.glass }}
+                            >
+                                <FaGoogle size={14} className="text-white group-hover:text-red-400 transition-colors" />
+                                Google
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleOAuthLogin('github')}
+                                className="w-full relative group py-3 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white/10 active:scale-95 border border-white/10"
+                                style={{ background: T.glass }}
+                            >
+                                <FaGithub size={15} className="text-white group-hover:text-gray-400 transition-colors" />
+                                GitHub
+                            </button>
+                        </div>
 
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
 
