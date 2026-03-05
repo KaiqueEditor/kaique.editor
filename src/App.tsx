@@ -1313,6 +1313,17 @@ export default function App() {
       </>
     );
   }
+  useEffect(() => {
+    if (session?.user) {
+      const isAdm =
+        session.user.email?.toLowerCase().includes('kaiqueseditor') ||
+        session.user.user_metadata?.nickname?.toLowerCase().includes('kaiqueseditor') ||
+        session.user.email === 'kaiqueseditor@gmail.com';
+      useStore.getState().setAdmin(!!isAdm);
+    } else {
+      useStore.getState().setAdmin(false);
+    }
+  }, [session]);
 
   return <CarrosselApp session={session} onLogout={() => supabase.auth.signOut()} />;
 }

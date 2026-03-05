@@ -134,7 +134,7 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
                         >
                             {/* Thumbnail */}
                             <div
-                                className="w-14 h-[4.7rem] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                                className="w-[54px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
                                 style={{
                                     background: p.thumbnailDataUrl ? undefined : T.glassMd,
                                     border: `1px solid ${T.border}`,

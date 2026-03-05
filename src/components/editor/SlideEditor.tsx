@@ -6,7 +6,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { Section } from '../../types';
-import { FONT_OPTIONS } from '../../constants/fonts';
+import { FONT_OPTIONS, FONT_CATEGORIES } from '../../constants/fonts';
 import { useStore } from '../../store';
 import { useImageGeneration } from '../../hooks/useImageGeneration';
 import { geminiService } from '../../services/api/geminiService';
@@ -161,6 +161,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const config = useStore(state => state.config);
   const updateConfig = useStore(state => state.updateConfig);
   const { generate, isGenerating } = useImageGeneration();
+  const isAdmin = useStore(state => state.isAdmin);
 
   const s = section;
   const generating = isGenerating(s.id);
@@ -436,7 +437,15 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                             className="w-full text-[10px] font-bold rounded-lg outline-none"
                             style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
                           >
-                            {FONT_OPTIONS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                            {FONT_CATEGORIES.map(cat => {
+                              const options = FONT_OPTIONS.filter(f => f.category === cat.key && (!f.adminOnly || isAdmin));
+                              if (options.length === 0) return null;
+                              return (
+                                <optgroup key={cat.key} label={cat.label}>
+                                  {options.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                </optgroup>
+                              );
+                            })}
                           </select>
                         </div>
                       </div>

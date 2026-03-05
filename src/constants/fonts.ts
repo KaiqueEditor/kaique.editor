@@ -5,6 +5,7 @@ export interface FontOption {
   googleFont?: string;
   category: 'favorita' | 'display' | 'sans' | 'serif' | 'mono';
   label?: string; // descrição curta
+  adminOnly?: boolean;
 }
 
 // ── Catálogo de fontes ──────────────────────────────────────────────────────
@@ -13,86 +14,46 @@ export const FONT_OPTIONS: FontOption[] = [
 
   // ─── ⭐ SUAS FAVORITAS ────────────────────────────────────────────────────
   {
-    id: 'druk',
-    name: 'Druk Wide',
-    stack: "'Bebas Neue', 'Anton', sans-serif",
-    googleFont: 'Bebas+Neue|Anton',
-    category: 'favorita',
-    label: 'Capa / Impacto',
-  },
-  {
     id: 'montserrat',
-    name: 'Montserrat',
+    name: 'Montserrat (PRO)',
     stack: "'Montserrat', sans-serif",
     googleFont: 'Montserrat:wght@400;500;600;700;800;900',
     category: 'favorita',
     label: 'Corpo / Títulos',
-  },
-  {
-    id: 'anton',
-    name: 'Anton',
-    stack: "'Anton', sans-serif",
-    googleFont: 'Anton',
-    category: 'favorita',
-    label: 'Headlines',
-  },
-  {
-    id: 'roboto',
-    name: 'Roboto',
-    stack: "'Roboto', sans-serif",
-    googleFont: 'Roboto:wght@300;400;500;700;900',
-    category: 'favorita',
-    label: 'Clean / Legível',
-  },
-  {
-    id: 'gotham',
-    name: 'Gotham (Nunito Alt.)',
-    stack: "'Nunito', 'Montserrat', sans-serif",
-    googleFont: 'Nunito:wght@400;600;700;800;900',
-    category: 'favorita',
-    label: 'Gotham-style',
-  },
-  {
-    id: 'filson',
-    name: 'Filson (Rounded Alt.)',
-    stack: "'Nunito Sans', 'Poppins', sans-serif",
-    googleFont: 'Nunito+Sans:wght@400;600;700;800',
-    category: 'favorita',
-    label: 'Amigável / Soft',
-  },
-
-  // ─── DISPLAY / IMPACTO ────────────────────────────────────────────────────
-  {
-    id: 'bebas',
-    name: 'Bebas Neue',
-    stack: "'Bebas Neue', sans-serif",
-    googleFont: 'Bebas+Neue',
-    category: 'display',
-    label: 'Títulos grandes',
+    adminOnly: true,
   },
   {
     id: 'wide',
-    name: 'Unbounded',
+    name: 'Unbounded (PRO)',
     stack: "'Unbounded', sans-serif",
     googleFont: 'Unbounded:wght@400;700;900',
-    category: 'display',
+    category: 'favorita',
     label: 'Futurista / Wide',
+    adminOnly: true,
   },
   {
-    id: 'oswald',
-    name: 'Oswald',
-    stack: "'Oswald', sans-serif",
-    googleFont: 'Oswald:wght@400;600;700',
-    category: 'display',
-    label: 'Compacto / Bold',
+    id: 'outfit',
+    name: 'Outfit',
+    stack: "'Outfit', sans-serif",
+    googleFont: 'Outfit:wght@300;400;500;600;700;800;900',
+    category: 'favorita',
+    label: 'Moderno / Arredondado',
   },
   {
-    id: 'barlow',
-    name: 'Barlow Condensed',
-    stack: "'Barlow Condensed', sans-serif",
-    googleFont: 'Barlow+Condensed:wght@400;600;700;800',
-    category: 'display',
-    label: 'Condensed',
+    id: 'syne',
+    name: 'Syne',
+    stack: "'Syne', sans-serif",
+    googleFont: 'Syne:wght@400;600;700;800',
+    category: 'favorita',
+    label: 'Vanguardista / Bold',
+  },
+  {
+    id: 'plus-jakarta',
+    name: 'Plus Jakarta Sans',
+    stack: "'Plus Jakarta Sans', sans-serif",
+    googleFont: 'Plus+Jakarta+Sans:wght@400;500;600;700;800',
+    category: 'favorita',
+    label: 'Clean / Premium',
   },
 
   // ─── SANS-SERIF ───────────────────────────────────────────────────────────
@@ -113,28 +74,20 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Geométrico',
   },
   {
-    id: 'opensans',
-    name: 'Open Sans',
-    stack: "'Open Sans', sans-serif",
-    googleFont: 'Open+Sans:wght@400;600;700',
+    id: 'space-grotesk',
+    name: 'Space Grotesk',
+    stack: "'Space Grotesk', sans-serif",
+    googleFont: 'Space+Grotesk:wght@400;500;600;700',
     category: 'sans',
-    label: 'Neutro / Legível',
+    label: 'Tech / Brutalist',
   },
   {
-    id: 'raleway',
-    name: 'Raleway',
-    stack: "'Raleway', sans-serif",
-    googleFont: 'Raleway:wght@400;600;700;800',
+    id: 'lexend',
+    name: 'Lexend',
+    stack: "'Lexend', sans-serif",
+    googleFont: 'Lexend:wght@400;500;600;700;800',
     category: 'sans',
-    label: 'Elegante',
-  },
-  {
-    id: 'dm',
-    name: 'DM Sans',
-    stack: "'DM Sans', sans-serif",
-    googleFont: 'DM+Sans:wght@400;500;700',
-    category: 'sans',
-    label: 'Editorial',
+    label: 'Claro / Expandido',
   },
 
   // ─── SERIF ────────────────────────────────────────────────────────────────
@@ -146,41 +99,13 @@ export const FONT_OPTIONS: FontOption[] = [
     category: 'serif',
     label: 'Luxo / Clássico',
   },
-  {
-    id: 'lora',
-    name: 'Lora',
-    stack: "'Lora', serif",
-    googleFont: 'Lora:ital,wght@0,400;0,700;1,400',
-    category: 'serif',
-    label: 'Editorial Quente',
-  },
-  {
-    id: 'cormorant',
-    name: 'Cormorant Garamond',
-    stack: "'Cormorant Garamond', serif",
-    googleFont: 'Cormorant+Garamond:ital,wght@0,400;0,600;1,400',
-    category: 'serif',
-    label: 'Alta costura',
-  },
-
-  // ─── MONO ─────────────────────────────────────────────────────────────────
-  {
-    id: 'jetbrains',
-    name: 'JetBrains Mono',
-    stack: "'JetBrains Mono', monospace",
-    googleFont: 'JetBrains+Mono:wght@400;700',
-    category: 'mono',
-    label: 'Tech / Código',
-  },
 ];
 
 // ── Agrupado por categoria (para UI) ──────────────────────────────────────
 export const FONT_CATEGORIES = [
-  { key: 'favorita', label: '⭐ Populares' },
-  { key: 'display',  label: 'Display / Impacto' },
-  { key: 'sans',     label: 'Sans-Serif' },
-  { key: 'serif',    label: 'Serif' },
-  { key: 'mono',     label: 'Mono' },
+  { key: 'favorita', label: '⭐ Premium' },
+  { key: 'sans', label: 'Sans-Serif Modernas' },
+  { key: 'serif', label: 'Serif Clássicas' },
 ] as const;
 
 export const getFontsByCategory = (cat: string) =>
