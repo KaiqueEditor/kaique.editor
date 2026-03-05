@@ -3,8 +3,9 @@
  * Pixel-level noise injection to preserve structural integrity
  */
 export async function applySynthidBypass(dataUrl: string): Promise<string> {
-  const PASSES = 3;
-  const NOISE_STRENGTH = 2.5;
+  // Apenas 1 passe e JPEG (0.85) para não estourar o limite de IndexedDB/Memória (PNG 1.0 passava de 20MB)
+  const PASSES = 1;
+  const NOISE_STRENGTH = 2.0;
 
   let currentResult = dataUrl;
 
@@ -22,7 +23,7 @@ export async function applySynthidBypass(dataUrl: string): Promise<string> {
           return;
         }
 
-        ctx.filter = `blur(0.3px) brightness(1.01) contrast(0.98)`;
+        ctx.filter = `blur(0.2px) brightness(1.01) contrast(0.99)`;
         ctx.drawImage(img, 0, 0);
         ctx.filter = 'none';
 
@@ -37,7 +38,8 @@ export async function applySynthidBypass(dataUrl: string): Promise<string> {
         }
 
         ctx.putImageData(imageData, 0, 0);
-        resolve(canvas.toDataURL('image/png', 1.0));
+        // USE JPEG HERE TO DRASTICALLY REDUCE BASE64 PAYLOAD SIZE BY 10x
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
       img.onerror = () => resolve(currentResult);
       img.src = currentResult;

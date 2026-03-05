@@ -555,6 +555,21 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const currentProjectId = useStore(state => state.currentProjectId);
   const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
 
+  // Restaurar imagens perdidas do auto-backup no carregamento (já que o localStorage limpa elas)
+  useEffect(() => {
+    projectStorage.loadProject('auto-backup').then((backup) => {
+      if (backup && backup.sections.length > 0) {
+        const state = useStore.getState();
+        // Se a gente recém-carregou e está faltando imagem em tudo devido ao limite salva no LocalStorage,
+        // podemos recuperar do DB que suporta megabytes de Base64
+        const looksLikeSameSession = state.sections.length === backup.sections.length;
+        if (looksLikeSameSession) {
+          useStore.getState().setSections(backup.sections);
+        }
+      }
+    });
+  }, []);
+
   // Auto-salvar projeto (APENAS backup)
   useEffect(() => {
     if (sections.length === 0) return;
@@ -573,8 +588,9 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       let thumbnailDataUrl;
       const firstSlide = exportRefs.current[0];
       if (firstSlide) {
-        const { toPng } = await import('html-to-image');
-        thumbnailDataUrl = await toPng(firstSlide, { width: 400, height: 400, pixelRatio: 1 });
+        // Usa JPEG com scale menor para não deformar nem pesar
+        const { toJpeg } = await import('html-to-image');
+        thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.5, pixelRatio: 0.25 });
       }
 
       const name = sections[0]?.title || 'Sem título';
