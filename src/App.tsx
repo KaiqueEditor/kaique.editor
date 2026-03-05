@@ -4,11 +4,13 @@ import {
   Upload, Wand2, Eye, Download, Loader2, Sun, Moon, Palette, FileText, ChevronDown,
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
-  PenLine, Copy, Check, Plus, Save,
+  PenLine, Copy, Check, Plus, Save, LogOut,
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { CarouselSlide } from './components/carousel/CarouselSlide';
 import { SlideEditor } from './components/editor/SlideEditor';
+import { LoginPage } from './components/auth/LoginPage';
+import { supabase } from './lib/supabase';
 import { useStore } from './store';
 import { useProcessText } from './hooks/useProcessText';
 import { useExport } from './hooks/useExport';
@@ -493,8 +495,8 @@ function SidebarContent({
   );
 }
 
-// ── App ────────────────────────────────────────────────────────────────────────
-export default function App() {
+// ── App Viewer/Editor ─────────────────────────────────────────────────────────
+function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => void }) {
   const sections = useStore(state => state.sections);
   const activeSlide = useStore(state => state.activeSlide);
   const config = useStore(state => state.config);
@@ -775,13 +777,25 @@ export default function App() {
             </p>
           </div>
 
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-xl transition-all active:scale-90"
-            style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-          >
-            {isDark ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl transition-all active:scale-90"
+              style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+              title="Trocar Tema"
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+
+            <button
+              onClick={onLogout}
+              className="p-2 rounded-xl transition-all active:scale-90 hover:bg-red-500/10"
+              style={{ background: T.glass, border: `1px solid ${T.border}`, color: '#ff4444' }}
+              title="Ver Perfil / Sair"
+            >
+              <LogOut size={15} />
+            </button>
+          </div>
         </div>
 
         {/* Nós de exportação — tecnicamente visíveis para o browser (decode ativo), invisíveis para o usuário */}
@@ -1228,6 +1242,61 @@ export default function App() {
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
       />
-    </div >
+    </div>
   );
+}
+
+// ── Aplicação Autenticada ───────────────────────────────────────────────────────
+
+export default function App() {
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center" style={{ background: '#000' }}>
+        <Loader2 className="animate-spin text-[#00E5C3]" size={32} />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: 'rgba(255,255,255,0.03)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(10px)',
+              fontSize: '11px',
+              fontFamily: 'Inter',
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+            },
+          }}
+        />
+        <LoginPage onLogin={(user) => setSession({ user })} />
+      </>
+    );
+  }
+
+  return <CarrosselApp session={session} onLogout={() => supabase.auth.signOut()} />;
 }
