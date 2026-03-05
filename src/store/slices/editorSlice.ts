@@ -19,6 +19,10 @@ export interface EditorSlice {
   isImageAgentOpen: boolean;
   imageAgentSectionId: string | null;
 
+  // Track the current project ID
+  currentProjectId: string | null;
+  setCurrentProjectId: (id: string | null) => void;
+
   // Actions
   setAgentOpen: (isOpen: boolean) => void;
   setShowExportPreview: (show: boolean) => void;
@@ -54,6 +58,7 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
   theme: 'dark',
   isImageAgentOpen: false,
   imageAgentSectionId: null,
+  currentProjectId: null,
 
   setAgentOpen: (isOpen) => set({ isAgentOpen: isOpen }),
   setShowExportPreview: (show) => set({ showExportPreview: show }),
@@ -71,14 +76,19 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
 
   setGeneratingIds: (ids) => set({ generatingIds: ids }),
 
-  setTheme: (theme) => set({ theme }),
-  toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
-
-  setImageAgentOpen: (open, sectionId = null) => set({
-    isImageAgentOpen: open,
-    imageAgentSectionId: open ? sectionId : null,
+  setTheme: (theme) => {
+    set({ theme });
+    localStorage.setItem('myhub-theme', theme);
+  },
+  toggleTheme: () => set((state) => {
+    const next = state.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('myhub-theme', next);
+    return { theme: next };
   }),
-  setUseAI: (v) => set({ useAI: v }),
+  setImageAgentOpen: (open, sectionId = null) => set({ isImageAgentOpen: open, imageAgentSectionId: sectionId }),
+  setUseAI: (v: boolean) => set({ useAI: v }),
+
+  setCurrentProjectId: (id: string | null) => set({ currentProjectId: id }),
 
   exportFormat: 'carousel',
   setExportFormat: (format) => set({ exportFormat: format }),

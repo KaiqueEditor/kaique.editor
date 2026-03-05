@@ -72,10 +72,11 @@ class ProjectStorage {
 
     await db.put('projects', project);
 
-    // Limite de 10 carrosséis — remove os mais antigos
+    // Limite de 10 carrosséis (ignorando auto-backup)
     const all = await db.getAll('projects');
-    if (all.length > 10) {
-      const sorted = all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const saved = all.filter(p => p.id !== 'auto-backup');
+    if (saved.length > 10) {
+      const sorted = saved.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
       const toDelete = sorted.slice(10);
       for (const old of toDelete) {
         await db.delete('projects', old.id);

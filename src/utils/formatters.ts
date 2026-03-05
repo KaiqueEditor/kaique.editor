@@ -11,10 +11,46 @@ import React from 'react';
 export const renderFormattedText = (text: string, highlightColor?: string) => {
   if (!text) return null;
 
-  // Ordem: ==highlight==, **bold forte**, *bold*, _italic_, ~strike~
-  const parts = text.split(/(==.*?==|\*\*.*?\*\*|\*.*?\*|_.*?_|~.*?~)/gs);
+  // Ordem: =1=color1=1=, =2=color2=2=, =3=color3=3=, ==highlight==, **bold forte**, *bold*, _italic_, ~strike~
+  const parts = text.split(/(=1=.*?=1=|=2=.*?=2=|=3=.*?=3=|==.*?==|\*\*.*?\*\*|\*.*?\*|_.*?_|~.*?~)/gs);
 
   return parts.map((part, i) => {
+    // =1=destaque vermelho=1=  (#ff0000)
+    if (part.startsWith('=1=') && part.endsWith('=1=') && part.length > 6) {
+      return React.createElement(
+        'span',
+        {
+          key: i,
+          style: { color: '#ff0000', fontWeight: 900 }
+        },
+        part.slice(3, -3)
+      );
+    }
+
+    // =2=destaque amarelo=2= (#FAA72B)
+    if (part.startsWith('=2=') && part.endsWith('=2=') && part.length > 6) {
+      return React.createElement(
+        'span',
+        {
+          key: i,
+          style: { color: '#FAA72B', fontWeight: 900 }
+        },
+        part.slice(3, -3)
+      );
+    }
+
+    // =3=destaque verde=3= (#00ff33)
+    if (part.startsWith('=3=') && part.endsWith('=3=') && part.length > 6) {
+      return React.createElement(
+        'span',
+        {
+          key: i,
+          style: { color: '#00ff33', fontWeight: 900 }
+        },
+        part.slice(3, -3)
+      );
+    }
+
     // ==destaque==
     if (part.startsWith('==') && part.endsWith('==') && part.length > 4) {
       return React.createElement(

@@ -4,7 +4,7 @@ import {
   Upload, Wand2, Eye, Download, Loader2, Sun, Moon, Palette, FileText, ChevronDown,
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
-  PenLine, Copy, Check, Plus,
+  PenLine, Copy, Check, Plus, Save,
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { CarouselSlide } from './components/carousel/CarouselSlide';
@@ -550,17 +550,44 @@ export default function App() {
   const [mobilePreviewMode, setMobilePreviewMode] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [currentProjectId] = useState(() => Date.now().toString() + Math.random().toString(36).slice(2, 6));
+  const currentProjectId = useStore(state => state.currentProjectId);
+  const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
 
-  // Auto-salvar projeto quando sections mudam
+  // Auto-salvar projeto (APENAS backup)
   useEffect(() => {
     if (sections.length === 0) return;
     const timer = setTimeout(() => {
-      const name = sections[0]?.title || 'Sem título';
-      projectStorage.saveProject(currentProjectId, name, sections, config).catch(() => { });
+      // Usamos sempre 'auto-backup' para sobescrever o rascunho anterior sem lotar o histórico
+      projectStorage.saveProject('auto-backup', 'Rascunho Automático', sections, config).catch(() => { });
     }, 2000);
     return () => clearTimeout(timer);
-  }, [sections, config, currentProjectId]);
+  }, [sections, config]);
+
+  const [savingProject, setSavingProject] = useState(false);
+
+  const handleManualSave = useCallback(async () => {
+    setSavingProject(true);
+    try {
+      let thumbnailDataUrl;
+      const firstSlide = exportRefs.current[0];
+      if (firstSlide) {
+        const { toPng } = await import('html-to-image');
+        thumbnailDataUrl = await toPng(firstSlide, { width: 400, height: 400, pixelRatio: 1 });
+      }
+
+      const name = sections[0]?.title || 'Sem título';
+      const idToSave = currentProjectId || (Date.now().toString() + Math.random().toString(36).slice(2, 6));
+
+      await projectStorage.saveProject(idToSave, name, sections, config, thumbnailDataUrl);
+      if (!currentProjectId) setCurrentProjectId(idToSave);
+
+      toast.success('Projeto salvo com sucesso!');
+    } catch (err) {
+      toast.error('Erro ao salvar o projeto');
+    } finally {
+      setSavingProject(false);
+    }
+  }, [currentProjectId, setCurrentProjectId, sections, config, exportRefs]);
 
   // Exportar PDF: renderiza cada slide como PNG e compila
   const handleExportPDF = useCallback(async () => {
@@ -928,8 +955,23 @@ export default function App() {
                     }
                   </button>
                 </div>
-                {/* Linha inferior: PDF + Histórico */}
+                {/* Linha inferior: Salvar + PDF + Histórico */}
                 <div className="flex gap-3">
+                  <button
+                    onClick={handleManualSave}
+                    disabled={savingProject}
+                    className="flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
+                    style={{
+                      background: T.glass,
+                      border: `1px solid ${T.border}`,
+                      color: savingProject ? T.textFaint : T.textSub,
+                    }}
+                  >
+                    {savingProject
+                      ? <><Loader2 className="animate-spin" size={12} /> Salvando...</>
+                      : <><Save size={13} /> Salvar</>
+                    }
+                  </button>
                   <button
                     onClick={handleExportPDF}
                     disabled={isExportingPDF || isExporting || isProcessing}
@@ -941,8 +983,8 @@ export default function App() {
                     }}
                   >
                     {isExportingPDF
-                      ? <><Loader2 className="animate-spin" size={12} /> Gerando PDF...</>
-                      : <><FileOutput size={13} /> Exportar PDF</>
+                      ? <><Loader2 className="animate-spin" size={12} /> PDF...</>
+                      : <><FileOutput size={13} /> Export PDF</>
                     }
                   </button>
                   <button
@@ -954,7 +996,7 @@ export default function App() {
                       color: T.textSub,
                     }}
                   >
-                    <FolderOpen size={13} /> Meus Carrosséis
+                    <FolderOpen size={13} /> Histórico
                   </button>
                 </div>
               </div>

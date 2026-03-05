@@ -18,6 +18,7 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
     const T = getTheme(theme);
     const setSections = useStore(s => s.setSections);
     const updateConfig = useStore(s => s.updateConfig);
+    const setCurrentProjectId = useStore(s => s.setCurrentProjectId);
 
     const [projects, setProjects] = useState<SavedProject[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
     const handleLoad = async (project: SavedProject) => {
         setSections(project.sections);
         updateConfig(project.config);
+        setCurrentProjectId(project.id === 'auto-backup' ? null : project.id);
         toast.success(`"${project.name}" carregado!`);
         onClose();
     };
@@ -148,7 +150,7 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-sm font-black truncate" style={{ color: T.textPrimary }}>
-                                    {p.name}
+                                    {p.name} {p.id === 'auto-backup' && <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,229,195,0.1)', color: T.accent }}>Auto</span>}
                                 </h3>
                                 <div className="flex items-center gap-3 mt-1">
                                     <span className="flex items-center gap-1 text-[9px] font-bold" style={{ color: T.textDim }}>
