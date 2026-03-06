@@ -417,8 +417,6 @@ function SidebarContent({
         <div className="px-5 sm:px-7 pb-24 space-y-4 transition-colors duration-300"
           style={{ borderTop: `1px solid ${T.border}` }}>
 
-
-
           {/* Mini preview fiel — segue o frame ativo, clica para voltar ao canvas */}
           <div
             className="lg:hidden mt-4 mb-2 mx-auto cursor-pointer active:scale-95 transition-transform"
@@ -461,8 +459,6 @@ function SidebarContent({
           {sections.map((s, idx) => (
             <div
               key={s.id}
-              draggable
-              onDragStart={() => { dragIdx.current = idx; }}
               onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderTop = `2px solid ${T.accent}`; }}
               onDragLeave={e => { e.currentTarget.style.borderTop = ''; }}
               onDrop={e => {
@@ -474,7 +470,6 @@ function SidebarContent({
                 }
                 dragIdx.current = null;
               }}
-              onDragEnd={() => { dragIdx.current = null; }}
             >
               <SlideEditor
                 section={s}
@@ -486,6 +481,11 @@ function SidebarContent({
                 onDownload={async () => { await onDownloadSlide(idx, s); }}
                 onImageUpload={onImageUpload}
                 onVideoUpload={onVideoUpload}
+                dragHandleProps={{
+                  draggable: true,
+                  onDragStart: () => { dragIdx.current = idx; },
+                  onDragEnd: () => { dragIdx.current = null; },
+                }}
               />
             </div>
           ))}

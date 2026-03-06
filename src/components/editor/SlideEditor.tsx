@@ -3,7 +3,7 @@ import {
   Trash2, ImageIcon, PanelsTopLeft,
   MessageSquareText, Minus, Plus, UploadCloud, Upload, Sparkles,
   Loader2, EyeOff, Image as LucideImage, Video, Download, RefreshCw,
-  ChevronDown,
+  ChevronDown, GripVertical,
 } from 'lucide-react';
 import { Section } from '../../types';
 import { FONT_OPTIONS, FONT_CATEGORIES } from '../../constants/fonts';
@@ -22,6 +22,7 @@ interface SlideEditorProps {
   onDownload?: () => Promise<void> | void;
   onVideoUpload?: (sectionId: string, file: File) => void;
   onImageUpload?: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 }
 
 // ── Pad de foco da imagem (opção B — miniatura como fundo) ──────────────────
@@ -152,7 +153,7 @@ const FocusPad: React.FC<FocusPadProps> = ({ imageUrl, videoUrl, posX, posY, onC
 // ── SlideEditor ─────────────────────────────────────────────────────────────
 export const SlideEditor: React.FC<SlideEditorProps> = ({
   section, index, isActive, onClick, T: TProp, onDownload,
-  onVideoUpload, onImageUpload,
+  onVideoUpload, onImageUpload, dragHandleProps,
 }) => {
   const T = TProp || DARK_FALLBACK;
   const sections = useStore(state => state.sections);
@@ -271,75 +272,87 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
       }}
     >
       {/* ── Header do card — clique aqui alterna abrir/fechar ── */}
-      <div
-        onClick={onClick}
-        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer"
-        style={{ borderBottom: isActive ? `1px solid ${T.border}` : 'none' }}
-      >
+      <div className="flex items-stretch cursor-pointer">
+        {/* Grip handle isolado para o drag event */}
         <div
-          className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center"
-          style={{ background: s.bgColor || '#000', border: `2px solid ${T.border}` }}
+          {...dragHandleProps}
+          className="w-8 flex items-center justify-center flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+          style={{ cursor: 'grab', background: T.glass }}
+          title="Arraste para reordenar"
+          onClick={e => e.stopPropagation()}
         >
-          {s.videoUrl ? <span style={{ fontSize: 10 }}>🎬</span> : s.imageUrl ? <span style={{ fontSize: 10 }}>🖼</span> : null}
+          <GripVertical size={13} style={{ color: T.textFaint }} />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span
-              className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-              style={{ background: isActive ? T.accent : T.glassMd, color: isActive ? T.accentText : T.textDim }}
-            >
-              {label}
-            </span>
-            {hasImage && <span className="text-[8px] font-bold" style={{ color: T.success }}>✓ img</span>}
+        <div
+          onClick={onClick}
+          className="flex-1 flex items-center gap-3 pr-4 py-3.5"
+          style={{ borderBottom: isActive ? `1px solid ${T.border}` : 'none' }}
+        >
+          <div
+            className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center"
+            style={{ background: s.bgColor || '#000', border: `2px solid ${T.border}` }}
+          >
+            {s.videoUrl ? <span style={{ fontSize: 10 }}>🎬</span> : s.imageUrl ? <span style={{ fontSize: 10 }}>🖼</span> : null}
           </div>
-          <p className="text-[10px] font-semibold truncate" style={{ color: isActive ? T.textSub : T.textDim }}>
-            {s.title || 'Sem título'}
-          </p>
-        </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {onDownload && (
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 active:opacity-60 disabled:opacity-50 disabled:cursor-wait hover:bg-white/10"
-              style={{ color: isDownloading ? T.textSub : T.textFaint }}
-              title={s.videoUrl ? 'Baixar MP4' : 'Baixar PNG'}
-            >
-              {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-            </button>
-          )}
-
-          {confirmDelete ? (
-            <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={e => { e.stopPropagation(); deleteSection(s.id); }}
-                className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all duration-300 hover:scale-105 active:scale-95"
-                style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
-              >Deletar</button>
-              <button
-                onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}
-                className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-white/5"
-                style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-              >Cancelar</button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span
+                className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                style={{ background: isActive ? T.accent : T.glassMd, color: isActive ? T.accentText : T.textDim }}
+              >
+                {label}
+              </span>
+              {hasImage && <span className="text-[8px] font-bold" style={{ color: T.success }}>✓ img</span>}
             </div>
-          ) : (
-            <button
-              onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}
-              className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 active:opacity-60 hover:bg-white/10"
-              style={{ color: T.textFaint }}
-            >
-              <Trash2 size={13} />
-            </button>
-          )}
+            <p className="text-[10px] font-semibold truncate" style={{ color: isActive ? T.textSub : T.textDim }}>
+              {s.title || 'Sem título'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onDownload && (
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 active:opacity-60 disabled:opacity-50 disabled:cursor-wait hover:bg-white/10"
+                style={{ color: isDownloading ? T.textSub : T.textFaint }}
+                title={s.videoUrl ? 'Baixar MP4' : 'Baixar PNG'}
+              >
+                {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+              </button>
+            )}
+
+            {confirmDelete ? (
+              <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={e => { e.stopPropagation(); deleteSection(s.id); }}
+                  className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all duration-300 hover:scale-105 active:scale-95"
+                  style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
+                >Deletar</button>
+                <button
+                  onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}
+                  className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-white/5"
+                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+                >Cancelar</button>
+              </div>
+            ) : (
+              <button
+                onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}
+                className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 active:opacity-60 hover:bg-white/10"
+                style={{ color: T.textFaint }}
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* ── Painel expandido ── */}
       {isActive && (
         <div className="p-4 space-y-3">
-
           {/* Texto */}
           {(() => {
             const fontSlots = [
@@ -836,7 +849,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           })()}
 
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
