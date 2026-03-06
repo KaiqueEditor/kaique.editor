@@ -201,6 +201,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                             </button>
                         </form>
 
+                        {/* TODO: OAuth desabilitado temporariamente — corrigir redirect callback antes de reativar
                         <div className="flex items-center w-full my-1">
                             <div className="flex-1 h-px bg-white/10" />
                             <span className="px-3 text-[10px] uppercase font-bold text-white/30 tracking-widest">
@@ -229,6 +230,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                 GitHub
                             </button>
                         </div>
+                        */}
 
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
 
