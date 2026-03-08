@@ -17,7 +17,7 @@ export interface CloudCarousel {
 // ── CloudStorage (Supabase) ────────────────────────────────────────────────────
 
 class CloudStorage {
-    /** Salva ou atualiza um carrossel no cloud */
+    /** Salva ou atualiza o carrossel mais recente do usuário no cloud */
     async saveCarousel(
         userId: string,
         name: string,
@@ -31,27 +31,44 @@ class CloudStorage {
             videoUrl: undefined,
         }));
 
-        const { data, error } = await supabase
+        const cleanConfig = {
+            ...config,
+            avatarUrl: config.avatarUrl?.startsWith('data:') ? '' : config.avatarUrl,
+        };
+
+        // Buscar o carrossel mais recente do usuário para atualizar
+        const { data: existing } = await supabase
             .from('carousels')
-            .upsert({
-                user_id: userId,
-                name,
-                sections: cleanSections,
-                config: {
-                    ...config,
-                    avatarUrl: config.avatarUrl?.startsWith('data:') ? '' : config.avatarUrl,
-                },
-                slide_count: sections.length,
-                updated_at: new Date().toISOString(),
-            }, { onConflict: 'id' })
-            .select()
+            .select('id')
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false })
+            .limit(1)
             .single();
 
-        if (error) {
-            console.error('[CloudStorage] save error:', error);
-            return null;
+        if (existing) {
+            // Atualiza o existente
+            const { data, error } = await supabase
+                .from('carousels')
+                .update({
+                    name,
+                    sections: cleanSections,
+                    config: cleanConfig,
+                    slide_count: sections.length,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', existing.id)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('[CloudStorage] save error:', error);
+                return null;
+            }
+            return data as CloudCarousel;
+        } else {
+            // Primeiro save: insere novo
+            return this.createCarousel(userId, name, sections, config);
         }
-        return data as CloudCarousel;
     }
 
     /** Insere um novo carrossel */

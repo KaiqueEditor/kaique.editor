@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
     X, FolderOpen, Trash2, Copy, Clock, Layers,
-    Loader2,
+    Loader2, Cloud, HardDrive,
 } from 'lucide-react';
 import { projectStorage, SavedProject } from '../../services/storage/projectStorage';
+import { cloudStorage, CloudCarousel } from '../../services/storage/cloudStorage';
+import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store';
 import { getTheme } from '../../constants/theme';
 import { toast } from 'react-hot-toast';
@@ -13,6 +15,20 @@ interface ProjectHistoryProps {
     onClose: () => void;
 }
 
+// Unifica projetos do cloud e local num formato único
+interface UnifiedProject {
+    id: string;
+    name: string;
+    slideCount: number;
+    updatedAt: string;
+    createdAt: string;
+    source: 'cloud' | 'local';
+    thumbnailDataUrl?: string;
+    // Para carregar
+    sections: any[];
+    config: any;
+}
+
 export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose }) => {
     const theme = useStore(s => s.theme);
     const T = getTheme(theme);
@@ -20,15 +36,55 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
     const updateConfig = useStore(s => s.updateConfig);
     const setCurrentProjectId = useStore(s => s.setCurrentProjectId);
 
-    const [projects, setProjects] = useState<SavedProject[]>([]);
+    const [projects, setProjects] = useState<UnifiedProject[]>([]);
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const loadProjects = async () => {
         setLoading(true);
         try {
-            const list = await projectStorage.getAllProjects();
-            setProjects(list);
+            // 1. Carregar projetos locais (IndexedDB)
+            const localProjects = await projectStorage.getAllProjects();
+            const localUnified: UnifiedProject[] = localProjects
+                .filter(p => p.id !== 'auto-backup')
+                .map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    slideCount: p.slideCount,
+                    updatedAt: p.updatedAt,
+                    createdAt: p.createdAt,
+                    source: 'local' as const,
+                    thumbnailDataUrl: p.thumbnailDataUrl,
+                    sections: p.sections,
+                    config: p.config,
+                }));
+
+            // 2. Carregar projetos do cloud (Supabase)
+            let cloudUnified: UnifiedProject[] = [];
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const cloudProjects = await cloudStorage.getUserCarousels(user.id);
+                    cloudUnified = cloudProjects.map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        slideCount: c.slide_count,
+                        updatedAt: c.updated_at,
+                        createdAt: c.created_at,
+                        source: 'cloud' as const,
+                        sections: c.sections,
+                        config: c.config,
+                    }));
+                }
+            } catch { /* cloud fetch failed, show local only */ }
+
+            // 3. Merge: cloud first, then local (sem duplicatas por nome)
+            const cloudNames = new Set(cloudUnified.map(c => c.name));
+            const uniqueLocal = localUnified.filter(l => !cloudNames.has(l.name));
+            const merged = [...cloudUnified, ...uniqueLocal]
+                .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+
+            setProjects(merged);
         } catch {
             toast.error('Erro ao carregar projetos');
         } finally {
@@ -40,17 +96,23 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
         if (isOpen) loadProjects();
     }, [isOpen]);
 
-    const handleLoad = async (project: SavedProject) => {
+    const handleLoad = async (project: UnifiedProject) => {
         setSections(project.sections);
         updateConfig(project.config);
-        setCurrentProjectId(project.id === 'auto-backup' ? null : project.id);
+        setCurrentProjectId(project.source === 'cloud' ? project.id : (project.id === 'auto-backup' ? null : project.id));
         toast.success(`"${project.name}" carregado!`);
         onClose();
     };
 
     const handleDelete = async (id: string) => {
+        const project = projects.find(p => p.id === id);
         if (deletingId === id) {
-            await projectStorage.deleteProject(id);
+            // Delete from appropriate source
+            if (project?.source === 'cloud') {
+                await cloudStorage.deleteCarousel(id);
+            } else {
+                await projectStorage.deleteProject(id);
+            }
             setProjects(prev => prev.filter(p => p.id !== id));
             setDeletingId(null);
             toast.success('Projeto removido');
@@ -61,17 +123,56 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
     };
 
     const handleDuplicate = async (id: string) => {
-        const dup = await projectStorage.duplicateProject(id);
-        if (dup) {
-            setProjects(prev => [dup, ...prev]);
-            toast.success('Projeto duplicado!');
+        const project = projects.find(p => p.id === id);
+        if (!project) return;
+
+        if (project.source === 'local') {
+            const dup = await projectStorage.duplicateProject(id);
+            if (dup) {
+                setProjects(prev => [{
+                    id: dup.id,
+                    name: dup.name,
+                    slideCount: dup.slideCount,
+                    updatedAt: dup.updatedAt,
+                    createdAt: dup.createdAt,
+                    source: 'local',
+                    thumbnailDataUrl: dup.thumbnailDataUrl,
+                    sections: dup.sections,
+                    config: dup.config,
+                }, ...prev]);
+                toast.success('Projeto duplicado!');
+            }
+        } else {
+            // Cloud: create a new cloud carousel with "(cópia)"
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const dup = await cloudStorage.createCarousel(
+                    user.id,
+                    `${project.name} (cópia)`,
+                    project.sections,
+                    project.config,
+                );
+                if (dup) {
+                    setProjects(prev => [{
+                        id: dup.id,
+                        name: dup.name,
+                        slideCount: dup.slide_count,
+                        updatedAt: dup.updated_at,
+                        createdAt: dup.created_at,
+                        source: 'cloud',
+                        sections: dup.sections,
+                        config: dup.config,
+                    }, ...prev]);
+                    toast.success('Projeto duplicado na nuvem!');
+                }
+            }
         }
     };
 
     const formatDate = (iso: string) => {
         const d = new Date(iso);
         return d.toLocaleDateString('pt-BR', {
-            day: '2-digit', month: 'short', year: 'numeric',
+            day: '2-digit', month: '2-digit', year: '2-digit',
             hour: '2-digit', minute: '2-digit',
         });
     };
@@ -79,110 +180,99 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-fade-in"
-            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}
-            onClick={onClose}
-        >
+        <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)' }}>
             <div
-                className="w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden flex flex-col animate-scale-in"
-                style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadowStrong }}
-                onClick={e => e.stopPropagation()}
+                className="w-full max-w-lg max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col"
+                style={{ background: T.sidebar, border: `1px solid ${T.border}` }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6" style={{ borderBottom: `1px solid ${T.border}` }}>
-                    <div className="flex items-center gap-3">
-                        <FolderOpen size={20} style={{ color: T.accent }} />
-                        <div>
-                            <h2 className="text-lg font-black" style={{ color: T.textPrimary }}>Meus Carrosséis</h2>
-                            <p className="text-[10px]" style={{ color: T.textDim }}>{projects.length} projeto{projects.length !== 1 ? 's' : ''} salvo{projects.length !== 1 ? 's' : ''}</p>
-                        </div>
+                <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: T.border }}>
+                    <div className="flex items-center gap-2">
+                        <FolderOpen size={18} style={{ color: T.accent }} />
+                        <h2 className="text-sm font-black" style={{ color: T.textPrimary }}>Meus Projetos</h2>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: T.glass, color: T.textFaint }}>
+                            {projects.length}
+                        </span>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl transition-all hover:scale-110 active:scale-90"
-                        style={{ color: T.textDim, border: `1px solid ${T.border}` }}>
-                        <X size={18} />
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5 active:scale-90">
+                        <X size={18} style={{ color: T.textSub }} />
                     </button>
                 </div>
 
-                {/* Lista de projetos */}
-                <div className="flex-1 overflow-y-auto p-4 no-scrollbar space-y-3">
-                    {loading && (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="animate-spin" size={24} style={{ color: T.textDim }} />
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {loading ? (
+                        <div className="flex justify-center py-10">
+                            <Loader2 className="animate-spin" size={24} style={{ color: T.accent }} />
                         </div>
-                    )}
-
-                    {!loading && projects.length === 0 && (
-                        <div className="text-center py-12">
-                            <FolderOpen size={40} style={{ color: T.textFaint, margin: '0 auto 12px' }} />
-                            <p className="text-sm font-bold" style={{ color: T.textDim }}>Nenhum carrossel salvo ainda</p>
-                            <p className="text-[10px] mt-1" style={{ color: T.textFaint }}>
-                                Seus carrosséis serão salvos automaticamente aqui
-                            </p>
-                        </div>
-                    )}
-
-                    {!loading && projects.map((p, idx) => (
-                        <div
-                            key={p.id}
-                            className="flex items-center gap-4 p-4 rounded-2xl transition-all hover:scale-[1.01] cursor-pointer group animate-fade-in"
-                            style={{
-                                background: T.glass,
-                                border: `1px solid ${T.border}`,
-                                animationDelay: `${idx * 30}ms`,
-                            }}
-                            onClick={() => handleLoad(p)}
-                        >
-                            {/* Thumbnail */}
+                    ) : projects.length === 0 ? (
+                        <p className="text-center py-10 text-xs" style={{ color: T.textFaint }}>
+                            Nenhum projeto salvo
+                        </p>
+                    ) : (
+                        projects.map(project => (
                             <div
-                                className="w-[54px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-                                style={{
-                                    background: p.thumbnailDataUrl ? undefined : T.glassMd,
-                                    border: `1px solid ${T.border}`,
-                                }}
+                                key={`${project.source}-${project.id}`}
+                                className="rounded-2xl p-4 transition-all hover:scale-[1.01] cursor-pointer active:scale-[0.99]"
+                                style={{ background: T.card, border: `1px solid ${T.border}` }}
+                                onClick={() => handleLoad(project)}
                             >
-                                {p.thumbnailDataUrl ? (
-                                    <img src={p.thumbnailDataUrl} alt={p.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <Layers size={18} style={{ color: T.textFaint }} />
-                                )}
-                            </div>
-
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-black truncate" style={{ color: T.textPrimary }}>
-                                    {p.name} {p.id === 'auto-backup' && <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,229,195,0.1)', color: T.accent }}>Auto</span>}
-                                </h3>
-                                <div className="flex items-center gap-3 mt-1">
-                                    <span className="flex items-center gap-1 text-[9px] font-bold" style={{ color: T.textDim }}>
-                                        <Layers size={10} /> {p.slideCount} slide{p.slideCount !== 1 ? 's' : ''}
-                                    </span>
-                                    <span className="flex items-center gap-1 text-[9px] font-bold" style={{ color: T.textFaint }}>
-                                        <Clock size={10} /> {formatDate(p.updatedAt)}
-                                    </span>
+                                <div className="flex items-start gap-3">
+                                    {project.thumbnailDataUrl ? (
+                                        <img
+                                            src={project.thumbnailDataUrl}
+                                            alt=""
+                                            className="w-12 h-16 object-cover rounded-lg flex-shrink-0"
+                                            style={{ border: `1px solid ${T.border}` }}
+                                        />
+                                    ) : (
+                                        <div
+                                            className="w-12 h-16 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{ background: T.glass, border: `1px solid ${T.border}` }}
+                                        >
+                                            <Layers size={16} style={{ color: T.textFaint }} />
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs font-black truncate" style={{ color: T.textPrimary }}>
+                                                {project.name}
+                                            </p>
+                                            {project.source === 'cloud' ? (
+                                                <Cloud size={11} style={{ color: T.accent }} />
+                                            ) : (
+                                                <HardDrive size={11} style={{ color: T.textFaint }} />
+                                            )}
+                                        </div>
+                                        <div className="flex gap-3 mt-1">
+                                            <span className="text-[9px] flex items-center gap-1" style={{ color: T.textFaint }}>
+                                                <Layers size={9} /> {project.slideCount} slides
+                                            </span>
+                                            <span className="text-[9px] flex items-center gap-1" style={{ color: T.textFaint }}>
+                                                <Clock size={9} /> {formatDate(project.updatedAt)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                                        <button
+                                            onClick={() => handleDuplicate(project.id)}
+                                            className="p-1.5 rounded-lg hover:bg-white/10 active:scale-90"
+                                            title="Duplicar"
+                                        >
+                                            <Copy size={13} style={{ color: T.textSub }} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(project.id)}
+                                            className="p-1.5 rounded-lg hover:bg-red-500/10 active:scale-90"
+                                            title={deletingId === project.id ? 'Confirmar?' : 'Excluir'}
+                                        >
+                                            <Trash2 size={13} style={{ color: deletingId === project.id ? '#ff4444' : T.textSub }} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleDuplicate(p.id); }}
-                                    className="p-2 rounded-lg transition-all hover:scale-110"
-                                    style={{ color: T.textDim }}
-                                    title="Duplicar"
-                                >
-                                    <Copy size={14} />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
-                                    className="p-2 rounded-lg transition-all hover:scale-110"
-                                    style={{ color: deletingId === p.id ? '#ef4444' : T.textDim }}
-                                    title={deletingId === p.id ? 'Clique novamente para confirmar' : 'Remover'}
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </div>
         </div>

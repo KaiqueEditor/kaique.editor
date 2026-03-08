@@ -603,38 +603,74 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
   const mobileActiveTab = useStore(state => state.mobileActiveTab);
 
-  // Restaurar imagens perdidas do auto-backup no carregamento (já que o localStorage limpa elas)
-  // OU inicializar com slides padrão se não houver nenhum
+  // Restaurar último projeto: primeiro do Cloud, depois fallback local
   useEffect(() => {
-    projectStorage.loadProject('auto-backup').then((backup) => {
-      if (backup && backup.sections.length > 0) {
-        const state = useStore.getState();
-        const looksLikeSameSession = state.sections.length === backup.sections.length;
-        if (looksLikeSameSession) {
-          useStore.getState().setSections(backup.sections);
+    const restoreFromCloud = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const cloudProjects = await cloudStorage.getUserCarousels(user.id);
+          if (cloudProjects.length > 0) {
+            const latest = cloudProjects[0]; // sorted by updated_at desc
+            if (latest.sections && latest.sections.length > 0) {
+              useStore.getState().setSections(latest.sections);
+              if (latest.config) useStore.getState().updateConfig(latest.config);
+              return; // cloud restored
+            }
+          }
         }
-      }
-    });
+      } catch { /* cloud failed, try local */ }
+
+      // Fallback: local auto-backup
+      try {
+        const backup = await projectStorage.loadProject('auto-backup');
+        if (backup && backup.sections.length > 0) {
+          const state = useStore.getState();
+          const looksLikeSameSession = state.sections.length === backup.sections.length;
+          if (looksLikeSameSession) {
+            useStore.getState().setSections(backup.sections);
+          }
+        }
+      } catch { /* no backup */ }
+    };
+
+    restoreFromCloud();
 
     // Se não existem slides, cria um set padrão para o usuário poder começar imediatamente
-    const state = useStore.getState();
-    if (state.sections.length === 0) {
-      const defaultSlides = [
-        createDefaultSection(0),
-        createDefaultSection(1),
-        createDefaultSection(2),
-      ];
-      useStore.getState().setSections(defaultSlides);
-    }
+    setTimeout(() => {
+      const state = useStore.getState();
+      if (state.sections.length === 0) {
+        const defaultSlides = [
+          createDefaultSection(0),
+          createDefaultSection(1),
+          createDefaultSection(2),
+        ];
+        useStore.getState().setSections(defaultSlides);
+      }
+    }, 1500);
   }, []);
 
-  // Auto-salvar projeto (APENAS backup)
+  // Auto-salvar local (2s debounce)
   useEffect(() => {
     if (sections.length === 0) return;
     const timer = setTimeout(() => {
-      // Usamos sempre 'auto-backup' para sobescrever o rascunho anterior sem lotar o histórico
       projectStorage.saveProject('auto-backup', 'Rascunho Automático', sections, config).catch(() => { });
     }, 2000);
+    return () => clearTimeout(timer);
+  }, [sections, config]);
+
+  // Auto-salvar cloud (15s debounce, evita spam no Supabase)
+  useEffect(() => {
+    if (sections.length === 0) return;
+    const timer = setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const name = sections[0]?.title || 'Rascunho';
+          await cloudStorage.saveCarousel(user.id, name, sections, config);
+        }
+      } catch { /* cloud save is best-effort */ }
+    }, 15000);
     return () => clearTimeout(timer);
   }, [sections, config]);
 
