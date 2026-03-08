@@ -72,6 +72,7 @@ export const ProjectHistory: React.FC<ProjectHistoryProps> = ({ isOpen, onClose 
                         updatedAt: c.updated_at,
                         createdAt: c.created_at,
                         source: 'cloud' as const,
+                        thumbnailDataUrl: c.thumbnail_url,
                         sections: c.sections,
                         config: c.config,
                     }));

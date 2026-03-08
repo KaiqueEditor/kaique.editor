@@ -18,6 +18,7 @@ import { useStore } from './store';
 import { useProcessText } from './hooks/useProcessText';
 import { useExport } from './hooks/useExport';
 import { useExportPDF } from './hooks/useExportPDF';
+import { useAutoSave } from './hooks/useAutoSave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHistory } from './hooks/useHistory';
 import { useFileUpload } from './hooks/useFileUpload';
@@ -564,6 +565,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const { handleAvatarUpload, handleImageUpload, validateVideoUpload, applyVideoClip } = useFileUpload();
   const { undo, redo } = useHistory();
   useKeyboardShortcuts({ onUndo: undo, onRedo: redo });
+
   const exportFormat = useStore(state => state.exportFormat);
   const setExportFormat = useStore(state => state.setExportFormat);
   const brandKits = useStore(state => state.brandKits);
@@ -602,6 +604,13 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const currentProjectId = useStore(state => state.currentProjectId);
   const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
   const mobileActiveTab = useStore(state => state.mobileActiveTab);
+  useAutoSave({
+    sections,
+    config,
+    currentProjectId,
+    userId: session?.user?.id,
+    exportRefs,
+  });
 
   // Restaurar último projeto: primeiro do Cloud, depois fallback local
   useEffect(() => {
@@ -697,7 +706,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       try {
         const userId = session?.user?.id;
         if (userId) {
-          await cloudStorage.createCarousel(userId, name, sections, config);
+          await cloudStorage.createCarousel(userId, name, sections, config, thumbnailDataUrl);
         }
       } catch { /* cloud save is best-effort */ }
 
@@ -1046,6 +1055,38 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>Meus Projetos</span>
                 <ChevronRight size={14} style={{ color: T.textFaint }} />
               </button>
+            </div>
+
+            {/* Legenda IA */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+              <p className="text-[9px] font-black uppercase tracking-widest px-4 pt-4 pb-2" style={{ color: T.textFaint }}>Legenda IA</p>
+              <button
+                onClick={handleGenerateCaption}
+                disabled={isGeneratingCaption || sections.length === 0}
+                className="flex items-center gap-3 w-full py-3 px-4 transition-all active:bg-white/5"
+                style={{ borderBottom: caption ? `1px solid ${T.border}` : undefined }}
+              >
+                {isGeneratingCaption
+                  ? <Loader2 className="animate-spin" size={16} style={{ color: T.accent }} />
+                  : <MessageSquareText size={16} style={{ color: T.accent }} />
+                }
+                <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>
+                  {isGeneratingCaption ? 'Gerando...' : 'Gerar Legenda'}
+                </span>
+                <ChevronRight size={14} style={{ color: T.textFaint }} />
+              </button>
+              {caption && (
+                <div className="px-4 py-3 space-y-2">
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: T.textSub }}>{caption}</p>
+                  <button
+                    onClick={handleCopyCaption}
+                    className="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95"
+                    style={{ background: T.accent, color: T.accentText }}
+                  >
+                    {captionCopied ? '✓ Copiada!' : 'Copiar Legenda'}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Analytics (admin only) */}

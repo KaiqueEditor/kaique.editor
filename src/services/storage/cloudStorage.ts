@@ -10,6 +10,7 @@ export interface CloudCarousel {
     sections: Section[];
     config: ProjectConfig;
     slide_count: number;
+    thumbnail_url?: string;
     created_at: string;
     updated_at: string;
 }
@@ -104,6 +105,7 @@ class CloudStorage {
         name: string,
         sections: Section[],
         config: ProjectConfig,
+        thumbnailDataUrl?: string,
     ): Promise<CloudCarousel | null> {
         // Upload images to Storage and clean sections
         const cleanSections = await this.processSectionsForCloud(userId, sections);
@@ -115,6 +117,12 @@ class CloudStorage {
                 : config.avatarUrl,
         };
 
+        // Upload thumbnail if provided
+        let thumbnailUrl: string | undefined;
+        if (thumbnailDataUrl?.startsWith('data:')) {
+            thumbnailUrl = await this.uploadImageToStorage(userId, thumbnailDataUrl, 'thumb') || undefined;
+        }
+
         // Buscar o carrossel mais recente do usuário para atualizar
         const { data: existing } = await supabase
             .from('carousels')
@@ -125,16 +133,18 @@ class CloudStorage {
             .single();
 
         if (existing) {
-            // Atualiza o existente
+            const updatePayload: any = {
+                name,
+                sections: cleanSections,
+                config: cleanConfig,
+                slide_count: sections.length,
+                updated_at: new Date().toISOString(),
+            };
+            if (thumbnailUrl) updatePayload.thumbnail_url = thumbnailUrl;
+
             const { data, error } = await supabase
                 .from('carousels')
-                .update({
-                    name,
-                    sections: cleanSections,
-                    config: cleanConfig,
-                    slide_count: sections.length,
-                    updated_at: new Date().toISOString(),
-                })
+                .update(updatePayload)
                 .eq('id', existing.id)
                 .select()
                 .single();
@@ -145,8 +155,7 @@ class CloudStorage {
             }
             return data as CloudCarousel;
         } else {
-            // Primeiro save: insere novo
-            return this.createCarousel(userId, name, sections, config);
+            return this.createCarousel(userId, name, sections, config, thumbnailUrl);
         }
     }
 
@@ -156,24 +165,28 @@ class CloudStorage {
         name: string,
         sections: Section[],
         config: ProjectConfig,
+        thumbnailUrl?: string,
     ): Promise<CloudCarousel | null> {
         // Upload images to Storage and clean sections
         const cleanSections = await this.processSectionsForCloud(userId, sections);
 
+        const insertPayload: any = {
+            user_id: userId,
+            name,
+            sections: cleanSections,
+            config: {
+                ...config,
+                avatarUrl: config.avatarUrl?.startsWith('data:')
+                    ? (await this.uploadImageToStorage(userId, config.avatarUrl, 'avatar')) || ''
+                    : config.avatarUrl,
+            },
+            slide_count: sections.length,
+        };
+        if (thumbnailUrl) insertPayload.thumbnail_url = thumbnailUrl;
+
         const { data, error } = await supabase
             .from('carousels')
-            .insert({
-                user_id: userId,
-                name,
-                sections: cleanSections,
-                config: {
-                    ...config,
-                    avatarUrl: config.avatarUrl?.startsWith('data:')
-                        ? (await this.uploadImageToStorage(userId, config.avatarUrl, 'avatar')) || ''
-                        : config.avatarUrl,
-                },
-                slide_count: sections.length,
-            })
+            .insert(insertPayload)
             .select()
             .single();
 
