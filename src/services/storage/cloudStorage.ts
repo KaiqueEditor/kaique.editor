@@ -17,6 +17,87 @@ export interface CloudCarousel {
 // ── CloudStorage (Supabase) ────────────────────────────────────────────────────
 
 class CloudStorage {
+    /**
+     * Upload a data: URL image to Supabase Storage and return the public URL.
+     * Returns the original URL if it's already a remote URL.
+     */
+    private async uploadImageToStorage(
+        userId: string,
+        dataUrl: string,
+        slideId: string,
+    ): Promise<string | undefined> {
+        if (!dataUrl) return undefined;
+        // Already a remote URL — keep it
+        if (!dataUrl.startsWith('data:')) return dataUrl;
+
+        try {
+            // Extract mime type and base64 content
+            const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
+            if (!match) return undefined;
+
+            const mimeType = match[1];
+            const ext = mimeType.split('/')[1] || 'png';
+            const base64Data = match[2];
+
+            // Convert base64 to Uint8Array
+            const byteString = atob(base64Data);
+            const bytes = new Uint8Array(byteString.length);
+            for (let i = 0; i < byteString.length; i++) {
+                bytes[i] = byteString.charCodeAt(i);
+            }
+
+            const fileName = `${userId}/${slideId}-${Date.now()}.${ext}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('carousel-images')
+                .upload(fileName, bytes, {
+                    contentType: mimeType,
+                    upsert: true,
+                });
+
+            if (uploadError) {
+                console.warn('[CloudStorage] image upload failed:', uploadError.message);
+                return undefined;
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from('carousel-images')
+                .getPublicUrl(fileName);
+
+            return publicUrlData?.publicUrl || undefined;
+        } catch (err) {
+            console.warn('[CloudStorage] image upload error:', err);
+            return undefined;
+        }
+    }
+
+    /**
+     * Process sections: upload any data: images to Storage and return clean sections
+     */
+    private async processSectionsForCloud(
+        userId: string,
+        sections: Section[],
+    ): Promise<Section[]> {
+        const processed = await Promise.all(
+            sections.map(async (s) => {
+                let imageUrl = s.imageUrl;
+
+                // Upload data: URLs to Supabase Storage
+                if (imageUrl?.startsWith('data:')) {
+                    const uploaded = await this.uploadImageToStorage(userId, imageUrl, s.id);
+                    imageUrl = uploaded || undefined;
+                }
+
+                return {
+                    ...s,
+                    imageUrl,
+                    videoUrl: undefined, // Videos are too heavy for cloud
+                };
+            })
+        );
+        return processed;
+    }
+
     /** Salva ou atualiza o carrossel mais recente do usuário no cloud */
     async saveCarousel(
         userId: string,
@@ -24,16 +105,14 @@ class CloudStorage {
         sections: Section[],
         config: ProjectConfig,
     ): Promise<CloudCarousel | null> {
-        // Remove blobs pesados antes de salvar
-        const cleanSections = sections.map(s => ({
-            ...s,
-            imageUrl: s.imageUrl?.startsWith('data:') ? undefined : s.imageUrl,
-            videoUrl: undefined,
-        }));
+        // Upload images to Storage and clean sections
+        const cleanSections = await this.processSectionsForCloud(userId, sections);
 
         const cleanConfig = {
             ...config,
-            avatarUrl: config.avatarUrl?.startsWith('data:') ? '' : config.avatarUrl,
+            avatarUrl: config.avatarUrl?.startsWith('data:')
+                ? (await this.uploadImageToStorage(userId, config.avatarUrl, 'avatar')) || ''
+                : config.avatarUrl,
         };
 
         // Buscar o carrossel mais recente do usuário para atualizar
@@ -78,11 +157,8 @@ class CloudStorage {
         sections: Section[],
         config: ProjectConfig,
     ): Promise<CloudCarousel | null> {
-        const cleanSections = sections.map(s => ({
-            ...s,
-            imageUrl: s.imageUrl?.startsWith('data:') ? undefined : s.imageUrl,
-            videoUrl: undefined,
-        }));
+        // Upload images to Storage and clean sections
+        const cleanSections = await this.processSectionsForCloud(userId, sections);
 
         const { data, error } = await supabase
             .from('carousels')
@@ -92,7 +168,9 @@ class CloudStorage {
                 sections: cleanSections,
                 config: {
                     ...config,
-                    avatarUrl: config.avatarUrl?.startsWith('data:') ? '' : config.avatarUrl,
+                    avatarUrl: config.avatarUrl?.startsWith('data:')
+                        ? (await this.uploadImageToStorage(userId, config.avatarUrl, 'avatar')) || ''
+                        : config.avatarUrl,
                 },
                 slide_count: sections.length,
             })

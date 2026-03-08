@@ -21,73 +21,43 @@ export const BottomTabBar: React.FC = () => {
 
     return (
         <nav
-            className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] flex items-end justify-around"
+            className="lg:hidden fixed z-[90] flex items-center gap-1 rounded-[24px] shadow-2xl transition-all duration-300"
             style={{
-                height: 64,
-                background: T.sidebar,
-                borderTop: `1px solid ${T.border}`,
-                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                bottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                border: `1px solid ${T.border}`,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                padding: '6px',
             }}
         >
-            {TABS.map(({ key, icon, label, isCenter }) => {
+            {TABS.map(({ key, icon, isCenter }, index) => {
                 const isActive = activeTab === key;
 
-                // Botão central em destaque (Pré Visualização)
-                if (isCenter) {
-                    return (
-                        <button
-                            key={key}
-                            onClick={() => setActiveTab(key)}
-                            className="flex flex-col items-center justify-center gap-0.5 flex-1 transition-all duration-200 active:scale-90"
-                            style={{ marginTop: -6 }}
-                        >
-                            <div
-                                className="flex items-center justify-center rounded-2xl transition-all duration-300"
-                                style={{
-                                    width: 52,
-                                    height: 34,
-                                    background: isActive ? T.accent : `${T.accent}30`,
-                                    color: isActive ? T.accentText : T.accent,
-                                    boxShadow: isActive ? `0 4px 20px ${T.accent}40` : 'none',
-                                }}
-                            >
-                                {icon}
-                            </div>
-                            <span
-                                className="text-[8px] font-black tracking-wide"
-                                style={{ color: isActive ? T.accent : T.textFaint }}
-                            >
-                                {label}
-                            </span>
-                        </button>
-                    );
-                }
-
                 return (
-                    <button
-                        key={key}
-                        onClick={() => setActiveTab(key)}
-                        className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-all duration-200 active:scale-90"
-                        style={{ color: isActive ? T.accent : T.textFaint }}
-                    >
-                        {/* Pill indicator */}
-                        <div
-                            className="flex items-center justify-center rounded-full transition-all duration-300"
+                    <React.Fragment key={key}>
+                        <button
+                            onClick={() => setActiveTab(key)}
+                            className="flex items-center justify-center transition-all duration-200 active:scale-90"
                             style={{
-                                width: isActive ? 44 : 32,
-                                height: 26,
-                                background: isActive ? `${T.accent}20` : 'transparent',
+                                width: isCenter ? 54 : 44,
+                                height: 38,
+                                borderRadius: 16,
+                                background: isActive ? (isCenter ? T.accent : (theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')) : 'transparent',
+                                color: isActive ? (isCenter ? T.accentText : T.textPrimary) : T.textSub,
+                                boxShadow: isActive && isCenter ? `0 4px 20px ${T.accent}40` : 'none',
                             }}
                         >
                             {icon}
-                        </div>
-                        <span
-                            className="text-[8px] font-bold tracking-wide"
-                            style={{ opacity: isActive ? 1 : 0.6 }}
-                        >
-                            {label}
-                        </span>
-                    </button>
+                        </button>
+
+                        {/* Custom divider before 'settings' or 'history' if needed to mimic desktop, or just a small gap. Here we just rely on standard gaps. */}
+                        {index === 2 && (
+                            <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
+                        )}
+                    </React.Fragment>
                 );
             })}
         </nav>

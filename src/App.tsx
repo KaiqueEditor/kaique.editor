@@ -711,16 +711,19 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
   // Exportar PDF: renderiza cada slide como PNG e compila
   const handleExportPDF = useCallback(async () => {
+    const fmt = EXPORT_FORMATS.find(f => f.key === exportFormat);
+    const fmtW = fmt?.width ?? 1080;
+    const fmtH = fmt?.height ?? 1440;
     const images: string[] = [];
     for (let i = 0; i < sections.length; i++) {
       const node = exportRefs.current[i];
       if (!node) continue;
       const { toPng } = await import('html-to-image');
-      const dataUrl = await toPng(node, { width: 1080, height: 1440, pixelRatio: 1 });
+      const dataUrl = await toPng(node, { width: fmtW, height: fmtH, pixelRatio: 1 });
       images.push(dataUrl);
     }
-    await exportPDF(images, sections[0]?.title || 'Carrossel');
-  }, [sections, exportRefs, exportPDF]);
+    await exportPDF(images, sections[0]?.title || 'Carrossel', fmtW, fmtH);
+  }, [sections, exportRefs, exportPDF, exportFormat]);
 
   // Caption AI
   const [caption, setCaption] = useState('');
@@ -874,14 +877,14 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
       {/* Tab: Editor — roteiro, formato, watermark, gerar carrossel */}
       {mobileActiveTab === 'editor' && (
-        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.sidebar }}>
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-24" style={{ background: T.sidebar }}>
           <SidebarContent {...sidebarProps} />
         </div>
       )}
 
       {/* Tab: Projetos — histórico de carrosséis */}
       {mobileActiveTab === 'projects' && (
-        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.bgCanvas }}>
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-24" style={{ background: T.bgCanvas }}>
           <div className="p-5 pt-6">
             <h2 className="text-lg font-black mb-1" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Meus Projetos</h2>
             <p className="text-[10px] font-bold mb-4" style={{ color: T.textFaint }}>Seus carrosséis salvos</p>
@@ -895,7 +898,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
       {/* Tab: Criar — criar manual + agentes */}
       {mobileActiveTab === 'create' && (
-        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.bgCanvas }}>
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-24" style={{ background: T.bgCanvas }}>
           <div className="p-5 pt-6 space-y-5">
             <h2 className="text-lg font-black" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Criar Carrossel</h2>
 
@@ -983,7 +986,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
       {/* Tab: Ajustes — tema, perfil/logout */}
       {mobileActiveTab === 'settings' && (
-        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.bgCanvas }}>
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-24" style={{ background: T.bgCanvas }}>
           <div className="p-5 pt-6 space-y-5">
             <h2 className="text-lg font-black" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Ajustes</h2>
 
@@ -1086,7 +1089,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
           CANVAS PRINCIPAL (desktop: sempre visível / mobile: só na tab Preview)
       ══════════════════════════════════════ */}
       <main
-        className={`flex-1 flex flex-col transition-colors duration-300 pb-[64px] lg:pb-0 ${mobileActiveTab !== 'preview' ? 'hidden lg:flex' : ''}`}
+        className={`flex-1 flex flex-col transition-colors duration-300 pb-24 lg:pb-0 ${mobileActiveTab !== 'preview' ? 'hidden lg:flex' : ''}`}
         style={{ background: T.bgCanvas, height: '100dvh', overflow: 'hidden' }}
       >
 
@@ -1141,9 +1144,9 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
           {sections.length > 0 ? (
             <div className="my-auto w-full flex flex-col items-center gap-3 sm:gap-4 p-4 lg:p-8">
 
-              {/* ── Floating Toolbar (desktop: above preview) ── */}
+              {/* ── Floating Toolbar (desktop/mobile: above preview) ── */}
               <div
-                className="hidden lg:flex items-center gap-1 px-2 py-1.5 rounded-2xl"
+                className="flex items-center gap-1 px-2 py-1.5 rounded-2xl"
                 style={{
                   background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                   border: `1px solid ${T.border}`,

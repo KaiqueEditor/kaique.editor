@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Download, Loader2 } from 'lucide-react';
-import { Section, ProjectConfig } from '../../types';
+import { Section, ProjectConfig, EXPORT_FORMATS } from '../../types';
 import { CarouselSlide } from '../carousel/CarouselSlide';
 import { useStore } from '../../store';
 import { getTheme } from '../../constants/theme';
@@ -15,15 +15,6 @@ interface ExportPreviewProps {
   onExport: () => void;
 }
 
-const PREVIEW_W = 240;
-const PREVIEW_H = Math.round(PREVIEW_W * (1440 / 1080));
-const SCALE = PREVIEW_W / 1080;
-
-// Mobile: thumbnails menores
-const PREVIEW_W_SM = 150;
-const PREVIEW_H_SM = Math.round(PREVIEW_W_SM * (1440 / 1080));
-const SCALE_SM = PREVIEW_W_SM / 1080;
-
 export const ExportPreview: React.FC<ExportPreviewProps> = ({
   sections,
   config,
@@ -34,7 +25,12 @@ export const ExportPreview: React.FC<ExportPreviewProps> = ({
   onExport,
 }) => {
   const theme = useStore(state => state.theme);
+  const exportFormat = useStore(state => state.exportFormat);
   const T = getTheme(theme);
+
+  const fmt = EXPORT_FORMATS.find(f => f.key === exportFormat);
+  const fmtW = fmt?.width ?? 1080;
+  const fmtH = fmt?.height ?? 1440;
 
   // Detecta mobile via window width
   const [isMobile, setIsMobile] = React.useState(() =>
@@ -46,9 +42,11 @@ export const ExportPreview: React.FC<ExportPreviewProps> = ({
     return () => window.removeEventListener('resize', handler);
   }, []);
 
+  const PREVIEW_W = 240;
+  const PREVIEW_W_SM = 150;
   const pw = isMobile ? PREVIEW_W_SM : PREVIEW_W;
-  const ph = isMobile ? PREVIEW_H_SM : PREVIEW_H;
-  const sc = isMobile ? SCALE_SM : SCALE;
+  const ph = Math.round(pw * (fmtH / fmtW));
+  const sc = pw / fmtW;
 
   return (
     <div className="fixed inset-0 z-[200] overflow-y-auto p-4 sm:p-8 lg:p-12 flex flex-col items-center no-scrollbar animate-fade-in" style={{ background: T.bgCanvas }}>
@@ -98,7 +96,7 @@ export const ExportPreview: React.FC<ExportPreviewProps> = ({
               className="rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden"
               style={{ width: pw, height: ph, border: `1px solid ${T.border}`, boxShadow: T.shadowStrong, position: 'relative' }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, width: 1080, height: 1440, transform: `scale(${sc})`, transformOrigin: 'top left' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: fmtW, height: fmtH, transform: `scale(${sc})`, transformOrigin: 'top left' }}>
                 <CarouselSlide
                   section={s}
                   config={config}
@@ -106,6 +104,8 @@ export const ExportPreview: React.FC<ExportPreviewProps> = ({
                   total={sections.length}
                   isExport={true}
                   isGenerating={generatingIds.includes(s.id)}
+                  formatWidth={fmtW}
+                  formatHeight={fmtH}
                 />
               </div>
             </div>

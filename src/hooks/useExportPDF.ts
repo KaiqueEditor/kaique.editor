@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 
 /**
  * Hook para exportar o carrossel como PDF compilado.
- * Recebe um array de PNGs (data URLs) e compila num PDF 1080×1440.
+ * Recebe um array de PNGs (data URLs) e compila num PDF com as dimensões do formato selecionado.
  */
 export function useExportPDF() {
     const [isExportingPDF, setIsExportingPDF] = useState(false);
@@ -12,6 +12,8 @@ export function useExportPDF() {
     const exportPDF = useCallback(async (
         slideImages: string[], // Array de data URLs (PNG)
         projectName: string = 'Carrossel',
+        formatWidth: number = 1080,
+        formatHeight: number = 1440,
     ) => {
         if (slideImages.length === 0) {
             toast.error('Nenhum slide para exportar');
@@ -21,19 +23,18 @@ export function useExportPDF() {
         setIsExportingPDF(true);
 
         try {
-            // 1080×1440 em mm (ppi=72: 1080px ~381mm, 1440px ~508mm)
-            // Usamos unidade "px" direto
-            const W = 1080;
-            const H = 1440;
+            const W = formatWidth;
+            const H = formatHeight;
+            const orientation = H >= W ? 'portrait' : 'landscape';
             const pdf = new jsPDF({
-                orientation: 'portrait',
+                orientation,
                 unit: 'px',
                 format: [W, H],
                 hotfixes: ['px_scaling'],
             });
 
             for (let i = 0; i < slideImages.length; i++) {
-                if (i > 0) pdf.addPage([W, H], 'portrait');
+                if (i > 0) pdf.addPage([W, H], orientation);
                 pdf.addImage(slideImages[i], 'PNG', 0, 0, W, H, undefined, 'FAST');
             }
 
