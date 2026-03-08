@@ -15,19 +15,21 @@ export const FONT_OPTIONS: FontOption[] = [
   // ─── ⭐ FAVORITAS ──────────────────────────────────────────────────────────
   {
     id: 'montserrat',
-    name: 'Montserrat',
+    name: 'Montserrat (PRO)',
     stack: "'Montserrat', sans-serif",
     googleFont: 'Montserrat:wght@400;500;600;700;800;900',
     category: 'favorita',
     label: 'Corpo / Títulos',
+    adminOnly: true,
   },
   {
     id: 'wide',
-    name: 'Unbounded',
+    name: 'Unbounded (PRO)',
     stack: "'Unbounded', sans-serif",
     googleFont: 'Unbounded:wght@400;700;900',
     category: 'favorita',
     label: 'Futurista / Wide',
+    adminOnly: true,
   },
   {
     id: 'outfit',
