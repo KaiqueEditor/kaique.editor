@@ -10,6 +10,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { CarouselSlide } from './components/carousel/CarouselSlide';
 import { SlideEditor } from './components/editor/SlideEditor';
 import { LoginPage } from './components/auth/LoginPage';
+import { BottomTabBar } from './components/layout/BottomTabBar';
 import { supabase } from './lib/supabase';
 import { useStore } from './store';
 import { useProcessText } from './hooks/useProcessText';
@@ -30,6 +31,29 @@ import { EXPORT_FORMATS } from './types/carousel.types';
 const AgentChat = lazy(() => import('./components/chat/AgentChat'));
 const ImageAgentChat = lazy(() => import('./components/chat/ImageAgentChat'));
 const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
+
+// ── Helper: cria uma Section vazia/default ──────────────────────────────────────
+const createDefaultSection = (index: number): Section => ({
+  id: `default-${Date.now()}-${index}`,
+  title: index === 0 ? 'Título da Capa' : `Slide ${index + 1}`,
+  content: index === 0 ? 'Comece editando este texto' : 'Adicione seu conteúdo aqui',
+  alignment: 'center',
+  layoutType: 'storytelling',
+  titleFont: 'Plus Jakarta Sans',
+  bodyFont: 'Inter',
+  titleColor: '#FFFFFF',
+  bodyColor: '#e0e0e0',
+  bgColor: '#1a1a2e',
+  brandingColor: '#00E5C3',
+  titleSize: 70,
+  bodySize: 22,
+  imagePosX: 50,
+  imagePosY: 50,
+  imageScale: 1,
+  overlayOpacity: 0,
+  textPosY: 70,
+  showSocialImage: false,
+});
 
 // ── Sidebar inner content (reutilizado no desktop e no mobile sheet) ──────────
 interface SidebarContentProps {
@@ -489,6 +513,24 @@ function SidebarContent({
               />
             </div>
           ))}
+
+          {/* Botão Adicionar Slide */}
+          <button
+            onClick={() => {
+              const newSection = createDefaultSection(sections.length);
+              useStore.getState().addSection(newSection);
+              setActiveSlide(sections.length);
+              toast.success('Novo slide adicionado!');
+            }}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-95"
+            style={{
+              background: T.glass,
+              color: T.textSub,
+              border: `1px dashed ${T.border}`,
+            }}
+          >
+            <Plus size={14} /> Adicionar Slide
+          </button>
         </div>
       )}
     </div>
@@ -554,20 +596,31 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const [historyOpen, setHistoryOpen] = useState(false);
   const currentProjectId = useStore(state => state.currentProjectId);
   const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
+  const mobileActiveTab = useStore(state => state.mobileActiveTab);
 
   // Restaurar imagens perdidas do auto-backup no carregamento (já que o localStorage limpa elas)
+  // OU inicializar com slides padrão se não houver nenhum
   useEffect(() => {
     projectStorage.loadProject('auto-backup').then((backup) => {
       if (backup && backup.sections.length > 0) {
         const state = useStore.getState();
-        // Se a gente recém-carregou e está faltando imagem em tudo devido ao limite salva no LocalStorage,
-        // podemos recuperar do DB que suporta megabytes de Base64
         const looksLikeSameSession = state.sections.length === backup.sections.length;
         if (looksLikeSameSession) {
           useStore.getState().setSections(backup.sections);
         }
       }
     });
+
+    // Se não existem slides, cria um set padrão para o usuário poder começar imediatamente
+    const state = useStore.getState();
+    if (state.sections.length === 0) {
+      const defaultSlides = [
+        createDefaultSection(0),
+        createDefaultSection(1),
+        createDefaultSection(2),
+      ];
+      useStore.getState().setSections(defaultSlides);
+    }
   }, []);
 
   // Auto-salvar projeto (APENAS backup)
@@ -729,7 +782,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       </aside>
 
       {/* ══════════════════════════════════════
-          MOBILE SIDEBAR — overlay sheet
+          MOBILE SIDEBAR — overlay sheet (opens from Editor tab)
       ══════════════════════════════════════ */}
       {/* Backdrop */}
       <div
@@ -757,62 +810,174 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       </div>
 
       {/* ══════════════════════════════════════
-          CANVAS PRINCIPAL
+          MOBILE BOTTOM TAB BAR
       ══════════════════════════════════════ */}
-      <main
-        className="flex-1 flex flex-col transition-colors duration-300"
-        style={{ background: T.bgCanvas, height: '100dvh', overflow: 'hidden' }}
-      >
-        {/* Mobile top bar */}
-        <div className="lg:hidden flex-shrink-0 w-full relative flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: `1px solid ${T.border}` }}
-        >
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all active:scale-90"
-            style={{ background: T.card, border: `1px solid ${T.border}`, color: T.textSub }}
-          >
-            <PanelLeft size={15} />
-            <span className="text-[9px] font-black uppercase tracking-wide">Editar</span>
-          </button>
+      <BottomTabBar />
 
-          <div className="absolute inset-x-0 text-center pointer-events-none">
-            <h1
-              className="font-black"
-              style={{
-                color: T.textPrimary,
-                letterSpacing: '-0.04em',
-                fontSize: '1rem',
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              Carrossel<span style={{ color: T.textDim }}>.</span>Pro
-            </h1>
-            <p className="text-[6px] font-bold tracking-wide" style={{ color: T.textFaint }}>
-              by <span style={{ color: T.accent }}>Kaique.Editor</span>
-            </p>
+      {/* ══════════════════════════════════════
+          MOBILE TAB VIEWS
+      ══════════════════════════════════════ */}
+
+      {/* Tab: Editor — roteiro, formato, watermark, gerar carrossel */}
+      {mobileActiveTab === 'editor' && (
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.sidebar }}>
+          <SidebarContent {...sidebarProps} />
+        </div>
+      )}
+
+      {/* Tab: Projetos — histórico de carrosséis */}
+      {mobileActiveTab === 'projects' && (
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.bgCanvas }}>
+          <div className="p-5 pt-6">
+            <h2 className="text-lg font-black mb-1" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Meus Projetos</h2>
+            <p className="text-[10px] font-bold mb-4" style={{ color: T.textFaint }}>Seus carrosséis salvos</p>
           </div>
+          <ProjectHistory
+            isOpen={true}
+            onClose={() => useStore.getState().setMobileActiveTab('preview')}
+          />
+        </div>
+      )}
 
-          <div className="flex gap-2">
+      {/* Tab: Criar — criar manual + agentes */}
+      {mobileActiveTab === 'create' && (
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.bgCanvas }}>
+          <div className="p-5 pt-6 space-y-5">
+            <h2 className="text-lg font-black" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Criar Carrossel</h2>
+
+            {/* Criar Manual */}
+            <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: T.textFaint }}>Modo Manual</p>
+              <p className="text-xs font-semibold mb-4" style={{ color: T.textSub }}>
+                Crie slides um a um, sem usar inteligência artificial
+              </p>
+              <button
+                onClick={() => {
+                  const newSection = createDefaultSection(sections.length);
+                  useStore.getState().addSection(newSection);
+                  setActiveSlide(sections.length);
+                  toast.success('Slide adicionado!');
+                  useStore.getState().setMobileActiveTab('preview');
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                style={{ background: `${T.accent}15`, color: T.accent, border: `1px solid ${T.accent}30` }}
+              >
+                <Plus size={14} /> Adicionar Slide
+              </button>
+              {sections.length > 0 && (
+                <p className="text-[9px] font-bold mt-2 text-center" style={{ color: T.textFaint }}>
+                  {sections.length} slide{sections.length !== 1 ? 's' : ''} no carrossel atual
+                </p>
+              )}
+            </div>
+
+            {/* Novo Carrossel (limpar) */}
             <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl transition-all active:scale-90"
-              style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-              title="Trocar Tema"
+              onClick={() => {
+                if (sections.length > 0 && !confirm('Criar um novo carrossel? O atual será salvo automaticamente.')) return;
+                useStore.getState().setSections([
+                  createDefaultSection(0),
+                  createDefaultSection(1),
+                  createDefaultSection(2),
+                ]);
+                setTextInput('');
+                toast.success('Novo carrossel criado!');
+                useStore.getState().setMobileActiveTab('preview');
+              }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+              style={{ background: T.glass, color: T.textSub, border: `1px dashed ${T.border}` }}
             >
-              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+              <FileText size={14} /> Novo Carrossel Vazio
             </button>
 
+            {/* Agentes IA (redirect ChatGPT) */}
+            <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: T.textFaint }}>Agentes IA</p>
+              <p className="text-xs font-semibold mb-4" style={{ color: T.textSub }}>
+                Use GPTs especializados para gerar conteúdo no ChatGPT
+              </p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank')}
+                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all active:scale-95"
+                  style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}30` }}
+                >
+                  <MessageSquareText size={16} style={{ color: T.accent }} />
+                  <div className="text-left flex-1">
+                    <div className="text-xs font-bold" style={{ color: T.textPrimary }}>Agente de Texto</div>
+                    <div className="text-[9px] font-medium" style={{ color: T.textFaint }}>Gera roteiros de carrossel no ChatGPT</div>
+                  </div>
+                  <ExternalLink size={12} style={{ color: T.textFaint }} />
+                </button>
+                <button
+                  onClick={() => window.open('https://chatgpt.com/g/g-699063520f4c81919e57262f9e84dc3e-kaique-editor-image-generator', '_blank')}
+                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all active:scale-95"
+                  style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}30` }}
+                >
+                  <Sparkles size={16} style={{ color: T.accent }} />
+                  <div className="text-left flex-1">
+                    <div className="text-xs font-bold" style={{ color: T.textPrimary }}>Agente de Imagem</div>
+                    <div className="text-[9px] font-medium" style={{ color: T.textFaint }}>Gera imagens para slides no ChatGPT</div>
+                  </div>
+                  <ExternalLink size={12} style={{ color: T.textFaint }} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Ajustes — tema, perfil/logout */}
+      {mobileActiveTab === 'settings' && (
+        <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-[64px]" style={{ background: T.bgCanvas }}>
+          <div className="p-5 pt-6 space-y-5">
+            <h2 className="text-lg font-black" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Ajustes</h2>
+
+            {/* Tema */}
+            <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: T.textFaint }}>Aparência</p>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-3 w-full py-2 px-3 rounded-xl transition-all active:scale-95"
+                style={{ background: T.glass, border: `1px solid ${T.border}` }}
+              >
+                {isDark ? <Sun size={16} style={{ color: T.accent }} /> : <Moon size={16} style={{ color: T.accent }} />}
+                <span className="text-xs font-bold" style={{ color: T.textPrimary }}>
+                  {isDark ? 'Modo Claro' : 'Modo Escuro'}
+                </span>
+              </button>
+            </div>
+
+            {/* Perfil */}
+            <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: T.textFaint }}>Conta</p>
+              <p className="text-xs font-bold mb-1" style={{ color: T.textPrimary }}>{session?.user?.email || 'Usuário'}</p>
+              <p className="text-[9px] font-medium" style={{ color: T.textFaint }}>Logado via {session?.user?.app_metadata?.provider || 'email'}</p>
+            </div>
+
+            {/* Sair */}
             <button
               onClick={onLogout}
-              className="p-2 rounded-xl transition-all active:scale-90 hover:bg-red-500/10"
-              style={{ background: T.glass, border: `1px solid ${T.border}`, color: '#ff4444' }}
-              title="Ver Perfil / Sair"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+              style={{
+                background: 'rgba(255,68,68,0.1)',
+                color: '#ff4444',
+                border: '1px solid rgba(255,68,68,0.2)',
+              }}
             >
-              <LogOut size={15} />
+              <LogOut size={14} /> Sair da Conta
             </button>
           </div>
         </div>
+      )}
+
+      {/* ══════════════════════════════════════
+          CANVAS PRINCIPAL (desktop: sempre visível / mobile: só na tab Preview)
+      ══════════════════════════════════════ */}
+      <main
+        className={`flex-1 flex flex-col transition-colors duration-300 pb-[64px] lg:pb-0 ${mobileActiveTab !== 'preview' ? 'hidden lg:flex' : ''}`}
+        style={{ background: T.bgCanvas, height: '100dvh', overflow: 'hidden' }}
+      >
 
         {/* Nós de exportação — tecnicamente visíveis para o browser (decode ativo), invisíveis para o usuário */}
         {/* IMPORTANTE: zIndex >= 0 e opacity > 0 são obrigatórios para o Chrome decodificar frames de vídeo */}

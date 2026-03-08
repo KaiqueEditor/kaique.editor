@@ -793,6 +793,40 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                         ))}
                       </div>
 
+                      {/* Degradê + Área da Imagem */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <div className="flex justify-between text-[8px] font-black uppercase mb-1.5" style={{ color: T.textFaint }}>
+                            <span>Degradê</span>
+                            <span style={{ color: T.textSub }}>
+                              {Math.round((s.gradientIntensity ?? 0.8) * 100)}%
+                            </span>
+                          </div>
+                          <input type="range" min={0} max={1} step={0.05}
+                            value={s.gradientIntensity ?? 0.8}
+                            onChange={e => update({ gradientIntensity: parseFloat(e.target.value) })}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full h-1 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: T.accent, background: T.glassMd }}
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-[8px] font-black uppercase mb-1.5" style={{ color: T.textFaint }}>
+                            <span>Área Imagem</span>
+                            <span style={{ color: T.textSub }}>
+                              {s.imageHeight ?? 55}%
+                            </span>
+                          </div>
+                          <input type="range" min={30} max={100} step={5}
+                            value={s.imageHeight ?? 55}
+                            onChange={e => update({ imageHeight: parseInt(e.target.value) })}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full h-1 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: T.accent, background: T.glassMd }}
+                          />
+                        </div>
+                      </div>
+
                       {/* Aviso MP4 */}
                       {s.videoUrl && (
                         <div

@@ -7,3 +7,4 @@ dist/
 src_BACKUP_*/
 .vercel
 .env*.local
+.claude/

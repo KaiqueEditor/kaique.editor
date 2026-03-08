@@ -26,6 +26,10 @@ export interface Section {
   overlayOpacity: number;
   // Text Adjustments
   textPosY: number;
+  // Gradient
+  gradientIntensity?: number;   // 0 a 1 (0 = sem degradê, 1 = máximo)
+  // Image area
+  imageHeight?: number;         // 30 a 100 (% da altura do slide que a imagem ocupa)
   // Social Post specific
   showSocialImage: boolean;
   avatarUrl?: string;

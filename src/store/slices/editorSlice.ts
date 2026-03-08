@@ -49,6 +49,10 @@ export interface EditorSlice {
   presets: StylePreset[];
   savePreset: (preset: StylePreset) => void;
   deletePreset: (id: string) => void;
+
+  // Mobile navigation
+  mobileActiveTab: 'editor' | 'projects' | 'preview' | 'create' | 'settings';
+  setMobileActiveTab: (tab: 'editor' | 'projects' | 'preview' | 'create' | 'settings') => void;
 }
 
 export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
@@ -102,4 +106,7 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
   presets: [],
   savePreset: (preset) => set(state => ({ presets: [...state.presets, preset] })),
   deletePreset: (id) => set(state => ({ presets: state.presets.filter(p => p.id !== id) })),
+
+  mobileActiveTab: 'preview',
+  setMobileActiveTab: (tab) => set({ mobileActiveTab: tab }),
 });

@@ -187,7 +187,8 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
       style={{ ...containerStyle, backgroundColor: section.bgColor || '#000000' }}
     >
       <div
-        className={`absolute inset-0 ${!isFullBg ? 'h-[55%]' : 'h-full'} overflow-hidden`}
+        className={`absolute inset-0 overflow-hidden`}
+        style={{ height: isFullBg ? '100%' : `${section.imageHeight ?? 55}%` }}
       >
         {isGenerating ? (
           <div className="w-full h-full bg-black flex flex-col items-center justify-center gap-4">
@@ -220,7 +221,15 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           <div className="w-full h-full opacity-10" style={{ background: `linear-gradient(135deg, #ffffff, rgba(255,255,255,0.3))` }}></div>
         )}
         <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }}></div>
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 12%, rgba(0,0,0,0.1) 22%, transparent 30%)' }}></div>
+        {(() => {
+          const gIntensity = section.gradientIntensity ?? 0.8;
+          if (gIntensity <= 0) return null;
+          return (
+            <div className="absolute inset-0" style={{
+              background: `linear-gradient(to top, rgba(0,0,0,${gIntensity}) 0%, rgba(0,0,0,${gIntensity * 0.5}) 12%, rgba(0,0,0,${gIntensity * 0.1}) 22%, transparent 30%)`
+            }}></div>
+          );
+        })()}
       </div>
 
       <div className="relative z-10 pt-12 flex flex-col items-center w-full">
