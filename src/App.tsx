@@ -1002,16 +1002,61 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
               </button>
             </div>
 
+            {/* Projeto */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+              <p className="text-[9px] font-black uppercase tracking-widest px-4 pt-4 pb-2" style={{ color: T.textFaint }}>Projeto</p>
+              <button
+                onClick={handleManualSave}
+                disabled={savingProject}
+                className="flex items-center gap-3 w-full py-3 px-4 transition-all active:bg-white/5"
+                style={{ borderBottom: `1px solid ${T.border}` }}
+              >
+                {savingProject
+                  ? <Loader2 className="animate-spin" size={16} style={{ color: T.accent }} />
+                  : <Save size={16} style={{ color: T.accent }} />
+                }
+                <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>
+                  {savingProject ? 'Salvando...' : 'Salvar Projeto'}
+                </span>
+                <ChevronRight size={14} style={{ color: T.textFaint }} />
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={isExportingPDF || isExporting || isProcessing}
+                className="flex items-center gap-3 w-full py-3 px-4 transition-all active:bg-white/5"
+                style={{ borderBottom: `1px solid ${T.border}` }}
+              >
+                {isExportingPDF
+                  ? <Loader2 className="animate-spin" size={16} style={{ color: T.accent }} />
+                  : <FileOutput size={16} style={{ color: T.accent }} />
+                }
+                <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>
+                  {isExportingPDF ? 'Exportando PDF...' : 'Exportar PDF'}
+                </span>
+                <ChevronRight size={14} style={{ color: T.textFaint }} />
+              </button>
+              <button
+                onClick={() => setHistoryOpen(true)}
+                className="flex items-center gap-3 w-full py-3 px-4 transition-all active:bg-white/5"
+              >
+                <FolderOpen size={16} style={{ color: T.accent }} />
+                <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>Meus Projetos</span>
+                <ChevronRight size={14} style={{ color: T.textFaint }} />
+              </button>
+            </div>
+
             {/* Analytics (admin only) */}
             {isAdmin && (
-              <button
-                onClick={() => setShowAnalytics(true)}
-                className="w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all active:scale-95"
-                style={{ background: 'rgba(0,229,195,0.08)', border: `1px solid rgba(0,229,195,0.2)` }}
-              >
-                <BarChart3 size={16} style={{ color: T.accent }} />
-                <span className="text-xs font-bold" style={{ color: T.accent }}>Analytics</span>
-              </button>
+              <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+                <button
+                  onClick={() => setShowAnalytics(true)}
+                  className="flex items-center gap-3 w-full py-3 px-4 transition-all active:bg-white/5"
+                >
+                  <BarChart3 size={16} style={{ color: T.accent }} />
+                  <span className="text-xs font-bold flex-1 text-left" style={{ color: T.accent }}>Analytics</span>
+                  <ChevronRight size={14} style={{ color: T.textFaint }} />
+                </button>
+              </div>
             )}
 
             {/* Perfil */}
@@ -1094,7 +1139,55 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar flex flex-col">
 
           {sections.length > 0 ? (
-            <div className="my-auto w-full flex flex-col items-center gap-3 sm:gap-5 p-4 lg:p-8">
+            <div className="my-auto w-full flex flex-col items-center gap-3 sm:gap-4 p-4 lg:p-8">
+
+              {/* ── Floating Toolbar (desktop: above preview) ── */}
+              <div
+                className="hidden lg:flex items-center gap-1 px-2 py-1.5 rounded-2xl"
+                style={{
+                  background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                  border: `1px solid ${T.border}`,
+                  backdropFilter: 'blur(20px)',
+                }}
+              >
+                <button
+                  onClick={handleManualSave}
+                  disabled={savingProject}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: savingProject ? T.textFaint : T.textSub }}
+                  title="Salvar"
+                >
+                  {savingProject ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                </button>
+                <button
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF || isExporting || isProcessing}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: isExportingPDF ? T.textFaint : T.textSub }}
+                  title="Export PDF"
+                >
+                  {isExportingPDF ? <Loader2 className="animate-spin" size={16} /> : <FileOutput size={16} />}
+                </button>
+                <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
+                <button
+                  onClick={() => setHistoryOpen(true)}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: T.textSub }}
+                  title="Histórico"
+                >
+                  <FolderOpen size={16} />
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAnalytics(true)}
+                    className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                    style={{ color: T.accent }}
+                    title="Analytics"
+                  >
+                    <BarChart3 size={16} />
+                  </button>
+                )}
+              </div>
 
               {/* ── Preview ── */}
               <div
@@ -1142,10 +1235,10 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 <button
                   disabled={activeSlide === 0}
                   onClick={() => setActiveSlide(activeSlide - 1)}
-                  className="p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
+                  className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
                   style={{ color: T.textPrimary, background: T.glass, border: `1px solid ${T.border}` }}
                 >
-                  <ChevronLeft size={18} />
+                  <ChevronLeft size={16} />
                 </button>
 
                 <div className="flex items-center gap-1.5">
@@ -1171,115 +1264,51 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 <button
                   disabled={activeSlide === sections.length - 1}
                   onClick={() => setActiveSlide(activeSlide + 1)}
-                  className="p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
+                  className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
                   style={{ color: T.textPrimary, background: T.glass, border: `1px solid ${T.border}` }}
                 >
-                  <ChevronRight size={18} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
 
-              {/* ── Ações ── */}
-              <div className="flex flex-col gap-2 w-full" style={{ maxWidth: 'min(500px, 90vw)' }}>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowExportPreview(true)}
-                    disabled={isProcessing || isExporting}
-                    className="flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 hover:bg-white/5 active:scale-95"
-                    style={{
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      color: isProcessing || isExporting ? T.textFaint : T.textSub,
-                      cursor: isProcessing || isExporting ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    <Eye size={15} /> Revisar
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (generatingIds.length > 0) {
-                        toast('Alguns slides ainda estão gerando imagens.');
-                      }
-                      exportAll(sections);
-                    }}
-                    disabled={isExporting || isProcessing}
-                    className="flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
-                    style={{
-                      background: isExporting || isProcessing ? T.glassMd : T.accent,
-                      color: isExporting || isProcessing ? T.textDim : T.accentText,
-                      boxShadow: isExporting || isProcessing ? 'none' : `0 8px 28px ${T.accentGlow}`,
-                      border: `1px solid ${isExporting || isProcessing ? T.border : 'transparent'}`,
-                    }}
-                  >
-                    {isExporting
-                      ? <><Loader2 className="animate-spin" size={14} /><span>{exportStep?.toUpperCase()}</span></>
-                      : <><Download size={15} /><span>Exportar ZIP</span></>
+              {/* ── Primary Actions (Revisar + Exportar ZIP) ── */}
+              <div className="flex gap-3 w-full" style={{ maxWidth: 'min(420px, 90vw)' }}>
+                <button
+                  onClick={() => setShowExportPreview(true)}
+                  disabled={isProcessing || isExporting}
+                  className="flex-1 py-3 rounded-2xl text-[10px] font-bold tracking-wider flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: T.glass,
+                    border: `1px solid ${T.border}`,
+                    color: isProcessing || isExporting ? T.textFaint : T.textSub,
+                  }}
+                >
+                  <Eye size={14} /> Revisar
+                </button>
+                <button
+                  onClick={() => {
+                    if (generatingIds.length > 0) {
+                      toast('Alguns slides ainda estão gerando imagens.');
                     }
-                  </button>
-                </div>
-                {/* Linha inferior: Salvar + PDF + Histórico */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleManualSave}
-                    disabled={savingProject}
-                    className="flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
-                    style={{
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      color: savingProject ? T.textFaint : T.textSub,
-                    }}
-                  >
-                    {savingProject
-                      ? <><Loader2 className="animate-spin" size={12} /> Salvando...</>
-                      : <><Save size={13} /> Salvar</>
-                    }
-                  </button>
-                  <button
-                    onClick={handleExportPDF}
-                    disabled={isExportingPDF || isExporting || isProcessing}
-                    className="flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
-                    style={{
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      color: isExportingPDF ? T.textFaint : T.textSub,
-                    }}
-                  >
-                    {isExportingPDF
-                      ? <><Loader2 className="animate-spin" size={12} /> PDF...</>
-                      : <><FileOutput size={13} /> Export PDF</>
-                    }
-                  </button>
-                  <button
-                    onClick={() => setHistoryOpen(true)}
-                    className="flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
-                    style={{
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      color: T.textSub,
-                    }}
-                  >
-                    <FolderOpen size={13} /> Histórico
-                  </button>
-                </div>
-
-                {/* Analytics (admin only) */}
-                {isAdmin && (
-                  <button
-                    onClick={() => setShowAnalytics(true)}
-                    className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
-                    style={{
-                      background: 'rgba(0,229,195,0.08)',
-                      border: '1px solid rgba(0,229,195,0.2)',
-                      color: T.accent,
-                    }}
-                  >
-                    <BarChart3 size={13} /> Analytics
-                  </button>
-                )}
+                    exportAll(sections);
+                  }}
+                  disabled={isExporting || isProcessing}
+                  className="flex-1 py-3 rounded-2xl text-[10px] font-bold tracking-wider flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: isExporting || isProcessing ? T.glassMd : T.accent,
+                    color: isExporting || isProcessing ? T.textDim : T.accentText,
+                    boxShadow: isExporting || isProcessing ? 'none' : `0 8px 28px ${T.accentGlow}`,
+                    border: `1px solid ${isExporting || isProcessing ? T.border : 'transparent'}`,
+                  }}
+                >
+                  {isExporting
+                    ? <><Loader2 className="animate-spin" size={14} /><span>{exportStep?.toUpperCase()}</span></>
+                    : <><Download size={14} /><span>Exportar ZIP</span></>
+                  }
+                </button>
               </div>
-
-
-
             </div>
+
           ) : (
             /* ── Empty State ── */
             <div className="my-auto self-center animate-fade-in flex flex-col items-center gap-8 px-6 py-8 w-full" style={{ maxWidth: 'min(640px, 90vw)' }}>
@@ -1504,7 +1533,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
       />
-    </div>
+    </div >
   );
 }
 
