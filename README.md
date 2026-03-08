@@ -41,6 +41,19 @@ Crie carrosséis de alta performance em minutos. Editor visual completo, agentes
 - **Criação manual** — Adicione slides sem usar IA, edite tudo direto no celular
 - **Tema claro/escuro** — Alterne entre modos com um toque
 
+### 📊 Analytics (Admin)
+
+- **Visão geral** — Total de usuários, carrosséis gerados e média por usuário
+- **Ranking de usuários** — Quem mais criou carrosséis, com filtro por período
+- **Filtros de data** — Hoje, 7 dias, 30 dias, 60 dias ou todos
+- **Acesso restrito** — Apenas perfis administrativos visualizam o painel
+
+### ☁️ Storage na Nuvem
+
+- **Carrosséis sincronizados** — Seus projetos são salvos no Supabase, vinculados ao seu email
+- **Acesso multi-dispositivo** — Edite no PC, continue no celular
+- **Backup local** — IndexedDB mantém uma cópia local como cache/fallback
+
 ### 📦 Exportação Profissional
 
 - **4 formatos de exportação:**
@@ -55,8 +68,8 @@ Crie carrosséis de alta performance em minutos. Editor visual completo, agentes
 ### 💾 Projetos
 
 - **Salvamento automático** — Nunca perca seu trabalho
+- **Salvamento na nuvem** — Sincronizado com Supabase
 - **Histórico de projetos** — Acesse e restaure carrosséis anteriores
-- **Slides padrão** — Ao abrir, já vem com 3 slides prontos para editar
 
 ### ⌨️ Atalhos de Teclado
 
@@ -75,7 +88,7 @@ Crie carrosséis de alta performance em minutos. Editor visual completo, agentes
 | React 19 + TypeScript | Interface reativa |
 | Zustand | Gerenciamento de estado |
 | Tailwind CSS | Estilização |
-| Supabase | Autenticação (Email, Google, GitHub) |
+| Supabase | Auth + Database (profiles, carousels) |
 | html-to-image | Renderização de slides em PNG |
 | JSZip | Compactação para download |
 | Vercel | Deploy e hosting |
@@ -100,6 +113,7 @@ Acesse **<http://localhost:3001>**
 ```
 src/
 ├── components/
+│   ├── analytics/     # AnalyticsPage (admin)
 │   ├── auth/          # Login (Email, Google, GitHub)
 │   ├── carousel/      # CarouselSlide + SlideFooter
 │   ├── chat/          # Agentes IA (ChatGPT redirects)
@@ -107,15 +121,15 @@ src/
 │   ├── export/        # ExportPreview
 │   ├── history/       # ProjectHistory
 │   └── layout/        # BottomTabBar (mobile)
-├── hooks/             # useExport, useProcessText, useFileUpload...
+├── hooks/             # useExport, useAdmin, useProcessText...
 ├── services/
-│   ├── api/           # GeminiService (processamento de texto)
+│   ├── api/           # GeminiService
 │   ├── processors/    # Processamento de imagens
-│   └── storage/       # Salvar/carregar projetos (localStorage)
+│   └── storage/       # projectStorage (local) + cloudStorage (Supabase)
 ├── store/             # Zustand (carouselSlice + editorSlice)
 ├── constants/         # Tema, fontes (17), cores, atalhos
 ├── types/             # Section, ProjectConfig, ChatMessage
-└── utils/             # Formatters (bold/italic/highlight), validation
+└── utils/             # Formatters, validation
 ```
 
 ---

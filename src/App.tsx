@@ -4,8 +4,10 @@ import {
   Upload, Wand2, Eye, Download, Loader2, Sun, Moon, Palette, FileText, ChevronDown,
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
-  PenLine, Copy, Check, Plus, Save, LogOut,
+  PenLine, Copy, Check, Plus, Save, LogOut, BarChart3,
 } from 'lucide-react';
+import { AnalyticsPage } from './components/analytics/AnalyticsPage';
+import { useAdmin, clearAdminCache } from './hooks/useAdmin';
 import { Toaster, toast } from 'react-hot-toast';
 import { CarouselSlide } from './components/carousel/CarouselSlide';
 import { SlideEditor } from './components/editor/SlideEditor';
@@ -22,6 +24,7 @@ import { useFileUpload } from './hooks/useFileUpload';
 import { VideoTrimModal } from './components/editor/VideoTrimModal';
 import { ProjectHistory } from './components/history/ProjectHistory';
 import { projectStorage } from './services/storage/projectStorage';
+import { cloudStorage } from './services/storage/cloudStorage';
 import { geminiService } from './services/api/geminiService';
 import { getTheme } from './constants/theme';
 import type { ThemeTokens } from './constants/theme';
@@ -568,6 +571,8 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const deleteBrandKit = useStore(state => state.deleteBrandKit);
   const applyBrandKit = useStore(state => state.applyBrandKit);
 
+  const { isAdmin } = useAdmin();
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
   const [textInput, setTextInput] = useState('');
   const swipeTouchStart = useRef<number | null>(null);
@@ -651,6 +656,14 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
       await projectStorage.saveProject(idToSave, name, sections, config, thumbnailDataUrl);
       if (!currentProjectId) setCurrentProjectId(idToSave);
+
+      // Cloud save (Supabase)
+      try {
+        const userId = session?.user?.id;
+        if (userId) {
+          await cloudStorage.createCarousel(userId, name, sections, config);
+        }
+      } catch { /* cloud save is best-effort */ }
 
       toast.success('Projeto salvo com sucesso!');
     } catch (err) {
@@ -749,6 +762,11 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       if (node) await downloadSlide(node, s, `slide-${idx + 1}`);
     },
   };
+
+  // AnalyticsPage (admin only)
+  if (showAnalytics) {
+    return <AnalyticsPage onBack={() => setShowAnalytics(false)} />;
+  }
 
   return (
     <div
@@ -947,6 +965,18 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 </span>
               </button>
             </div>
+
+            {/* Analytics (admin only) */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowAnalytics(true)}
+                className="w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all active:scale-95"
+                style={{ background: 'rgba(0,229,195,0.08)', border: `1px solid rgba(0,229,195,0.2)` }}
+              >
+                <BarChart3 size={16} style={{ color: T.accent }} />
+                <span className="text-xs font-bold" style={{ color: T.accent }}>Analytics</span>
+              </button>
+            )}
 
             {/* Perfil */}
             <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
@@ -1194,6 +1224,21 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                     <FolderOpen size={13} /> Histórico
                   </button>
                 </div>
+
+                {/* Analytics (admin only) */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAnalytics(true)}
+                    className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
+                    style={{
+                      background: 'rgba(0,229,195,0.08)',
+                      border: '1px solid rgba(0,229,195,0.2)',
+                      color: T.accent,
+                    }}
+                  >
+                    <BarChart3 size={13} /> Analytics
+                  </button>
+                )}
               </div>
 
 
@@ -1491,5 +1536,5 @@ export default function App() {
     );
   }
 
-  return <CarrosselApp session={session} onLogout={() => supabase.auth.signOut()} />;
+  return <CarrosselApp session={session} onLogout={() => { clearAdminCache(); supabase.auth.signOut(); }} />;
 }
