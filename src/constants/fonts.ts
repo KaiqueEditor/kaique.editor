@@ -12,24 +12,22 @@ export interface FontOption {
 // Ordem: Favoritas → Display/Impact → Sans → Serif → Mono
 export const FONT_OPTIONS: FontOption[] = [
 
-  // ─── ⭐ SUAS FAVORITAS ────────────────────────────────────────────────────
+  // ─── ⭐ FAVORITAS ──────────────────────────────────────────────────────────
   {
     id: 'montserrat',
-    name: 'Montserrat (PRO)',
+    name: 'Montserrat',
     stack: "'Montserrat', sans-serif",
     googleFont: 'Montserrat:wght@400;500;600;700;800;900',
     category: 'favorita',
     label: 'Corpo / Títulos',
-    adminOnly: true,
   },
   {
     id: 'wide',
-    name: 'Unbounded (PRO)',
+    name: 'Unbounded',
     stack: "'Unbounded', sans-serif",
     googleFont: 'Unbounded:wght@400;700;900',
     category: 'favorita',
     label: 'Futurista / Wide',
-    adminOnly: true,
   },
   {
     id: 'outfit',
@@ -56,7 +54,17 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Clean / Premium',
   },
 
-  // ─── SANS-SERIF ───────────────────────────────────────────────────────────
+  // ─── DISPLAY / IMPACTO ─────────────────────────────────────────────────────
+  {
+    id: 'bebas-neue',
+    name: 'Bebas Neue',
+    stack: "'Bebas Neue', sans-serif",
+    googleFont: 'Bebas+Neue',
+    category: 'display',
+    label: 'Impacto / Headlines',
+  },
+
+  // ─── SANS-SERIF ────────────────────────────────────────────────────────────
   {
     id: 'sans',
     name: 'Inter',
@@ -66,12 +74,50 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'UI / Moderno',
   },
   {
+    id: 'roboto',
+    name: 'Roboto',
+    stack: "'Roboto', sans-serif",
+    googleFont: 'Roboto:wght@300;400;500;700;900',
+    category: 'sans',
+    label: 'Universal / Google',
+  },
+  {
+    id: 'open-sans',
+    name: 'Open Sans',
+    stack: "'Open Sans', sans-serif",
+    googleFont: 'Open+Sans:wght@300;400;500;600;700;800',
+    category: 'sans',
+    label: 'Legível / Versátil',
+  },
+  {
     id: 'poppins',
     name: 'Poppins',
     stack: "'Poppins', sans-serif",
     googleFont: 'Poppins:wght@300;400;500;600;700;800',
     category: 'sans',
     label: 'Geométrico',
+  },
+  {
+    id: 'lato',
+    name: 'Lato',
+    stack: "'Lato', sans-serif",
+    googleFont: 'Lato:wght@300;400;700;900',
+    category: 'sans',
+    label: 'Humanista / Elegante',
+  },
+  {
+    id: 'helvetica',
+    name: 'Helvetica',
+    stack: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    category: 'sans',
+    label: 'Clássica / Sistema',
+  },
+  {
+    id: 'arial',
+    name: 'Arial',
+    stack: "Arial, 'Helvetica Neue', Helvetica, sans-serif",
+    category: 'sans',
+    label: 'Universal / Sistema',
   },
   {
     id: 'space-grotesk',
@@ -90,7 +136,7 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Claro / Expandido',
   },
 
-  // ─── SERIF ────────────────────────────────────────────────────────────────
+  // ─── SERIF ─────────────────────────────────────────────────────────────────
   {
     id: 'playfair',
     name: 'Playfair Display',
@@ -104,6 +150,7 @@ export const FONT_OPTIONS: FontOption[] = [
 // ── Agrupado por categoria (para UI) ──────────────────────────────────────
 export const FONT_CATEGORIES = [
   { key: 'favorita', label: '⭐ Premium' },
+  { key: 'display', label: '🔥 Display / Impacto' },
   { key: 'sans', label: 'Sans-Serif Modernas' },
   { key: 'serif', label: 'Serif Clássicas' },
 ] as const;
