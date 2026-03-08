@@ -288,6 +288,70 @@ class CloudStorage {
             userRanking,
         };
     }
+
+    /** Loga um export (ZIP/PDF) no Supabase */
+    async logExport(
+        userId: string,
+        userEmail: string,
+        slideCount: number,
+        carouselName: string,
+        exportType: 'zip' | 'pdf' = 'zip',
+    ): Promise<void> {
+        try {
+            await supabase.from('export_logs').insert({
+                user_id: userId,
+                user_email: userEmail,
+                slide_count: slideCount,
+                carousel_name: carouselName,
+                export_type: exportType,
+            });
+        } catch (err) {
+            console.warn('[CloudStorage] logExport error:', err);
+        }
+    }
+
+    /** Retorna estatísticas de exports para o Analytics */
+    async getExportStats(): Promise<{
+        totalExports: number;
+        totalSlides: number;
+        exportsByUser: { email: string; count: number; slides: number; lastExport: string }[];
+    }> {
+        const { data, error } = await supabase
+            .from('export_logs')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error || !data) {
+            return { totalExports: 0, totalSlides: 0, exportsByUser: [] };
+        }
+
+        const userMap = new Map<string, { email: string; count: number; slides: number; lastExport: string }>();
+        let totalSlides = 0;
+
+        for (const log of data) {
+            totalSlides += log.slide_count || 0;
+            const email = log.user_email || 'anônimo';
+            const existing = userMap.get(email);
+            if (existing) {
+                existing.count += 1;
+                existing.slides += log.slide_count || 0;
+                if (log.created_at > existing.lastExport) existing.lastExport = log.created_at;
+            } else {
+                userMap.set(email, {
+                    email,
+                    count: 1,
+                    slides: log.slide_count || 0,
+                    lastExport: log.created_at,
+                });
+            }
+        }
+
+        return {
+            totalExports: data.length,
+            totalSlides,
+            exportsByUser: Array.from(userMap.values()).sort((a, b) => b.count - a.count),
+        };
+    }
 }
 
 export const cloudStorage = new CloudStorage();

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { cloudStorage } from '../../services/storage/cloudStorage';
-import { BarChart3, Users, FileImage, Calendar, ArrowLeft, TrendingUp, Clock, Medal, Sparkles } from 'lucide-react';
+import { BarChart3, Users, FileImage, Calendar, ArrowLeft, TrendingUp, Clock, Medal, Sparkles, Download, Layers } from 'lucide-react';
 
 // ── Theme ──────────────────────────────────────────────────────────────────────
 
@@ -82,6 +82,11 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
         totalCarousels: number;
         userRanking: { email: string; count: number; lastCreated: string }[];
     } | null>(null);
+    const [exportStats, setExportStats] = useState<{
+        totalExports: number;
+        totalSlides: number;
+        exportsByUser: { email: string; count: number; slides: number; lastExport: string }[];
+    } | null>(null);
     const [dateFilter, setDateFilter] = useState<DateFilter>('all');
     const [loading, setLoading] = useState(true);
 
@@ -91,8 +96,12 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
 
     const loadStats = async () => {
         setLoading(true);
-        const data = await cloudStorage.getStats();
+        const [data, exData] = await Promise.all([
+            cloudStorage.getStats(),
+            cloudStorage.getExportStats(),
+        ]);
         setStats(data);
+        setExportStats(exData);
         setLoading(false);
     };
 
@@ -156,7 +165,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
 
             <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 space-y-8 pb-32">
                 {/* ── KPI Cards ── */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-5">
                     <div className="rounded-[24px] p-6 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]" style={{ background: T.card, border: `1px solid ${T.border}` }}>
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:opacity-10 transition-opacity" />
                         <div className="flex items-center gap-3 mb-4">
@@ -193,6 +202,28 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                             </p>
                             <span className="text-sm font-bold pb-2" style={{ color: T.textSub }}>/ criador</span>
                         </div>
+                    </div>
+
+                    <div className="rounded-[24px] p-6 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+                        <div className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -mr-16 -mt-16 group-hover:opacity-20 transition-opacity" style={{ background: 'rgba(34,197,94,0.15)' }} />
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(34,197,94,0.1)' }}>
+                                <Download size={18} style={{ color: '#22c55e' }} />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: T.textFaint }}>Downloads</span>
+                        </div>
+                        <p className="text-4xl sm:text-5xl font-black mt-2 tracking-tight" style={{ color: T.text }}>{exportStats?.totalExports || 0}</p>
+                    </div>
+
+                    <div className="rounded-[24px] p-6 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+                        <div className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -mr-16 -mt-16 group-hover:opacity-20 transition-opacity" style={{ background: 'rgba(168,85,247,0.15)' }} />
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(168,85,247,0.1)' }}>
+                                <Layers size={18} style={{ color: '#a855f7' }} />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: T.textFaint }}>Slides Baixados</span>
+                        </div>
+                        <p className="text-4xl sm:text-5xl font-black mt-2 tracking-tight" style={{ color: T.text }}>{exportStats?.totalSlides || 0}</p>
                     </div>
                 </div>
 
@@ -335,6 +366,46 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                         </div>
                     )}
                 </div>
+
+                {/* ── Downloads por Usuário ── */}
+                {exportStats && exportStats.exportsByUser.length > 0 && (
+                    <div className="rounded-[24px] p-6 sm:p-8" style={{ background: T.card, border: `1px solid ${T.border}` }}>
+                        <div className="flex items-center gap-3 mb-6">
+                            <Download size={20} style={{ color: '#22c55e' }} />
+                            <h3 className="text-lg font-black tracking-tight" style={{ color: T.text }}>Downloads por Usuário</h3>
+                        </div>
+
+                        <div className="space-y-2">
+                            {exportStats.exportsByUser.map((user, idx) => (
+                                <div
+                                    key={user.email}
+                                    className="grid grid-cols-[1fr_auto_auto_auto] gap-3 sm:gap-6 items-center py-3 px-4 rounded-xl transition-all hover:scale-[1.01]"
+                                    style={{ background: idx === 0 ? 'rgba(34,197,94,0.08)' : T.bg, border: `1px solid ${idx === 0 ? 'rgba(34,197,94,0.2)' : T.border}` }}
+                                >
+                                    <div className="min-w-0">
+                                        <span className="text-sm font-bold truncate block" style={{ color: idx === 0 ? '#22c55e' : T.text }}>
+                                            {user.email}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-lg font-black tabular-nums" style={{ color: T.text }}>{user.count}</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: T.textFaint }}>ZIPs</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-lg font-black tabular-nums" style={{ color: '#a855f7' }}>{user.slides}</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: T.textFaint }}>Slides</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: T.bg, border: `1px solid ${T.border}` }}>
+                                        <Clock size={11} style={{ color: T.accent }} />
+                                        <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: T.textSub }}>
+                                            {formatRelativeTime(user.lastExport)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

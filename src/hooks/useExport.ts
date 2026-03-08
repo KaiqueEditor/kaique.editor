@@ -2,6 +2,8 @@ import { useRef, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { Section, EXPORT_FORMATS } from '../types';
 import { useStore } from '../store';
+import { cloudStorage } from '../services/storage/cloudStorage';
+import { supabase } from '../lib/supabase';
 import ffmpegCoreURL from '@ffmpeg/core?url';
 import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
 
@@ -387,6 +389,15 @@ export const useExport = () => {
       setExportStep('finalizando zip');
       const content = await zip.generateAsync({ type: 'blob' });
       saveAs(content, `carrossel-pro-${Date.now()}.zip`);
+
+      // Log export to Supabase (best-effort)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const carouselName = sections[0]?.title || 'Sem título';
+          await cloudStorage.logExport(user.id, user.email || '', sections.length, carouselName, 'zip');
+        }
+      } catch { /* silent */ }
     } catch (e) {
       console.error('Erro na exportação:', e);
       toast.error('Erro ao exportar arquivo ZIP.');
