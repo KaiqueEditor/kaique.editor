@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback, MutableRefObject } from 'react';
-import { cloudStorage } from '../services/storage/cloudStorage';
 import { projectStorage } from '../services/storage/projectStorage';
-import { toast } from 'react-hot-toast';
 import type { Section, ProjectConfig } from '../types';
 
 const AUTO_SAVE_INTERVAL = 3 * 60 * 1000; // 3 minutos
+const AUTO_BACKUP_ID = 'auto-backup';
+const AUTO_BACKUP_NAME = '🔄 Auto-backup';
 
 interface UseAutoSaveOptions {
     sections: Section[];
@@ -33,31 +33,29 @@ export function useAutoSave({
         if (hash === lastSaveRef.current) return;
         lastSaveRef.current = hash;
 
-        const name = sections[0]?.title || 'Sem título';
-        const id = currentProjectId || Date.now().toString();
-
         try {
-            // Gerar thumbnail
+            // Gerar thumbnail (leve)
             let thumbnailDataUrl: string | undefined;
             const firstSlide = exportRefs.current[0];
             if (firstSlide) {
                 const { toJpeg } = await import('html-to-image');
-                thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.4, pixelRatio: 0.2 });
+                thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.3, pixelRatio: 0.15 });
             }
 
-            // Salvar localmente
-            await projectStorage.saveProject(id, name, sections, config, thumbnailDataUrl);
+            // Salvar localmente com ID fixo — sempre sobrescreve o mesmo slot
+            await projectStorage.saveProject(
+                AUTO_BACKUP_ID,
+                AUTO_BACKUP_NAME,
+                sections,
+                config,
+                thumbnailDataUrl,
+            );
 
-            // Salvar na nuvem
-            if (userId) {
-                await cloudStorage.saveCarousel(userId, name, sections, config, thumbnailDataUrl);
-            }
-
-            console.log('[AutoSave] Salvo automaticamente');
+            console.log('[AutoSave] Backup local salvo (auto-backup)');
         } catch (err) {
             console.warn('[AutoSave] Erro:', err);
         }
-    }, [sections, config, currentProjectId, userId, exportRefs]);
+    }, [sections, config, exportRefs]);
 
     useEffect(() => {
         if (!enabled) return;
