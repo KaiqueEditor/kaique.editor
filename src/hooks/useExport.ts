@@ -217,7 +217,7 @@ export const useExport = () => {
     } finally {
       if (parent) parent.style.opacity = '0.0001';
     }
-  }, []);
+  }, [EW, EH]);
 
   const captureOverlay = useCallback(async (node: HTMLDivElement): Promise<HTMLImageElement> => {
     const { htmlToImage } = await loadExportDeps();
@@ -278,7 +278,7 @@ export const useExport = () => {
     });
 
     return img;
-  }, []);
+  }, [EW, EH]);
 
   /**
    * Compõe o vídeo final em MP4 usando FFmpeg diretamente.
