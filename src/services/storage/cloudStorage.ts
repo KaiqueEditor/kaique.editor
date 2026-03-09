@@ -32,12 +32,40 @@ class CloudStorage {
         if (!dataUrl.startsWith('data:')) return dataUrl;
 
         try {
-            // Extract mime type and base64 content
-            const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
-            if (!match) return undefined;
+            // More robust regex: handles image/jpeg, image/png, image/webp, image/svg+xml, etc.
+            const match = dataUrl.match(/^data:(image\/[^;]+);base64,(.+)$/s);
+            if (!match) {
+                console.warn('[CloudStorage] data URL regex did not match, trying split fallback');
+                // Fallback: simple split
+                const commaIdx = dataUrl.indexOf(',');
+                if (commaIdx === -1) return undefined;
+                const base64Data = dataUrl.slice(commaIdx + 1);
+                if (!base64Data) return undefined;
+
+                const byteString = atob(base64Data);
+                const bytes = new Uint8Array(byteString.length);
+                for (let i = 0; i < byteString.length; i++) {
+                    bytes[i] = byteString.charCodeAt(i);
+                }
+
+                const fileName = `${userId}/${slideId}-${Date.now()}.png`;
+                const { error: uploadError } = await supabase.storage
+                    .from('carousel-images')
+                    .upload(fileName, bytes, { contentType: 'image/png', upsert: true });
+
+                if (uploadError) {
+                    console.warn('[CloudStorage] image upload failed (fallback):', uploadError.message);
+                    return undefined;
+                }
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('carousel-images')
+                    .getPublicUrl(fileName);
+                return publicUrlData?.publicUrl || undefined;
+            }
 
             const mimeType = match[1];
-            const ext = mimeType.split('/')[1] || 'png';
+            const ext = mimeType.split('/')[1]?.replace('+xml', '') || 'png';
             const base64Data = match[2];
 
             // Convert base64 to Uint8Array

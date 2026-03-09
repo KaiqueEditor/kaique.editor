@@ -706,7 +706,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       try {
         const userId = session?.user?.id;
         if (userId) {
-          await cloudStorage.createCarousel(userId, name, sections, config, thumbnailDataUrl);
+          await cloudStorage.saveCarousel(userId, name, sections, config, thumbnailDataUrl);
         }
       } catch { /* cloud save is best-effort */ }
 
