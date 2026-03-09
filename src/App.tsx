@@ -668,20 +668,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     return () => clearTimeout(timer);
   }, [sections, config]);
 
-  // Auto-salvar cloud (15s debounce, evita spam no Supabase)
-  useEffect(() => {
-    if (sections.length === 0) return;
-    const timer = setTimeout(async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const name = sections[0]?.title || 'Rascunho';
-          await cloudStorage.saveCarousel(user.id, name, sections, config);
-        }
-      } catch { /* cloud save is best-effort */ }
-    }, 15000);
-    return () => clearTimeout(timer);
-  }, [sections, config]);
 
   const [savingProject, setSavingProject] = useState(false);
 
