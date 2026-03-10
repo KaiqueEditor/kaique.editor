@@ -25,6 +25,8 @@ const T = {
 export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [nickname, setNickname] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
 
@@ -34,19 +36,51 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
 
         try {
             if (isSignUp) {
+                if (password !== confirmPassword) {
+                    toast.error('As senhas não coincidem!');
+                    setLoading(false);
+                    return;
+                }
+                if (password.length < 6) {
+                    toast.error('A senha deve ter pelo menos 6 caracteres.');
+                    setLoading(false);
+                    return;
+                }
                 const { data, error } = await supabase.auth.signUp({
                     email,
-                    password
+                    password,
+                    options: {
+                        data: {
+                            nickname: nickname || email.split('@')[0],
+                        },
+                    },
                 });
-                if (error) throw error;
-                toast.success('Conta criada com sucesso! Faça login para começar.');
-                setIsSignUp(false);
+                if (error) {
+                    // Mensagens mais claras
+                    if (error.message.includes('already registered')) {
+                        throw new Error('Este email já está cadastrado. Tente fazer login.');
+                    }
+                    throw error;
+                }
+                // Se email confirmation está OFF, data.user já vem com sessão
+                if (data.user && data.session) {
+                    toast.success('Conta criada! Entrando...');
+                    onLogin(data.user);
+                } else {
+                    toast.success('Conta criada! Verifique seu email e depois faça login.');
+                    setIsSignUp(false);
+                }
             } else {
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 });
-                if (error) throw error;
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        throw new Error('Email ou senha incorretos.');
+                    }
+                    throw error;
+                }
                 toast.success('Bem-vindo de volta!');
                 onLogin(data.user);
             }
@@ -123,6 +157,8 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                     <input
                                         type="text"
                                         placeholder="Seu nome de criador"
+                                        value={nickname}
+                                        onChange={(e) => setNickname(e.target.value)}
                                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
                                     />
                                 </div>
@@ -165,6 +201,8 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                             type="password"
                                             required
                                             minLength={6}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                             className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
                                         />
                                     </div>

@@ -8,7 +8,20 @@ interface SlideFooterProps {
   signature: string;
   isSocial?: boolean;
   formatHeight?: number;
+  bgColor?: string;
 }
+
+// Calcula luminância relativa para decidir se o fundo é claro ou escuro
+const isLightBackground = (hex: string): boolean => {
+  const c = hex.replace('#', '');
+  if (c.length < 6) return false;
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  // Fórmula de luminância percebida
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5;
+};
 
 export const SlideFooter: React.FC<SlideFooterProps> = ({
   index,
@@ -17,12 +30,15 @@ export const SlideFooter: React.FC<SlideFooterProps> = ({
   signature,
   isSocial = false,
   formatHeight = 1440,
+  bgColor = '#000000',
 }) => {
   const isFirst = index === 0;
   const isLast = index === total - 1;
 
-  const ctaColor = isSocial ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)';
-  const watermarkColor = isSocial ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)';
+  // Auto-contraste: texto escuro em fundo claro, texto claro em fundo escuro
+  const isLight = isLightBackground(bgColor);
+  const ctaColor = isLight ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)';
+  const watermarkColor = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)';
 
   const hScale = formatHeight / 1440;
   const paddingBottom = isExport ? Math.round(64 * hScale) : 26;

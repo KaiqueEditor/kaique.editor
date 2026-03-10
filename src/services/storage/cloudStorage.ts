@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
-import type { Section, ProjectConfig } from '../../types/carousel.types';
+import { Section, ProjectConfig } from '../../types';
+import { toast } from 'react-hot-toast';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ class CloudStorage {
 
                 if (uploadError) {
                     console.warn('[CloudStorage] image upload failed (fallback):', uploadError.message);
+                    toast.error('Erro ao fazer upload da imagem. Verifique sua conexão.');
                     return undefined;
                 }
 
@@ -86,6 +88,7 @@ class CloudStorage {
 
             if (uploadError) {
                 console.warn('[CloudStorage] image upload failed:', uploadError.message);
+                toast.error('Erro ao fazer upload da imagem. Verifique sua conexão.');
                 return undefined;
             }
 

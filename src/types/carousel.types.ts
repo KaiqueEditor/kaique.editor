@@ -104,9 +104,8 @@ export interface ExportFormat {
 }
 
 export const EXPORT_FORMATS: ExportFormat[] = [
-  { key: 'carousel', label: 'Carrossel', width: 1080, height: 1440, ratio: '3:4' },
+  { key: 'carousel', label: 'Feed', width: 1080, height: 1440, ratio: '3:4' },
   { key: 'stories', label: 'Stories', width: 1080, height: 1920, ratio: '9:16' },
-  { key: 'feed', label: 'Feed', width: 1080, height: 1350, ratio: '4:5' },
   { key: 'linkedin', label: 'LinkedIn', width: 1080, height: 1080, ratio: '1:1' },
 ];
 

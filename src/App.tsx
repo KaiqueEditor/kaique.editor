@@ -4,7 +4,7 @@ import {
   Upload, Wand2, Eye, Download, Loader2, Sun, Moon, Palette, FileText, ChevronDown,
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
-  PenLine, Copy, Check, Plus, Save, LogOut, BarChart3,
+  PenLine, Copy, Check, Plus, Save, LogOut, BarChart3, Undo2, Redo2,
 } from 'lucide-react';
 import { AnalyticsPage } from './components/analytics/AnalyticsPage';
 import { useAdmin, clearAdminCache } from './hooks/useAdmin';
@@ -24,10 +24,14 @@ import { useHistory } from './hooks/useHistory';
 import { useFileUpload } from './hooks/useFileUpload';
 import { VideoTrimModal } from './components/editor/VideoTrimModal';
 import { ProjectHistory } from './components/history/ProjectHistory';
+import { TemplateGallery } from './components/templates/TemplateGallery';
+import { Onboarding } from './components/onboarding/Onboarding';
+import { CustomThemes } from './components/themes/CustomThemes';
 import { projectStorage } from './services/storage/projectStorage';
 import { cloudStorage } from './services/storage/cloudStorage';
 import { geminiService } from './services/api/geminiService';
 import { getTheme } from './constants/theme';
+import { STARTER_TEMPLATES } from './constants/starterTemplates';
 import type { ThemeTokens } from './constants/theme';
 import type { Section, ProjectConfig } from './types/carousel.types';
 import { EXPORT_FORMATS } from './types/carousel.types';
@@ -119,6 +123,35 @@ function SidebarContent({
   const [wmOpen, setWmOpen] = useState(false);
   const [formatoOpen, setFormatoOpen] = useState(false);
   const [estilosOpen, setEstilosOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(sections.length === 0);
+  const setSections = useStore(state => state.setSections);
+
+  const applyStarterTemplate = (template: typeof STARTER_TEMPLATES[0]) => {
+    const newSections = template.slides.map((slide, idx) => ({
+      id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+      title: slide.title || '',
+      content: slide.content || '',
+      alignment: slide.alignment || 'left',
+      layoutType: slide.layoutType || 'storytelling',
+      titleFont: slide.titleFont || 'druk',
+      bodyFont: slide.bodyFont || 'montserrat',
+      titleSize: slide.titleSize || 40,
+      bodySize: slide.bodySize || 18,
+      bgColor: slide.bgColor || '#000000',
+      titleColor: slide.titleColor || '#ffffff',
+      bodyColor: slide.bodyColor || '#cccccc',
+      brandingColor: slide.brandingColor || '#ffffff',
+      imagePosX: slide.imagePosX ?? 50,
+      imagePosY: slide.imagePosY ?? 50,
+      imageScale: slide.imageScale ?? 1,
+      overlayOpacity: slide.overlayOpacity ?? 0,
+      textPosY: slide.textPosY ?? 85,
+      showSocialImage: slide.showSocialImage ?? false,
+    } as any));
+    setSections(newSections);
+    setTemplatesOpen(false);
+    toast.success(`Template "${template.name}" aplicado!`);
+  };
 
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -187,6 +220,95 @@ function SidebarContent({
         </header>
 
         <div className="mb-6 h-px" style={{ background: T.border }} />
+
+        {/* ── Templates Rápidos ── */}
+        <div className="mb-5 rounded-2xl overflow-hidden transition-all"
+          style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+          <div className="flex items-center justify-between px-4 py-3 cursor-pointer"
+            onClick={() => setTemplatesOpen(!templatesOpen)}>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: T.glassMd }}>
+                <Sparkles size={12} style={{ color: T.accent }} />
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: T.textPrimary }}>
+                  {sections.length === 0 ? 'Começar com Template' : 'Templates'}
+                </p>
+                <p className="text-[7px] font-bold" style={{ color: T.textFaint }}>
+                  {sections.length === 0 ? 'Escolha um modelo pronto' : '7 modelos prontos'}
+                </p>
+              </div>
+            </div>
+            <ChevronDown size={12} style={{ color: T.textFaint, transform: templatesOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+          </div>
+
+          {templatesOpen && (
+            <div className="px-3 pb-3 space-y-3" style={{ borderTop: `1px solid ${T.border}` }}>
+              {/* Feed */}
+              <div className="pt-2">
+                <p className="text-[7px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: T.textFaint }}>Feed / Carrossel</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {STARTER_TEMPLATES.filter(t => t.category === 'feed').map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => applyStarterTemplate(t)}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                      style={{ background: T.glassMd, border: `1px solid ${T.border}` }}
+                    >
+                      <span className="text-base flex-shrink-0">{t.emoji}</span>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black truncate" style={{ color: T.textPrimary }}>{t.name}</p>
+                        <p className="text-[7px] font-medium" style={{ color: T.textFaint }}>{t.slideCount} slides</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Twitter */}
+              <div>
+                <p className="text-[7px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: T.textFaint }}>Twitter / X</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {STARTER_TEMPLATES.filter(t => t.category === 'twitter').map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => applyStarterTemplate(t)}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                      style={{ background: T.glassMd, border: `1px solid ${T.border}` }}
+                    >
+                      <span className="text-base flex-shrink-0">{t.emoji}</span>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black truncate" style={{ color: T.textPrimary }}>{t.name}</p>
+                        <p className="text-[7px] font-medium" style={{ color: T.textFaint }}>{t.slideCount} slides</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Educação */}
+              <div>
+                <p className="text-[7px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: T.textFaint }}>Educação</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {STARTER_TEMPLATES.filter(t => t.category === 'educacao').map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => applyStarterTemplate(t)}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                      style={{ background: T.glassMd, border: `1px solid ${T.border}` }}
+                    >
+                      <span className="text-base flex-shrink-0">{t.emoji}</span>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black truncate" style={{ color: T.textPrimary }}>{t.name}</p>
+                        <p className="text-[7px] font-medium" style={{ color: T.textFaint }}>{t.slideCount} slides</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <section className="space-y-4">
 
@@ -601,6 +723,9 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const [mobilePreviewMode, setMobilePreviewMode] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('carrosselpro-onboarding-done'));
+  const [showCustomThemes, setShowCustomThemes] = useState(false);
   const currentProjectId = useStore(state => state.currentProjectId);
   const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
   const mobileActiveTab = useStore(state => state.mobileActiveTab);
@@ -1181,6 +1306,25 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 }}
               >
                 <button
+                  onClick={() => useStore.getState().undo()}
+                  disabled={!useStore.getState().canUndo}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20"
+                  style={{ color: T.textSub }}
+                  title="Desfazer (Cmd+Z)"
+                >
+                  <Undo2 size={16} />
+                </button>
+                <button
+                  onClick={() => useStore.getState().redo()}
+                  disabled={!useStore.getState().canRedo}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20"
+                  style={{ color: T.textSub }}
+                  title="Refazer (Cmd+Shift+Z)"
+                >
+                  <Redo2 size={16} />
+                </button>
+                <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
+                <button
                   onClick={handleManualSave}
                   disabled={savingProject}
                   className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
@@ -1197,6 +1341,15 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                   title="Export PDF"
                 >
                   {isExportingPDF ? <Loader2 className="animate-spin" size={16} /> : <FileOutput size={16} />}
+                </button>
+
+                <button
+                  onClick={() => setShowCustomThemes(true)}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: T.textSub }}
+                  title="Temas Personalizados"
+                >
+                  <Palette size={16} />
                 </button>
                 <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
                 <button
@@ -1563,6 +1716,10 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
       />
+
+
+      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
+      {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} T={T} />}
     </div >
   );
 }

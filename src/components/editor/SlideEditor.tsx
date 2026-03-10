@@ -3,7 +3,7 @@ import {
   Trash2, ImageIcon, PanelsTopLeft,
   MessageSquareText, Minus, Plus, UploadCloud, Upload, Sparkles,
   Loader2, EyeOff, Image as LucideImage, Video, Download, RefreshCw,
-  ChevronDown, GripVertical,
+  ChevronDown, ChevronUp, GripVertical, Copy,
 } from 'lucide-react';
 import { Section } from '../../types';
 import { FONT_OPTIONS, FONT_CATEGORIES } from '../../constants/fonts';
@@ -159,6 +159,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const sections = useStore(state => state.sections);
   const updateSection = useStore(state => state.updateSection);
   const deleteSection = useStore(state => state.deleteSection);
+  const duplicateSection = useStore(state => state.duplicateSection);
+  const reorderSections = useStore(state => state.reorderSections);
   const config = useStore(state => state.config);
   const updateConfig = useStore(state => state.updateConfig);
   const { generate, isGenerating } = useImageGeneration();
@@ -312,6 +314,36 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           </div>
 
           <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Reorder buttons */}
+            <button
+              onClick={e => { e.stopPropagation(); if (index > 0) reorderSections(index, index - 1); }}
+              className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
+              style={{ color: T.textFaint }}
+              title="Mover para cima"
+              disabled={index === 0}
+            >
+              <ChevronUp size={13} />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); if (index < sections.length - 1) reorderSections(index, index + 1); }}
+              className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
+              style={{ color: T.textFaint }}
+              title="Mover para baixo"
+              disabled={index === sections.length - 1}
+            >
+              <ChevronDown size={13} />
+            </button>
+
+            {/* Duplicate */}
+            <button
+              onClick={e => { e.stopPropagation(); duplicateSection(s.id); }}
+              className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10"
+              style={{ color: T.textFaint }}
+              title="Duplicar slide"
+            >
+              <Copy size={13} />
+            </button>
+
             {onDownload && (
               <button
                 onClick={handleDownload}

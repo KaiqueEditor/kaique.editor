@@ -68,49 +68,54 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
     const avatar = section.avatarUrl || config.avatarUrl || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23334155'/><circle cx='20' cy='15' r='7' fill='%2394a3b8'/><ellipse cx='20' cy='33' rx='11' ry='8' fill='%2394a3b8'/></svg>`;
     const showImage = section.showSocialImage !== false;
     const hasImage = !!(section.imageUrl || section.videoUrl);
+    // textPosY controla o espaço do topo — igual ao Feed que controla do fundo
+    const socialTopPad = (manualTextOffset * 0.4) * scaleFactor;
     return (
       <div
         ref={innerRef}
         className={`flex flex-col relative overflow-hidden ${isExport ? '' : ''}`}
-        style={{ ...containerStyle, backgroundColor: finalBrandingBgColor }}
+        style={{ ...containerStyle, backgroundColor: finalBrandingBgColor, paddingTop: `${socialTopPad}px` }}
       >
-        {/* Header com avatar — espaço fixo */}
-        <div className="flex items-center gap-4 flex-shrink-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingTop: `${16 * scaleFactor}px`, paddingBottom: `${8 * scaleFactor}px` }}>
+        {/* Header com avatar */}
+        <div className="flex items-center flex-shrink-0" style={{ gap: `${14 * scaleFactor}px`, paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${4 * scaleFactor}px` }}>
           <div
             onClick={!isExport ? onAvatarClick : undefined}
             className={`rounded-full overflow-hidden flex-shrink-0 ${!isExport ? 'cursor-pointer transition-all' : ''}`}
-            style={{ width: `${64 * scaleFactor}px`, height: `${64 * scaleFactor}px`, border: `2px solid rgba(0,0,0,0.08)` }}
+            style={{ width: `${48 * scaleFactor}px`, height: `${48 * scaleFactor}px`, border: `2px solid rgba(0,0,0,0.08)` }}
           >
             <img src={avatar} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-bold" style={{ fontSize: `${20 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: finalBrandingColor }}>{config.branding || 'Seu Nome Completo'}</span>
+          <div className="flex flex-col" style={{ gap: `${1 * scaleFactor}px` }}>
+            <div className="flex items-center" style={{ gap: `${6 * scaleFactor}px` }}>
+              <span className="font-bold" style={{ fontSize: `${18 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: finalBrandingColor }}>{config.branding || 'Seu Nome'}</span>
               <VerifiedBadge size={16 * scaleFactor} />
             </div>
-            <span style={{ fontSize: `${16 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: '#64748b' }}>{config.handle || '@seuusuario'}</span>
+            <span style={{ fontSize: `${15 * scaleFactor}px`, fontFamily: getFontFamily('sans'), color: '#71767b' }}>{config.handle || '@seuusuario'}</span>
           </div>
         </div>
 
-        {/* Conteúdo de texto — cresce mas nunca empurra a imagem pra fora */}
+        {/* Conteúdo de texto */}
         <div
-          className="flex flex-col gap-3 overflow-hidden"
+          className="flex flex-col overflow-hidden"
           style={{
-            paddingLeft: `${paddingX}px`,
-            paddingRight: `${paddingX}px`,
-            paddingBottom: `${8 * scaleFactor}px`,
+            paddingLeft: `${paddingX * 1.2}px`,
+            paddingRight: `${paddingX * 1.2}px`,
+            paddingTop: `${20 * scaleFactor}px`,
+            paddingBottom: `${16 * scaleFactor}px`,
+            gap: `${16 * scaleFactor}px`,
             flex: showImage && hasImage ? '0 1 auto' : '1 1 auto',
             maxHeight: showImage && hasImage ? '50%' : undefined,
           }}
         >
           <h2
-            className="font-bold leading-[1.2]"
             style={{
               fontSize: finalTitleSize,
               color: finalTitleColor,
-              fontFamily: getFontFamily(section.titleFont || 'anton'),
+              fontFamily: getFontFamily(section.titleFont || 'open-sans'),
               textAlign: textAlign as any,
               overflow: 'hidden',
+              fontWeight: 400,
+              lineHeight: 1.35,
             }}
           >
             {renderFormattedText(section.title)}
@@ -118,13 +123,13 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
 
           {section.content && (
             <p
-              className="leading-relaxed"
               style={{
                 fontSize: finalBodySize,
                 color: finalBodyColor,
                 fontFamily: getFontFamily(section.bodyFont || 'sans'),
                 textAlign: textAlign as any,
                 overflow: 'hidden',
+                lineHeight: 1.65,
               }}
             >
               {renderFormattedText(section.content)}
@@ -132,9 +137,9 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           )}
         </div>
 
-        {/* Imagem — flex-1 garante que sempre ocupa o espaço restante */}
-        {showImage && (
-          <div className="flex-1 min-h-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingBottom: `${contentPaddingBottom}px` }}>
+        {/* Imagem */}
+        {showImage && hasImage && (
+          <div className="flex-1 min-h-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingBottom: `${16 * scaleFactor}px` }}>
             <div className="relative w-full h-full rounded-[1rem] overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)`, minHeight: `${80 * scaleFactor}px` }}>
               {isGenerating ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
@@ -163,19 +168,12 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                 />
               ) : section.imageUrl ? (
                 <img src={section.imageUrl} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/20">
-                  <ImageIcon size={48 * scaleFactor} />
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         )}
 
-        {/* Se não tem imagem, o texto preenche e usamos o padding bottom */}
-        {!showImage && <div style={{ flex: '1' }} />}
-
-        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} formatHeight={formatHeight} />
+        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} formatHeight={formatHeight} bgColor={section.bgColor || '#ffffff'} />
       </div>
     );
   }
@@ -220,13 +218,18 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
         ) : (
           <div className="w-full h-full opacity-10" style={{ background: `linear-gradient(135deg, #ffffff, rgba(255,255,255,0.3))` }}></div>
         )}
-        <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }}></div>
+        <div className="absolute inset-0" style={{ backgroundColor: section.bgColor || '#000000', opacity: overlayOpacity }}></div>
         {(() => {
           const gIntensity = section.gradientIntensity ?? 0.8;
           if (gIntensity <= 0) return null;
+          // Converte bgColor hex em rgb para usar com alpha
+          const bg = section.bgColor || '#000000';
+          const r = parseInt(bg.slice(1, 3), 16) || 0;
+          const g = parseInt(bg.slice(3, 5), 16) || 0;
+          const b = parseInt(bg.slice(5, 7), 16) || 0;
           return (
             <div className="absolute inset-0" style={{
-              background: `linear-gradient(to top, rgba(0,0,0,${gIntensity}) 0%, rgba(0,0,0,${gIntensity * 0.5}) 12%, rgba(0,0,0,${gIntensity * 0.1}) 22%, transparent 30%)`
+              background: `linear-gradient(to top, rgba(${r},${g},${b},1) 0%, rgba(${r},${g},${b},0.85) 3%, rgba(${r},${g},${b},0.6) 7%, rgba(${r},${g},${b},0.35) 11%, rgba(${r},${g},${b},0.12) 16%, rgba(${r},${g},${b},0.03) 20%, transparent 25%)`
             }}></div>
           );
         })()}
@@ -279,7 +282,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           )}
         </div>
       </div>
-      <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} formatHeight={formatHeight} />
+      <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} formatHeight={formatHeight} bgColor={section.bgColor || '#000000'} />
     </div>
   );
 });
