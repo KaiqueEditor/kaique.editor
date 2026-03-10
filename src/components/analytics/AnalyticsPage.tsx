@@ -80,7 +80,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
     const [stats, setStats] = useState<{
         totalUsers: number;
         totalCarousels: number;
-        userRanking: { email: string; count: number; lastCreated: string }[];
+        userRanking: { email: string; count: number; lastCreated: string; createdAt: string; lastActivity: string; role: string }[];
     } | null>(null);
     const [exportStats, setExportStats] = useState<{
         totalExports: number;
@@ -330,12 +330,22 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
 
                                             {/* Email */}
                                             <div className="z-10 flex flex-col justify-center min-w-0">
-                                                <span className="text-sm sm:text-base font-bold truncate" style={{ color: isTop1 ? T.yellow : T.text }}>
-                                                    {user.email}
-                                                </span>
-                                                <span className="text-[10px] font-medium uppercase mt-0.5" style={{ color: T.textFaint }}>
-                                                    Membro Pro
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm sm:text-base font-bold truncate" style={{ color: isTop1 ? T.yellow : T.text }}>
+                                                        {user.email}
+                                                    </span>
+                                                    {user.role === 'admin' && (
+                                                        <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: T.yellow, color: '#000' }}>Admin</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    <span className="text-[10px] font-medium flex items-center gap-1" style={{ color: T.textFaint }}>
+                                                        <Calendar size={9} /> Cadastro: {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                                                    </span>
+                                                    <span className="text-[10px] font-medium" style={{ color: T.accent }}>
+                                                        Última atividade: {formatRelativeTime(user.lastActivity)}
+                                                    </span>
+                                                </div>
                                             </div>
 
                                             {/* Count */}

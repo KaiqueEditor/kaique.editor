@@ -279,7 +279,14 @@ class CloudStorage {
     async getStats(): Promise<{
         totalUsers: number;
         totalCarousels: number;
-        userRanking: { email: string; count: number; lastCreated: string }[];
+        userRanking: {
+            email: string;
+            count: number;
+            lastCreated: string;
+            createdAt: string;
+            lastActivity: string;
+            role: string;
+        }[];
     }> {
         // Total de perfis
         const { count: totalUsers } = await supabase
@@ -291,24 +298,47 @@ class CloudStorage {
             .from('carousels')
             .select('*', { count: 'exact', head: true });
 
+        // Todos os perfis com data de cadastro e role
+        const { data: allProfiles } = await supabase
+            .from('profiles')
+            .select('id, email, role, created_at')
+            .order('created_at', { ascending: false });
+
         // Todos os carrosséis com email
         const { data: allCarousels } = await supabase
             .from('carousels')
-            .select('user_id, created_at, profiles!carousels_user_id_fkey(email)')
-            .order('created_at', { ascending: false });
+            .select('user_id, created_at, updated_at, profiles!carousels_user_id_fkey(email)')
+            .order('updated_at', { ascending: false });
 
-        // Ranking de usuários
-        const userMap = new Map<string, { email: string; count: number; lastCreated: string }>();
+        // Mapa de atividade por carrosséis
+        const activityMap = new Map<string, { count: number; lastCreated: string; lastActivity: string }>();
         for (const c of (allCarousels || [])) {
-            const email = (c as any).profiles?.email || 'desconhecido';
-            const existing = userMap.get(email);
+            const userId = c.user_id;
+            const existing = activityMap.get(userId);
             if (existing) {
                 existing.count++;
+                if (c.updated_at > existing.lastActivity) existing.lastActivity = c.updated_at;
             } else {
-                userMap.set(email, { email, count: 1, lastCreated: c.created_at });
+                activityMap.set(userId, {
+                    count: 1,
+                    lastCreated: c.created_at,
+                    lastActivity: c.updated_at || c.created_at,
+                });
             }
         }
-        const userRanking = Array.from(userMap.values()).sort((a, b) => b.count - a.count);
+
+        // Combinar perfis com atividade
+        const userRanking = (allProfiles || []).map((p: any) => {
+            const activity = activityMap.get(p.id);
+            return {
+                email: p.email || 'desconhecido',
+                count: activity?.count || 0,
+                lastCreated: activity?.lastCreated || p.created_at,
+                createdAt: p.created_at,
+                lastActivity: activity?.lastActivity || p.created_at,
+                role: p.role || 'user',
+            };
+        }).sort((a, b) => b.count - a.count);
 
         return {
             totalUsers: totalUsers || 0,
