@@ -370,10 +370,12 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             {/* Row 1: color swatch + label + title + delete */}
             <div className="flex items-center gap-3">
               <div
-                className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center"
+                className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
                 style={{ background: s.bgColor || '#000', border: `2px solid ${T.border}` }}
               >
-                {s.videoUrl ? <span style={{ fontSize: 9 }}>🎬</span> : s.imageUrl ? <span style={{ fontSize: 9 }}>🖼</span> : null}
+                {s.imageUrl ? (
+                  <img src={s.imageUrl} alt="" className="w-full h-full object-cover" draggable={false} />
+                ) : s.videoUrl ? <span style={{ fontSize: 9 }}>🎬</span> : null}
               </div>
               <span
                 className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex-shrink-0"

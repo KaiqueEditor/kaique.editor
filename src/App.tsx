@@ -327,7 +327,7 @@ function SidebarContent({
               )}
             </div>
             <textarea
-              placeholder="Cole aqui o roteiro do Agente de Texto..."
+              placeholder={"Cole aqui o roteiro do Agente de Texto...\n\ntexto 1\nTítulo da Capa\n\ntexto 2\nSubtítulo · Conteúdo do slide 2"}
               className="w-full h-32 lg:h-44 px-4 py-3 text-sm rounded-2xl outline-none resize-none transition-all"
               value={textInput}
               onChange={e => setTextInput(e.target.value)}
@@ -571,9 +571,9 @@ function SidebarContent({
 
 
 
-          <p className="text-[8px] font-black uppercase tracking-widest px-1 pt-1 mb-2"
-            style={{ color: T.textFaint }}>
-            {sections.length} Frame{sections.length !== 1 ? 's' : ''} · Arraste para reordenar
+          <p className="text-[8px] font-black uppercase tracking-widest px-1 pt-3 pb-2 sticky top-0 z-10"
+            style={{ color: T.textFaint, background: T.sidebar, backdropFilter: 'blur(8px)' }}>
+            {sections.length} Frame{sections.length !== 1 ? 's' : ''} · Slide {activeSlide + 1} de {sections.length}
           </p>
           {sections.map((s, idx) => (
             <div
@@ -617,14 +617,14 @@ function SidebarContent({
               setActiveSlide(sections.length);
               toast.success('Novo slide adicionado!');
             }}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-95"
             style={{
-              background: T.glass,
-              color: T.textSub,
-              border: `1px dashed ${T.border}`,
+              background: `linear-gradient(135deg, ${T.accent}18, ${T.accent}08)`,
+              color: T.accent,
+              border: `1.5px dashed ${T.accent}40`,
             }}
           >
-            <Plus size={14} /> Adicionar Slide
+            <Plus size={18} strokeWidth={3} /> Adicionar Slide
           </button>
         </div>
       )}
@@ -1303,7 +1303,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 }}
               >
                 <button
-                  onClick={() => useStore.getState().undo()}
+                  onClick={() => { useStore.getState().undo(); toast('↩ Ação desfeita', { duration: 1200, icon: '↩' }); }}
                   disabled={!useStore.getState().canUndo}
                   className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20"
                   style={{ color: T.textSub }}
@@ -1312,7 +1312,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                   <Undo2 size={16} />
                 </button>
                 <button
-                  onClick={() => useStore.getState().redo()}
+                  onClick={() => { useStore.getState().redo(); toast('↪ Ação refeita', { duration: 1200, icon: '↪' }); }}
                   disabled={!useStore.getState().canRedo}
                   className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20"
                   style={{ color: T.textSub }}
