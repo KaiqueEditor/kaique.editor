@@ -336,11 +336,14 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 </span>
                 {hasImage && <span className="text-[8px] font-bold" style={{ color: T.success }}>✓ img</span>}
               </div>
-              <p className="text-[10px] font-semibold truncate" style={{ color: isActive ? T.textSub : T.textDim }}>
-                {s.title || 'Sem título'}
-              </p>
+              {!isActive && (
+                <p className="text-[10px] font-semibold truncate" style={{ color: T.textDim }}>
+                  {s.title || 'Sem título'}
+                </p>
+              )}
             </div>
 
+            {isActive && (
             <div className="flex items-center gap-1 flex-shrink-0">
               {/* Reorder buttons */}
               <button
@@ -419,6 +422,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 </button>
               )}
             </div>
+            )}
           </div>
         </div>
 
