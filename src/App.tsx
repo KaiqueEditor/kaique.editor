@@ -568,40 +568,8 @@ function SidebarContent({
         <div className="px-5 sm:px-7 pb-24 space-y-4 transition-colors duration-300"
           style={{ borderTop: `1px solid ${T.border}` }}>
 
-          {/* Mini preview fiel — segue o frame ativo, clica para voltar ao canvas */}
-          <div
-            className="lg:hidden mt-4 mb-2 mx-auto cursor-pointer active:scale-95 transition-transform"
-            onClick={() => setMobileSidebarOpen(false)}
-            style={{
-              width: 150,
-              height: Math.round(150 * (EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440) / (EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080)),
-              borderRadius: 10,
-              overflow: 'hidden',
-              border: `2px solid ${T.border}`,
-              position: 'relative',
-              boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
-            }}
-          >
-            <div style={{
-              width: EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080,
-              height: EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440,
-              transform: `scale(${150 / (EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080)})`,
-              transformOrigin: 'top left',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-            }}>
-              <CarouselSlide
-                section={sections[activeSlide] || sections[0]}
-                config={config}
-                index={activeSlide}
-                total={sections.length}
-                isExport={true}
-                formatWidth={EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}
-                formatHeight={EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}
-              />
-            </div>
-          </div>
+
+
 
           <p className="text-[8px] font-black uppercase tracking-widest px-1 pt-1 mb-2"
             style={{ color: T.textFaint }}>
