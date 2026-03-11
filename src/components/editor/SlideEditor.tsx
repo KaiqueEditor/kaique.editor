@@ -215,6 +215,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
   // Seções colapsáveis para mobile
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ imagem: true });
+  const [isDragOver, setIsDragOver] = useState(false);
   const toggleSection = (key: string) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   const [showGallery, setShowGallery] = useState(false);
 
@@ -284,23 +285,68 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     } else if (onImageUpload) {
       onImageUpload(s.id, e);
     }
-    // Reset input para permitir re-upload do mesmo arquivo
     e.target.value = '';
+  };
+
+  // ── Drag & Drop ──
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes('Files')) setIsDragOver(true);
+  };
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          update({ imageUrl: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/') && onVideoUpload) {
+      onVideoUpload(s.id, file);
+    }
   };
 
   return (
     <>
       <div
-        className={`rounded-2xl transition-all overflow-hidden ${isActive ? 'animate-glow-pulse' : ''}`}
+        className={`rounded-2xl transition-all overflow-hidden relative ${isActive ? 'animate-glow-pulse' : ''}`}
         style={{
           background: confirmDelete ? 'rgba(239,68,68,0.12)' : isActive ? T.glassMd : T.glass,
-          border: confirmDelete
-            ? '1.5px solid rgba(239,68,68,0.4)'
-            : isActive ? `1.5px solid ${T.borderStrong}` : `1px solid ${T.border}`,
-          boxShadow: isActive ? `0 0 0 1px ${T.glass}, ${T.shadow}` : 'none',
+          border: isDragOver
+            ? '2px dashed rgba(0,229,195,0.8)'
+            : confirmDelete
+              ? '1.5px solid rgba(239,68,68,0.4)'
+              : isActive ? `1.5px solid ${T.borderStrong}` : `1px solid ${T.border}`,
+          boxShadow: isDragOver
+            ? '0 0 20px rgba(0,229,195,0.2), inset 0 0 40px rgba(0,229,195,0.05)'
+            : isActive ? `0 0 0 1px ${T.glass}, ${T.shadow}` : 'none',
           transform: isActive ? 'translateY(-1px)' : 'translateY(0)',
         }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
+        {/* Drag overlay */}
+        {isDragOver && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(0,229,195,0.08)', backdropFilter: 'blur(2px)' }}>
+            <div className="flex flex-col items-center gap-2 animate-pulse">
+              <Download size={24} style={{ color: T.accent }} />
+              <span className="text-xs font-black uppercase tracking-widest" style={{ color: T.accent }}>Solte a imagem aqui</span>
+            </div>
+          </div>
+        )}
         {/* ── Header do card ── */}
         <div className="flex items-stretch cursor-pointer">
           {/* Grip handle */}
@@ -516,36 +562,39 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                       const currentFont = (s as any)[fontKey] || defaultFont;
                       const currentSize = (s as any)[sizeKey] || defaultSize;
                       return (
-                        <div key={fontKey} className="flex items-center gap-2 mb-2">
-                          <div className="flex items-center gap-1 flex-shrink-0 p-0.5 rounded-lg" style={{ background: T.glassMd }}>
-                            <button onClick={e => { e.stopPropagation(); update({ [sizeKey]: Math.max(sizeMin, currentSize - sizeStep) }); }}
-                              className="w-5 h-5 rounded flex items-center justify-center transition-all active:scale-90" style={{ color: T.textDim }}
-                            ><Minus size={9} /></button>
-                            <span className="text-[9px] font-black w-6 text-center tabular-nums" style={{ color: T.textPrimary }}>{currentSize}</span>
-                            <button onClick={e => { e.stopPropagation(); update({ [sizeKey]: Math.min(sizeMax, currentSize + sizeStep) }); }}
-                              className="w-5 h-5 rounded flex items-center justify-center transition-all active:scale-90" style={{ color: T.textDim }}
-                            ><Plus size={9} /></button>
+                        <div key={fontKey} className="mb-3">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <p className="text-[7px] font-black uppercase tracking-widest" style={{ color: T.textFaint }}>{lbl}</p>
+                            <span className="text-[9px] font-black tabular-nums ml-auto px-1.5 py-0.5 rounded" style={{ color: T.accent, background: T.glassMd }}>{currentSize}px</span>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[7px] font-black uppercase tracking-widest mb-1" style={{ color: T.textFaint }}>{lbl}</p>
-                            <select
-                              value={currentFont}
-                              onChange={e => { e.stopPropagation(); update({ [fontKey]: e.target.value }); }}
-                              onClick={e => e.stopPropagation()}
-                              className="w-full text-[10px] font-bold rounded-lg outline-none"
-                              style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
-                            >
-                              {FONT_CATEGORIES.map(cat => {
-                                const options = FONT_OPTIONS.filter(f => f.category === cat.key && (!f.adminOnly || isAdmin));
-                                if (options.length === 0) return null;
-                                return (
-                                  <optgroup key={cat.key} label={cat.label}>
-                                    {options.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                                  </optgroup>
-                                );
-                              })}
-                            </select>
-                          </div>
+                          <select
+                            value={currentFont}
+                            onChange={e => { e.stopPropagation(); update({ [fontKey]: e.target.value }); }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full text-[10px] font-bold rounded-lg outline-none mb-2"
+                            style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
+                          >
+                            {FONT_CATEGORIES.map(cat => {
+                              const options = FONT_OPTIONS.filter(f => f.category === cat.key && (!f.adminOnly || isAdmin));
+                              if (options.length === 0) return null;
+                              return (
+                                <optgroup key={cat.key} label={cat.label}>
+                                  {options.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                </optgroup>
+                              );
+                            })}
+                          </select>
+                          <input
+                            type="range"
+                            min={sizeMin}
+                            max={sizeMax}
+                            step={sizeStep}
+                            value={currentSize}
+                            onChange={e => { e.stopPropagation(); update({ [sizeKey]: parseInt(e.target.value) }); }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: T.accent, background: T.glassMd }}
+                          />
                         </div>
                       );
                     })}

@@ -5,6 +5,7 @@ import {
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
   PenLine, Copy, Check, Plus, Save, LogOut, BarChart3, Undo2, Redo2,
+  Play, Pause,
 } from 'lucide-react';
 import { AnalyticsPage } from './components/analytics/AnalyticsPage';
 import { useAdmin, clearAdminCache } from './hooks/useAdmin';
@@ -682,7 +683,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const toggleTheme = useStore(state => state.toggleTheme);
   const setImageAgentOpen = useStore(state => state.setImageAgentOpen);
   const { processText, isProcessing } = useProcessText();
-  const { exportRefs, exportAll, downloadSlide, isExporting, exportStep } = useExport();
+  const { exportRefs, exportAll, exportAsReels, downloadSlide, isExporting, exportStep } = useExport();
   const { exportPDF, isExportingPDF } = useExportPDF();
   const { handleAvatarUpload, handleImageUpload, validateVideoUpload, applyVideoClip } = useFileUpload();
   const { undo, redo } = useHistory();
@@ -700,6 +701,26 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
   const [textInput, setTextInput] = useState('');
   const swipeTouchStart = useRef<number | null>(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+  const autoPlayRef = useRef({ activeSlide, sections: sections.length });
+  autoPlayRef.current = { activeSlide, sections: sections.length };
+
+  // Autoplay timer
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    const timer = setInterval(() => {
+      const { activeSlide: cur, sections: len } = autoPlayRef.current;
+      if (cur >= len - 1) {
+        setIsAutoPlaying(false);
+        setActiveSlide(0);
+      } else {
+        setSlideDirection('left');
+        setActiveSlide(cur + 1);
+      }
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [isAutoPlaying]);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(() => {
     if (typeof window === 'undefined') return 500 / 1080;
@@ -1417,18 +1438,40 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
               <div className="flex items-center gap-3">
                 <button
                   disabled={activeSlide === 0}
-                  onClick={() => setActiveSlide(activeSlide - 1)}
+                  onClick={() => { setSlideDirection('right'); setActiveSlide(activeSlide - 1); setIsAutoPlaying(false); }}
                   className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
                   style={{ color: T.textPrimary, background: T.glass, border: `1px solid ${T.border}` }}
                 >
                   <ChevronLeft size={16} />
                 </button>
 
+                {/* Play/Pause */}
+                <button
+                  onClick={() => {
+                    if (isAutoPlaying) {
+                      setIsAutoPlaying(false);
+                    } else {
+                      if (activeSlide >= sections.length - 1) setActiveSlide(0);
+                      setIsAutoPlaying(true);
+                    }
+                  }}
+                  className="p-2.5 rounded-full transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{
+                    color: isAutoPlaying ? '#000' : T.textPrimary,
+                    background: isAutoPlaying ? T.accent : T.glass,
+                    border: `1px solid ${isAutoPlaying ? T.accent : T.border}`,
+                    boxShadow: isAutoPlaying ? `0 2px 12px ${T.accent}40` : 'none',
+                  }}
+                  title={isAutoPlaying ? 'Pausar' : 'Preview animado'}
+                >
+                  {isAutoPlaying ? <Pause size={14} /> : <Play size={14} />}
+                </button>
+
                 <div className="flex items-center gap-1.5">
                   {sections.map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => setActiveSlide(i)}
+                      onClick={() => { setActiveSlide(i); setIsAutoPlaying(false); }}
                       className="rounded-full transition-all"
                       style={{
                         width: i === activeSlide ? 20 : 6,
@@ -1446,7 +1489,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
                 <button
                   disabled={activeSlide === sections.length - 1}
-                  onClick={() => setActiveSlide(activeSlide + 1)}
+                  onClick={() => { setSlideDirection('left'); setActiveSlide(activeSlide + 1); setIsAutoPlaying(false); }}
                   className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
                   style={{ color: T.textPrimary, background: T.glass, border: `1px solid ${T.border}` }}
                 >
@@ -1490,6 +1533,19 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                   }
                 </button>
               </div>
+              {/* Reels */}
+              <button
+                onClick={() => exportAsReels(sections)}
+                disabled={isExporting || isProcessing}
+                className="py-2.5 px-5 rounded-2xl text-[10px] font-bold tracking-wider flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: T.glass,
+                  border: `1px solid ${T.border}`,
+                  color: isExporting || isProcessing ? T.textFaint : T.textSub,
+                }}
+              >
+                <FileOutput size={14} /> Reels 🎬
+              </button>
             </div>
 
           ) : (
