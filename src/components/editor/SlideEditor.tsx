@@ -566,39 +566,36 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                       const currentFont = (s as any)[fontKey] || defaultFont;
                       const currentSize = (s as any)[sizeKey] || defaultSize;
                       return (
-                        <div key={fontKey} className="mb-3">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <p className="text-[7px] font-black uppercase tracking-widest" style={{ color: T.textFaint }}>{lbl}</p>
-                            <span className="text-[9px] font-black tabular-nums ml-auto px-1.5 py-0.5 rounded" style={{ color: T.accent, background: T.glassMd }}>{currentSize}px</span>
+                        <div key={fontKey} className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-1 flex-shrink-0 p-0.5 rounded-lg" style={{ background: T.glassMd }}>
+                            <button onClick={e => { e.stopPropagation(); update({ [sizeKey]: Math.max(sizeMin, currentSize - sizeStep) }); }}
+                              className="w-5 h-5 rounded flex items-center justify-center transition-all active:scale-90" style={{ color: T.textDim }}
+                            ><Minus size={9} /></button>
+                            <span className="text-[9px] font-black w-6 text-center tabular-nums" style={{ color: T.textPrimary }}>{currentSize}</span>
+                            <button onClick={e => { e.stopPropagation(); update({ [sizeKey]: Math.min(sizeMax, currentSize + sizeStep) }); }}
+                              className="w-5 h-5 rounded flex items-center justify-center transition-all active:scale-90" style={{ color: T.textDim }}
+                            ><Plus size={9} /></button>
                           </div>
-                          <select
-                            value={currentFont}
-                            onChange={e => { e.stopPropagation(); update({ [fontKey]: e.target.value }); }}
-                            onClick={e => e.stopPropagation()}
-                            className="w-full text-[10px] font-bold rounded-lg outline-none mb-2"
-                            style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
-                          >
-                            {FONT_CATEGORIES.map(cat => {
-                              const options = FONT_OPTIONS.filter(f => f.category === cat.key && (!f.adminOnly || isAdmin));
-                              if (options.length === 0) return null;
-                              return (
-                                <optgroup key={cat.key} label={cat.label}>
-                                  {options.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                                </optgroup>
-                              );
-                            })}
-                          </select>
-                          <input
-                            type="range"
-                            min={sizeMin}
-                            max={sizeMax}
-                            step={sizeStep}
-                            value={currentSize}
-                            onChange={e => { e.stopPropagation(); update({ [sizeKey]: parseInt(e.target.value) }); }}
-                            onClick={e => e.stopPropagation()}
-                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                            style={{ accentColor: T.accent, background: T.glassMd }}
-                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[7px] font-black uppercase tracking-widest mb-1" style={{ color: T.textFaint }}>{lbl}</p>
+                            <select
+                              value={currentFont}
+                              onChange={e => { e.stopPropagation(); update({ [fontKey]: e.target.value }); }}
+                              onClick={e => e.stopPropagation()}
+                              className="w-full text-[10px] font-bold rounded-lg outline-none"
+                              style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
+                            >
+                              {FONT_CATEGORIES.map(cat => {
+                                const options = FONT_OPTIONS.filter(f => f.category === cat.key && (!f.adminOnly || isAdmin));
+                                if (options.length === 0) return null;
+                                return (
+                                  <optgroup key={cat.key} label={cat.label}>
+                                    {options.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                  </optgroup>
+                                );
+                              })}
+                            </select>
+                          </div>
                         </div>
                       );
                     })}
