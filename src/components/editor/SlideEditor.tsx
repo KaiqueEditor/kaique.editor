@@ -301,9 +301,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           transform: isActive ? 'translateY(-1px)' : 'translateY(0)',
         }}
       >
-        {/* ── Header do card — clique aqui alterna abrir/fechar ── */}
+        {/* ── Header do card ── */}
         <div className="flex items-stretch cursor-pointer">
-          {/* Grip handle isolado para o drag event */}
+          {/* Grip handle */}
           <div
             {...dragHandleProps}
             className="w-8 flex items-center justify-center flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
@@ -316,112 +316,110 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
           <div
             onClick={onClick}
-            className="flex-1 flex items-center gap-3 pr-4 py-3.5"
+            className="flex-1 flex flex-col pr-4 py-3"
             style={{ borderBottom: isActive ? `1px solid ${T.border}` : 'none' }}
           >
-            <div
-              className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center"
-              style={{ background: s.bgColor || '#000', border: `2px solid ${T.border}` }}
-            >
-              {s.videoUrl ? <span style={{ fontSize: 10 }}>🎬</span> : s.imageUrl ? <span style={{ fontSize: 10 }}>🖼</span> : null}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span
-                  className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                  style={{ background: isActive ? T.accent : T.glassMd, color: isActive ? T.accentText : T.textDim }}
-                >
-                  {label}
-                </span>
-                {hasImage && <span className="text-[8px] font-bold" style={{ color: T.success }}>✓ img</span>}
+            {/* Row 1: color swatch + label + title */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center"
+                style={{ background: s.bgColor || '#000', border: `2px solid ${T.border}` }}
+              >
+                {s.videoUrl ? <span style={{ fontSize: 9 }}>🎬</span> : s.imageUrl ? <span style={{ fontSize: 9 }}>🖼</span> : null}
               </div>
+              <span
+                className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex-shrink-0"
+                style={{ background: isActive ? T.accent : T.glassMd, color: isActive ? T.accentText : T.textDim }}
+              >
+                {label}
+              </span>
+              {hasImage && <span className="text-[8px] font-bold flex-shrink-0" style={{ color: T.success }}>✓ img</span>}
               {!isActive && (
-                <p className="text-[10px] font-semibold truncate" style={{ color: T.textDim }}>
+                <p className="text-[10px] font-semibold truncate flex-1 min-w-0" style={{ color: T.textDim }}>
                   {s.title || 'Sem título'}
                 </p>
               )}
             </div>
 
+            {/* Row 2: action buttons (only when active) */}
             {isActive && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Reorder buttons */}
-              <button
-                onClick={e => { e.stopPropagation(); if (index > 0) reorderSections(index, index - 1); }}
-                className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
-                style={{ color: T.textFaint }}
-                title="Mover para cima"
-                disabled={index === 0}
-              >
-                <ChevronUp size={13} />
-              </button>
-              <button
-                onClick={e => { e.stopPropagation(); if (index < sections.length - 1) reorderSections(index, index + 1); }}
-                className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
-                style={{ color: T.textFaint }}
-                title="Mover para baixo"
-                disabled={index === sections.length - 1}
-              >
-                <ChevronDown size={13} />
-              </button>
-
-              {/* Duplicate */}
-              <button
-                onClick={e => { e.stopPropagation(); duplicateSection(s.id); }}
-                className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10"
-                style={{ color: T.textFaint }}
-                title="Duplicar slide"
-              >
-                <Copy size={13} />
-              </button>
-
-              {/* Aplicar estilo a todos */}
-              {sections.length > 1 && (
+              <div className="flex items-center gap-1 mt-2 flex-wrap" onClick={e => e.stopPropagation()}>
                 <button
-                  onClick={e => { e.stopPropagation(); applyStyleToAll(); }}
-                  className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10"
+                  onClick={() => { if (index > 0) reorderSections(index, index - 1); }}
+                  className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
                   style={{ color: T.textFaint }}
-                  title="Aplicar estilo a todos os slides"
+                  title="Mover para cima"
+                  disabled={index === 0}
                 >
-                  <Paintbrush size={13} />
+                  <ChevronUp size={13} />
                 </button>
-              )}
-
-              {onDownload && (
                 <button
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 active:opacity-60 disabled:opacity-50 disabled:cursor-wait hover:bg-white/10"
-                  style={{ color: isDownloading ? T.textSub : T.textFaint }}
-                  title={s.videoUrl ? 'Baixar MP4' : 'Baixar PNG'}
-                >
-                  {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-                </button>
-              )}
-
-              {confirmDelete ? (
-                <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                  <button
-                    onClick={e => { e.stopPropagation(); deleteSection(s.id); }}
-                    className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all duration-300 hover:scale-105 active:scale-95"
-                    style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
-                  >Deletar</button>
-                  <button
-                    onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}
-                    className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-white/5"
-                    style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-                  >Cancelar</button>
-                </div>
-              ) : (
-                <button
-                  onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}
-                  className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 active:opacity-60 hover:bg-white/10"
+                  onClick={() => { if (index < sections.length - 1) reorderSections(index, index + 1); }}
+                  className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
                   style={{ color: T.textFaint }}
+                  title="Mover para baixo"
+                  disabled={index === sections.length - 1}
                 >
-                  <Trash2 size={13} />
+                  <ChevronDown size={13} />
                 </button>
-              )}
-            </div>
+
+                <div className="w-px h-4 mx-0.5" style={{ background: T.border }} />
+
+                <button
+                  onClick={() => duplicateSection(s.id)}
+                  className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10"
+                  style={{ color: T.textFaint }}
+                  title="Duplicar slide"
+                >
+                  <Copy size={13} />
+                </button>
+                {sections.length > 1 && (
+                  <button
+                    onClick={() => applyStyleToAll()}
+                    className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10"
+                    style={{ color: T.textFaint }}
+                    title="Aplicar estilo a todos"
+                  >
+                    <Paintbrush size={13} />
+                  </button>
+                )}
+                {onDownload && (
+                  <button
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                    className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-50"
+                    style={{ color: isDownloading ? T.textSub : T.textFaint }}
+                    title={s.videoUrl ? 'Baixar MP4' : 'Baixar PNG'}
+                  >
+                    {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                  </button>
+                )}
+
+                <div className="w-px h-4 mx-0.5" style={{ background: T.border }} />
+
+                {confirmDelete ? (
+                  <>
+                    <button
+                      onClick={() => deleteSection(s.id)}
+                      className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all hover:scale-105 active:scale-95"
+                      style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
+                    >Deletar</button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all hover:scale-105 active:scale-95 hover:bg-white/5"
+                      style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+                    >Cancelar</button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10"
+                    style={{ color: T.textFaint }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

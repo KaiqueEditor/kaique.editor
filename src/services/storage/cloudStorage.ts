@@ -350,6 +350,81 @@ class CloudStorage {
         };
     }
 
+    /** Loga um login no Supabase */
+    async logLogin(userId: string, userEmail: string): Promise<void> {
+        try {
+            const ua = navigator.userAgent;
+            const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+            const device = isMobile ? 'mobile' : 'desktop';
+            let browser = 'outro';
+            if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+            else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+            else if (ua.includes('Firefox')) browser = 'Firefox';
+            else if (ua.includes('Edg')) browser = 'Edge';
+
+            await supabase.from('login_logs').insert({
+                user_id: userId,
+                user_email: userEmail,
+                device,
+                browser,
+            });
+        } catch (err) {
+            console.warn('[CloudStorage] logLogin error:', err);
+        }
+    }
+
+    /** Retorna estatísticas de logins */
+    async getLoginStats(): Promise<{
+        totalLogins: number;
+        deviceBreakdown: { device: string; count: number }[];
+        browserBreakdown: { browser: string; count: number }[];
+        loginsByUser: { email: string; count: number; lastLogin: string; device: string }[];
+        dailyLogins: { date: string; count: number }[];
+    }> {
+        const { data, error } = await supabase
+            .from('login_logs')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error || !data) {
+            return { totalLogins: 0, deviceBreakdown: [], browserBreakdown: [], loginsByUser: [], dailyLogins: [] };
+        }
+
+        // Device breakdown
+        const deviceMap = new Map<string, number>();
+        const browserMap = new Map<string, number>();
+        const userMap = new Map<string, { email: string; count: number; lastLogin: string; device: string }>();
+        const dailyMap = new Map<string, number>();
+
+        for (const log of data) {
+            // Device
+            const dev = log.device || 'desktop';
+            deviceMap.set(dev, (deviceMap.get(dev) || 0) + 1);
+            // Browser
+            const br = log.browser || 'outro';
+            browserMap.set(br, (browserMap.get(br) || 0) + 1);
+            // User
+            const email = log.user_email || 'anônimo';
+            const existing = userMap.get(email);
+            if (existing) {
+                existing.count += 1;
+            } else {
+                userMap.set(email, { email, count: 1, lastLogin: log.created_at, device: dev });
+            }
+            // Daily
+            const day = log.created_at?.slice(0, 10) || '';
+            if (day) dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
+        }
+
+        return {
+            totalLogins: data.length,
+            deviceBreakdown: Array.from(deviceMap.entries()).map(([device, count]) => ({ device, count })),
+            browserBreakdown: Array.from(browserMap.entries()).map(([browser, count]) => ({ browser, count })),
+            loginsByUser: Array.from(userMap.values()).sort((a, b) => b.count - a.count),
+            dailyLogins: Array.from(dailyMap.entries()).map(([date, count]) => ({ date, count })).sort((a, b) => a.date.localeCompare(b.date)).slice(-14),
+        };
+    }
+
     /** Loga um export (ZIP/PDF) no Supabase */
     async logExport(
         userId: string,
