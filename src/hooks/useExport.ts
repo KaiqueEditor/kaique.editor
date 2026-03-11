@@ -195,23 +195,29 @@ export const useExport = () => {
     const { htmlToImage } = await loadExportDeps();
     const parent = node.parentElement;
     if (parent) parent.style.opacity = '1';
+    // Pequeno delay para garantir que o browser renderizou o slide
+    await new Promise(r => setTimeout(r, 150));
     try {
       let dataUrl = '';
-      for (let attempt = 0; attempt < 2; attempt++) {
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
           dataUrl = await htmlToImage.toPng(node, {
             pixelRatio,
             cacheBust: true,
             width: EW,
             height: EH,
+            skipAutoScale: true,
+            includeQueryParams: true,
+            fetchRequestInit: { mode: 'cors' },
           });
           if (dataUrl && dataUrl.length > 200) break;
-        } catch {
-          await new Promise(r => setTimeout(r, 300));
+        } catch(err) {
+          console.warn(`Tentativa ${attempt + 1} de captura falhou:`, err);
+          await new Promise(r => setTimeout(r, 500));
         }
       }
-      if (!dataUrl) {
-        throw new Error('Falha ao capturar slide como PNG.');
+      if (!dataUrl || dataUrl.length <= 200) {
+        throw new Error('Falha ao capturar slide como PNG após 3 tentativas.');
       }
       return dataUrl;
     } finally {
