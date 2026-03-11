@@ -806,12 +806,20 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   }, []);
 
   // Auto-salvar local (2s debounce)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   useEffect(() => {
     if (sections.length === 0) return;
-    const timer = setTimeout(() => {
-      projectStorage.saveProject('auto-backup', 'Rascunho Automático', sections, config).catch(() => { });
+    setAutoSaveStatus('saving');
+    const timer = setTimeout(async () => {
+      try {
+        await projectStorage.saveProject('auto-backup', 'Rascunho Automático', sections, config);
+        setAutoSaveStatus('saved');
+        setTimeout(() => setAutoSaveStatus('idle'), 2500);
+      } catch {
+        setAutoSaveStatus('idle');
+      }
     }, 2000);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [sections, config]);
 
 
@@ -1391,7 +1399,31 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                     <BarChart3 size={16} />
                   </button>
                 )}
+                {/* Auto-save indicator */}
+                {autoSaveStatus !== 'idle' && (
+                  <>
+                    <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
+                    <span
+                      className="text-[9px] font-bold flex items-center gap-1 px-2"
+                      style={{
+                        color: autoSaveStatus === 'saved' ? '#00E5C3' : T.textFaint,
+                        transition: 'opacity 0.3s',
+                      }}
+                    >
+                      {autoSaveStatus === 'saving' ? '● Salvando...' : '✓ Salvo'}
+                    </span>
+                  </>
+                )}
               </div>
+
+              {/* Format badge */}
+              <span className="text-[8px] font-bold tabular-nums px-2.5 py-1 rounded-full" style={{
+                background: T.glass,
+                color: T.textFaint,
+                border: `1px solid ${T.border}`,
+              }}>
+                {EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}×{EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}
+              </span>
 
               {/* ── Preview ── */}
               <div
