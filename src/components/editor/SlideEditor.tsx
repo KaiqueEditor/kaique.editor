@@ -365,7 +365,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             className="flex-1 flex flex-col pr-4 py-3"
             style={{ borderBottom: isActive ? `1px solid ${T.border}` : 'none' }}
           >
-            {/* Row 1: color swatch + label + title */}
+            {/* Row 1: color swatch + label + title + delete */}
             <div className="flex items-center gap-3">
               <div
                 className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center"
@@ -384,6 +384,39 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 <p className="text-[10px] font-semibold truncate flex-1 min-w-0" style={{ color: T.textDim }}>
                   {s.title || 'Sem título'}
                 </p>
+              )}
+              {/* Delete — no header, à direita */}
+              {isActive && (
+                <div className="ml-auto flex items-center" onClick={e => e.stopPropagation()}>
+                  {confirmDelete ? (
+                    <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid rgba(239,68,68,0.3)' }}>
+                      <button
+                        onClick={() => deleteSection(s.id)}
+                        className="flex items-center gap-1 px-2.5 py-1 text-[8px] font-black transition-all hover:brightness-110 active:scale-95"
+                        style={{ background: 'rgba(239,68,68,0.85)', color: '#fff' }}
+                      >
+                        Excluir
+                      </button>
+                      <div className="w-px h-4" style={{ background: 'rgba(239,68,68,0.2)' }} />
+                      <button
+                        onClick={() => setConfirmDelete(false)}
+                        className="flex items-center gap-1 px-2.5 py-1 text-[8px] font-bold transition-all hover:bg-white/5 active:scale-95"
+                        style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.6)' }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDelete(true)}
+                      className="p-1.5 rounded-lg transition-all hover:bg-red-500/10 active:scale-90"
+                      style={{ color: 'rgba(239,68,68,0.4)' }}
+                      title="Excluir slide"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -447,35 +480,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     </>
                   )}
                 </div>
-
-                {/* ── Excluir (isolado à direita) ── */}
-                {confirmDelete ? (
-                  <div className="flex items-center rounded-xl overflow-hidden ml-auto" style={{ border: '1px solid rgba(239,68,68,0.3)' }}>
-                    <button
-                      onClick={() => deleteSection(s.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-black transition-all hover:brightness-110 active:scale-95"
-                      style={{ background: 'rgba(239,68,68,0.85)', color: '#fff' }}
-                    >
-                      Sim, excluir
-                    </button>
-                    <div className="w-px h-5" style={{ background: 'rgba(239,68,68,0.2)' }} />
-                    <button
-                      onClick={() => setConfirmDelete(false)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold transition-all hover:bg-white/5 active:scale-95"
-                      style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.7)' }}
-                    >
-                      Não
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-bold transition-all hover:bg-red-500/10 active:scale-95 ml-auto"
-                    style={{ border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)' }}
-                  >
-                    <Trash2 size={11} /> Excluir
-                  </button>
-                )}
               </div>
             )}
           </div>
