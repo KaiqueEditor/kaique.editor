@@ -343,80 +343,75 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
             {/* Row 2: action buttons (only when active) */}
             {isActive && (
-              <div className="flex items-center gap-1 mt-2 flex-wrap" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-1.5 mt-2.5 flex-wrap" onClick={e => e.stopPropagation()}>
+                {/* Reorder */}
                 <button
                   onClick={() => { if (index > 0) reorderSections(index, index - 1); }}
-                  className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
-                  style={{ color: T.textFaint }}
-                  title="Mover para cima"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-20"
+                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
                   disabled={index === 0}
                 >
-                  <ChevronUp size={13} />
+                  <ChevronUp size={11} /> Subir
                 </button>
                 <button
                   onClick={() => { if (index < sections.length - 1) reorderSections(index, index + 1); }}
-                  className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-20"
-                  style={{ color: T.textFaint }}
-                  title="Mover para baixo"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-20"
+                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
                   disabled={index === sections.length - 1}
                 >
-                  <ChevronDown size={13} />
+                  <ChevronDown size={11} /> Descer
                 </button>
 
-                <div className="w-px h-4 mx-0.5" style={{ background: T.border }} />
-
+                {/* Actions */}
                 <button
                   onClick={() => duplicateSection(s.id)}
-                  className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10"
-                  style={{ color: T.textFaint }}
-                  title="Duplicar slide"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
+                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
                 >
-                  <Copy size={13} />
+                  <Copy size={11} /> Duplicar
                 </button>
                 {sections.length > 1 && (
                   <button
                     onClick={() => applyStyleToAll()}
-                    className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10"
-                    style={{ color: T.textFaint }}
-                    title="Aplicar estilo a todos"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
+                    style={{ background: 'rgba(0,229,195,0.08)', border: `1px solid rgba(0,229,195,0.2)`, color: T.accent }}
                   >
-                    <Paintbrush size={13} />
+                    <Paintbrush size={11} /> Estilo p/ todos
                   </button>
                 )}
                 {onDownload && (
                   <button
                     onClick={handleDownload}
                     disabled={isDownloading}
-                    className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10 disabled:opacity-50"
-                    style={{ color: isDownloading ? T.textSub : T.textFaint }}
-                    title={s.videoUrl ? 'Baixar MP4' : 'Baixar PNG'}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                    style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
                   >
-                    {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                    {isDownloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+                    {s.videoUrl ? 'MP4' : 'PNG'}
                   </button>
                 )}
 
-                <div className="w-px h-4 mx-0.5" style={{ background: T.border }} />
-
+                {/* Delete */}
                 {confirmDelete ? (
                   <>
                     <button
                       onClick={() => deleteSection(s.id)}
-                      className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all hover:scale-105 active:scale-95"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black transition-all hover:scale-105 active:scale-95"
                       style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
-                    >Deletar</button>
+                    >Confirmar</button>
                     <button
                       onClick={() => setConfirmDelete(false)}
-                      className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-wide transition-all hover:scale-105 active:scale-95 hover:bg-white/5"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
                       style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
                     >Cancelar</button>
                   </>
                 ) : (
                   <button
                     onClick={() => setConfirmDelete(true)}
-                    className="p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 hover:bg-white/10"
-                    style={{ color: T.textFaint }}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
+                    style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'rgba(239,68,68,0.7)' }}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={11} /> Excluir
                   </button>
                 )}
               </div>
