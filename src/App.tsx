@@ -1339,6 +1339,15 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 >
                   {isExportingPDF ? <Loader2 className="animate-spin" size={16} /> : <FileOutput size={16} />}
                 </button>
+                <button
+                  onClick={() => exportAsReels(sections)}
+                  disabled={isExporting || isProcessing}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: isExporting ? T.textFaint : T.textSub }}
+                  title="Exportar Reels (vídeo)"
+                >
+                  🎬
+                </button>
 
                 <button
                   onClick={() => setShowCustomThemes(true)}
@@ -1533,19 +1542,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                   }
                 </button>
               </div>
-              {/* Reels */}
-              <button
-                onClick={() => exportAsReels(sections)}
-                disabled={isExporting || isProcessing}
-                className="py-2.5 px-5 rounded-2xl text-[10px] font-bold tracking-wider flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  background: T.glass,
-                  border: `1px solid ${T.border}`,
-                  color: isExporting || isProcessing ? T.textFaint : T.textSub,
-                }}
-              >
-                <FileOutput size={14} /> Reels 🎬
-              </button>
             </div>
 
           ) : (
