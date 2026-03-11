@@ -343,73 +343,89 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
             {/* Row 2: action buttons (only when active) */}
             {isActive && (
-              <div className="flex items-center gap-1.5 mt-2.5 flex-wrap" onClick={e => e.stopPropagation()}>
-                {/* Reorder */}
-                <button
-                  onClick={() => { if (index > 0) reorderSections(index, index - 1); }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-20"
-                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-                  disabled={index === 0}
-                >
-                  <ChevronUp size={11} /> Subir
-                </button>
-                <button
-                  onClick={() => { if (index < sections.length - 1) reorderSections(index, index + 1); }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-20"
-                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-                  disabled={index === sections.length - 1}
-                >
-                  <ChevronDown size={11} /> Descer
-                </button>
-
-                {/* Actions */}
-                <button
-                  onClick={() => duplicateSection(s.id)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
-                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-                >
-                  <Copy size={11} /> Duplicar
-                </button>
-                {sections.length > 1 && (
+              <div className="flex items-center gap-2 mt-2.5 flex-wrap" onClick={e => e.stopPropagation()}>
+                {/* ── Grupo: Ordem ── */}
+                <div className="flex items-center rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
                   <button
-                    onClick={() => applyStyleToAll()}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
-                    style={{ background: 'rgba(0,229,195,0.08)', border: `1px solid rgba(0,229,195,0.2)`, color: T.accent }}
+                    onClick={() => { if (index > 0) reorderSections(index, index - 1); }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-bold transition-all hover:bg-white/10 active:scale-95 disabled:opacity-20"
+                    style={{ color: T.textDim, background: T.glass }}
+                    disabled={index === 0}
                   >
-                    <Paintbrush size={11} /> Estilo p/ todos
+                    <ChevronUp size={12} />
                   </button>
-                )}
-                {onDownload && (
+                  <div className="w-px h-5" style={{ background: T.border }} />
                   <button
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-                    style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+                    onClick={() => { if (index < sections.length - 1) reorderSections(index, index + 1); }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-[9px] font-bold transition-all hover:bg-white/10 active:scale-95 disabled:opacity-20"
+                    style={{ color: T.textDim, background: T.glass }}
+                    disabled={index === sections.length - 1}
                   >
-                    {isDownloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
-                    {s.videoUrl ? 'MP4' : 'PNG'}
+                    <ChevronDown size={12} />
                   </button>
-                )}
+                </div>
 
-                {/* Delete */}
+                {/* ── Grupo: Ações ── */}
+                <div className="flex items-center rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+                  <button
+                    onClick={() => duplicateSection(s.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold transition-all hover:bg-white/10 active:scale-95"
+                    style={{ color: T.textDim, background: T.glass }}
+                  >
+                    <Copy size={11} /> Duplicar
+                  </button>
+                  {sections.length > 1 && (
+                    <>
+                      <div className="w-px h-5" style={{ background: T.border }} />
+                      <button
+                        onClick={() => applyStyleToAll()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold transition-all hover:bg-white/10 active:scale-95"
+                        style={{ color: T.accent, background: 'rgba(0,229,195,0.05)' }}
+                      >
+                        <Paintbrush size={11} /> Estilo p/ todos
+                      </button>
+                    </>
+                  )}
+                  {onDownload && (
+                    <>
+                      <div className="w-px h-5" style={{ background: T.border }} />
+                      <button
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+                        style={{ color: T.textDim, background: T.glass }}
+                      >
+                        {isDownloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+                        Baixar {s.videoUrl ? 'MP4' : 'PNG'}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* ── Excluir (isolado à direita) ── */}
                 {confirmDelete ? (
-                  <>
+                  <div className="flex items-center rounded-xl overflow-hidden ml-auto" style={{ border: '1px solid rgba(239,68,68,0.3)' }}>
                     <button
                       onClick={() => deleteSection(s.id)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black transition-all hover:scale-105 active:scale-95"
-                      style={{ background: 'rgba(239,68,68,0.9)', color: '#fff' }}
-                    >Confirmar</button>
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-black transition-all hover:brightness-110 active:scale-95"
+                      style={{ background: 'rgba(239,68,68,0.85)', color: '#fff' }}
+                    >
+                      Sim, excluir
+                    </button>
+                    <div className="w-px h-5" style={{ background: 'rgba(239,68,68,0.2)' }} />
                     <button
                       onClick={() => setConfirmDelete(false)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
-                      style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
-                    >Cancelar</button>
-                  </>
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold transition-all hover:bg-white/5 active:scale-95"
+                      style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.7)' }}
+                    >
+                      Não
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
-                    style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'rgba(239,68,68,0.7)' }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-bold transition-all hover:bg-red-500/10 active:scale-95 ml-auto"
+                    style={{ border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)' }}
                   >
                     <Trash2 size={11} /> Excluir
                   </button>
