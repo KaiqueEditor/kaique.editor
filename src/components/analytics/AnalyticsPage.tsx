@@ -116,19 +116,49 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
         setLoading(false);
     };
 
-    // Filter ranking
-    const filteredRanking = stats?.userRanking.filter(u => {
-        const threshold = getDateThreshold(dateFilter);
-        if (!threshold) return true;
-        return new Date(u.lastCreated) >= threshold;
-    }) || [];
+    // Build usage ranking: merge logins + exports per user
+    const usageMap = new Map<string, { email: string; logins: number; exports: number; usage: number; lastActivity: string; createdAt: string; role: string }>();
 
-    const filteredTotal = filteredRanking.reduce((sum, u) => sum + u.count, 0);
-    const maxCount = filteredRanking.length > 0 ? filteredRanking[0].count : 1;
+    // Add base users from stats
+    stats?.userRanking.forEach(u => {
+        usageMap.set(u.email, { email: u.email, logins: 0, exports: 0, usage: 0, lastActivity: u.lastActivity, createdAt: u.createdAt, role: u.role });
+    });
+
+    // Merge login counts
+    loginStats?.loginsByUser.forEach(l => {
+        const existing = usageMap.get(l.email);
+        if (existing) {
+            existing.logins = l.count;
+            existing.usage += l.count;
+            if (l.lastLogin > existing.lastActivity) existing.lastActivity = l.lastLogin;
+        }
+    });
+
+    // Merge export counts
+    exportStats?.exportsByUser.forEach(e => {
+        const existing = usageMap.get(e.email);
+        if (existing) {
+            existing.exports = e.count;
+            existing.usage += e.count * 3; // exports weigh more
+            if (e.lastExport > existing.lastActivity) existing.lastActivity = e.lastExport;
+        }
+    });
+
+    // Filter and sort
+    const filteredRanking = Array.from(usageMap.values())
+        .filter(u => {
+            const threshold = getDateThreshold(dateFilter);
+            if (!threshold) return true;
+            return new Date(u.lastActivity) >= threshold;
+        })
+        .sort((a, b) => b.usage - a.usage);
+
+    const filteredTotal = filteredRanking.reduce((sum, u) => sum + u.usage, 0);
+    const maxCount = filteredRanking.length > 0 ? filteredRanking[0].usage : 1;
 
     // Computed stats
     const avgSlidesPerCarousel = stats && stats.totalCarousels > 0
-        ? (filteredRanking.reduce((sum, u) => sum + u.count, 0) / stats.totalCarousels).toFixed(1)
+        ? (filteredRanking.reduce((sum, u) => sum + u.usage, 0) / stats.totalCarousels).toFixed(1)
         : '0';
     const activeUsersToday = stats?.userRanking.filter(u => {
         const today = new Date();
@@ -305,7 +335,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                                     <h2 className="text-lg font-black tracking-tight" style={{ color: T.text }}>Top Creators</h2>
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: T.textSub }}>
-                                    Rank por Volume
+                                    Rank por Uso
                                 </span>
                             </div>
 
@@ -317,10 +347,10 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col">
-                                    <div className="hidden sm:grid grid-cols-[80px_1fr_120px_150px] gap-4 px-8 py-4 border-b text-[10px] font-black uppercase tracking-widest" style={{ borderColor: T.border, color: T.textFaint }}>
+                                    <div className="grid grid-cols-[80px_1fr_120px_150px] gap-4 px-8 py-4 border-b text-[10px] font-black uppercase tracking-widest" style={{ borderColor: T.border, color: T.textFaint }}>
                                         <div className="text-center">Pos</div>
                                         <div>Criador / E-mail</div>
-                                        <div className="text-right">Volume</div>
+                                        <div className="text-right">Uso</div>
                                         <div className="text-right">Última Atividade</div>
                                     </div>
 
@@ -333,7 +363,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
 
                                             const rankColor = isTop1 ? T.yellow : isTop2 ? T.silver : isTop3 ? T.bronze : T.card;
                                             const rankText = isPodium ? '#000' : T.textSub;
-                                            const barWidth = Math.max(2, (user.count / maxCount) * 100);
+                                            const barWidth = Math.max(2, (user.usage / maxCount) * 100);
 
                                             return (
                                                 <div
@@ -383,7 +413,10 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                                                     <div className="z-10 flex sm:justify-end items-center gap-2">
                                                         <div className="flex flex-col items-start sm:items-end">
                                                             <span className="text-xl sm:text-2xl font-black tabular-nums tracking-tight" style={{ color: isPodium ? T.text : T.accent }}>
-                                                                {user.count}
+                                                                {user.usage}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold" style={{ color: T.textFaint }}>
+                                                                {user.logins} logins · {user.exports} exports
                                                             </span>
                                                         </div>
                                                     </div>
@@ -391,7 +424,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                                                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: T.bg, border: `1px solid ${T.border}` }}>
                                                             <Clock size={11} style={{ color: T.accent }} />
                                                             <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap" style={{ color: T.textSub }}>
-                                                                {formatRelativeTime(user.lastCreated)}
+                                                                {formatRelativeTime(user.lastActivity)}
                                                             </span>
                                                         </div>
                                                     </div>
