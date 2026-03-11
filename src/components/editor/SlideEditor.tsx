@@ -490,35 +490,38 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
         {/* ── Painel expandido ── */}
         {isActive && (
           <div className="p-4 space-y-3">
-            {/* Mini Preview — mobile only */}
-            <div className="lg:hidden rounded-2xl overflow-hidden relative" style={{
-              aspectRatio: '1080 / 1440',
-              border: `1px solid ${T.border}`,
-              boxShadow: `0 8px 32px rgba(0,0,0,0.3)`,
-            }}>
-              <div style={{
-                position: 'absolute', top: 0, left: 0,
-                width: 1080, height: 1440,
-                transform: 'scale(var(--mini-scale))',
-                transformOrigin: 'top left',
-              }} ref={el => {
-                if (el) {
-                  const parent = el.parentElement;
-                  if (parent) {
-                    const scale = parent.clientWidth / 1080;
-                    el.style.setProperty('--mini-scale', String(scale));
-                  }
-                }
+            {/* Mini Preview — mobile only (60% size) */}
+            <div className="lg:hidden flex justify-center">
+              <div className="rounded-2xl overflow-hidden relative" style={{
+                width: '60%',
+                aspectRatio: '1080 / 1440',
+                border: `1px solid ${T.border}`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.25)`,
               }}>
-                <CarouselSlide
-                  section={s}
-                  config={config}
-                  index={index}
-                  total={sections.length}
-                  isExport={true}
-                  formatWidth={1080}
-                  formatHeight={1440}
-                />
+                <div style={{
+                  position: 'absolute', top: 0, left: 0,
+                  width: 1080, height: 1440,
+                  transform: 'scale(var(--mini-scale))',
+                  transformOrigin: 'top left',
+                }} ref={el => {
+                  if (el) {
+                    const parent = el.parentElement;
+                    if (parent) {
+                      const scale = parent.clientWidth / 1080;
+                      el.style.setProperty('--mini-scale', String(scale));
+                    }
+                  }
+                }}>
+                  <CarouselSlide
+                    section={s}
+                    config={config}
+                    index={index}
+                    total={sections.length}
+                    isExport={true}
+                    formatWidth={1080}
+                    formatHeight={1440}
+                  />
+                </div>
               </div>
             </div>
             {/* Texto */}
