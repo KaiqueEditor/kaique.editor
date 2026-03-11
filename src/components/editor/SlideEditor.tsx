@@ -3,7 +3,7 @@ import {
   Trash2, ImageIcon, PanelsTopLeft,
   MessageSquareText, Minus, Plus, UploadCloud, Upload, Sparkles,
   Loader2, EyeOff, Image as LucideImage, Video, Download, RefreshCw,
-  ChevronDown, ChevronUp, GripVertical, Copy, Search,
+  ChevronDown, ChevronUp, GripVertical, Copy, Search, Paintbrush,
 } from 'lucide-react';
 import { Section } from '../../types';
 import { FONT_OPTIONS, FONT_CATEGORIES } from '../../constants/fonts';
@@ -177,6 +177,31 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const savePreset = useStore(state => state.savePreset);
   const deletePreset = useStore(state => state.deletePreset);
 
+  // Aplica o estilo visual deste slide a todos os outros
+  const applyStyleToAll = () => {
+    const styleProps: Partial<Section> = {
+      layoutType: s.layoutType,
+      titleFont: s.titleFont,
+      bodyFont: s.bodyFont,
+      titleSize: s.titleSize,
+      bodySize: s.bodySize,
+      bgColor: s.bgColor,
+      titleColor: s.titleColor,
+      bodyColor: s.bodyColor,
+      brandingColor: s.brandingColor,
+      alignment: s.alignment,
+      overlayOpacity: s.overlayOpacity,
+      gradientIntensity: s.gradientIntensity,
+      textPosY: s.textPosY,
+      imageHeight: s.imageHeight,
+    };
+    sections.forEach(sec => {
+      if (sec.id !== s.id) {
+        updateSection(sec.id, styleProps);
+      }
+    });
+  };
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [titleVariations, setTitleVariations] = useState<string[]>([]);
@@ -346,6 +371,18 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               >
                 <Copy size={13} />
               </button>
+
+              {/* Aplicar estilo a todos */}
+              {sections.length > 1 && (
+                <button
+                  onClick={e => { e.stopPropagation(); applyStyleToAll(); }}
+                  className="p-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10"
+                  style={{ color: T.textFaint }}
+                  title="Aplicar estilo a todos os slides"
+                >
+                  <Paintbrush size={13} />
+                </button>
+              )}
 
               {onDownload && (
                 <button
