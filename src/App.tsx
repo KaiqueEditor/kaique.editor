@@ -44,6 +44,7 @@ const ExportPreview = lazy(() => import('./components/export/ExportPreview').the
 // ── Helper: cria uma Section vazia/default ──────────────────────────────────────
 const createDefaultSection = (index: number, userEmail?: string | null): Section => {
   const isTimePrimo = userEmail?.toLowerCase() === 'marcela.depaula@timeprimo.com' || userEmail?.toLowerCase() === 'lorena.volpini@timeprimo.com';
+  const isAdmin = userEmail?.toLowerCase() === 'kaiqueseditor@gmail.com';
 
   return {
     id: `default-${Date.now()}-${index}`,
@@ -51,8 +52,8 @@ const createDefaultSection = (index: number, userEmail?: string | null): Section
     content: index === 0 ? 'Comece editando este texto' : 'Adicione seu conteúdo aqui',
     alignment: 'center',
     layoutType: 'storytelling',
-    titleFont: isTimePrimo ? 'filson-pro-bold' : 'plus-jakarta',
-    bodyFont: isTimePrimo ? 'open-sans' : 'sans',
+    titleFont: isTimePrimo ? 'filson-pro-bold' : isAdmin ? 'wide' : 'plus-jakarta',
+    bodyFont: isTimePrimo ? 'open-sans' : isAdmin ? 'montserrat' : 'sans',
     titleColor: '#FFFFFF',
     bodyColor: '#e0e0e0',
     bgColor: '#1a1a2e',
