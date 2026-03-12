@@ -58,7 +58,7 @@ export const FONT_OPTIONS: FontOption[] = [
   },
   {
     id: 'filson-pro-bold',
-    name: 'Filson Pro Bold (Premium)',
+    name: 'Filson Pro Heavy (Premium)',
     stack: "'filson-pro', sans-serif",
     category: 'favorita',
     label: 'Geométrica / Time Primo',
@@ -66,7 +66,7 @@ export const FONT_OPTIONS: FontOption[] = [
   },
   {
     id: 'filson-pro',
-    name: 'Filson Pro (Premium)',
+    name: 'Filson Pro Bold (Premium)',
     stack: "'filson-pro', sans-serif",
     category: 'sans',
     label: 'Geométrica / Time Primo',
