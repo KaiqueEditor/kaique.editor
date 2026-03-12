@@ -5,7 +5,7 @@ import {
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
   PenLine, Copy, Check, Plus, Save, LogOut, BarChart3, Undo2, Redo2,
-  Play, Pause,
+  Play, Pause, User,
 } from 'lucide-react';
 import { AnalyticsPage } from './components/analytics/AnalyticsPage';
 import { useAdmin, clearAdminCache } from './hooks/useAdmin';
@@ -96,6 +96,7 @@ interface SidebarContentProps {
   onImageUpload: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   onVideoUpload: (sectionId: string, file: File) => void;
   sessionUserEmail?: string | null;
+  onLogout: () => void;
 }
 
 // Conta slides a partir do formato "texto N" do agente
@@ -114,7 +115,7 @@ function SidebarContent({
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
   setAgentOpen, setImageAgentOpen, isAgentOpen, isImageAgentOpen,
   setActiveSlide, toggleTheme, onDownloadSlide, onImageUpload, onVideoUpload,
-  sessionUserEmail,
+  sessionUserEmail, onLogout,
 }: SidebarContentProps) {
   const detectedSlides = useMemo(() => countSlidesFromText(textInput), [textInput]);
   const carouselTemplates = useStore(state => state.carouselTemplates);
@@ -131,6 +132,7 @@ function SidebarContent({
   const [formatoOpen, setFormatoOpen] = useState(false);
   const [estilosOpen, setEstilosOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(sections.length === 0);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const setSections = useStore(state => state.setSections);
 
   const applyStarterTemplate = (template: typeof STARTER_TEMPLATES[0]) => {
@@ -225,8 +227,48 @@ function SidebarContent({
             >
               {isDark ? <Sun size={15} /> : <Moon size={15} />}
             </button>
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                title="Minha Conta"
+                className="hidden lg:flex p-2 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-white/5"
+                style={{ background: userMenuOpen ? T.glassMd : T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
+              >
+                <User size={15} />
+              </button>
+              {userMenuOpen && (
+                <div 
+                  className="absolute right-0 top-full mt-2 w-56 rounded-2xl p-3 shadow-2xl z-50 flex flex-col gap-3"
+                  style={{ background: T.card, border: `1px solid ${T.border}`, backdropFilter: 'blur(20px)' }}
+                >
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: T.textFaint }}>Logado como</p>
+                    <p className="text-xs font-bold truncate pr-2" style={{ color: T.textPrimary }}>{sessionUserEmail || 'Usuário'}</p>
+                  </div>
+                  <div className="h-px w-full" style={{ background: T.border }} />
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-red-500/10 active:scale-95"
+                    style={{ color: '#ff4444' }}
+                  >
+                    <LogOut size={13} /> Sair da Conta
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
+
+        {/* Clica fora esconde o menu (usando truque do overlay vazio só quando tá aberto) */}
+        {userMenuOpen && (
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setUserMenuOpen(false)}
+          />
+        )}
 
         <div className="mb-6 h-px" style={{ background: T.border }} />
 
@@ -926,6 +968,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       if (node) await downloadSlide(node, s, `slide-${idx + 1}`);
     },
     sessionUserEmail: session?.user?.email,
+    onLogout,
   };
 
   // AnalyticsPage (admin only)
