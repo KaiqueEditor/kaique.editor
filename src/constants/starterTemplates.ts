@@ -13,7 +13,7 @@ export interface CarouselStarterTemplate {
 const base = (overrides: Partial<Section>): Partial<Section> => ({
     alignment: 'left',
     layoutType: 'storytelling',
-    titleFont: 'druk',
+    titleFont: 'bebas-neue',
     bodyFont: 'montserrat',
     titleSize: 40,
     bodySize: 18,
@@ -39,7 +39,7 @@ export const STARTER_TEMPLATES: CarouselStarterTemplate[] = [
         category: 'feed',
         slideCount: 5,
         slides: [
-            base({ title: '5 DICAS\nQUE VÃO MUDAR\nSEU JOGO', content: 'Salve para não esquecer →', titleSize: 48, titleFont: 'druk', bodyFont: 'inter' }),
+            base({ title: '5 DICAS\nQUE VÃO MUDAR\nSEU JOGO', content: 'Salve para não esquecer →', titleSize: 48, titleFont: 'bebas-neue', bodyFont: 'sans' }),
             base({ title: 'DICA 01', content: 'Comece pelo mais difícil.\nSeu cérebro está mais afiado pela manhã.', titleColor: '#F5A623' }),
             base({ title: 'DICA 02', content: 'Consistência > Perfeição.\nPostar 3x/semana é melhor que 1 post perfeito.', titleColor: '#F5A623' }),
             base({ title: 'DICA 03', content: 'Estude seus concorrentes.\nVeja o que funciona e adapte pro seu estilo.', titleColor: '#F5A623' }),
@@ -54,7 +54,7 @@ export const STARTER_TEMPLATES: CarouselStarterTemplate[] = [
         category: 'feed',
         slideCount: 4,
         slides: [
-            base({ title: 'ANTES\nvs\nDEPOIS', content: 'A transformação completa →', titleSize: 52, titleFont: 'druk', alignment: 'center' }),
+            base({ title: 'ANTES\nvs\nDEPOIS', content: 'A transformação completa →', titleSize: 52, titleFont: 'bebas-neue', alignment: 'center' }),
             base({ title: 'ANTES', content: 'O problema que existia antes:\n• Desorganizado\n• Sem estratégia\n• Resultados ruins', titleColor: '#ef4444', bgColor: '#1a0000' }),
             base({ title: 'DEPOIS', content: 'O resultado após a mudança:\n• Organizado\n• Processo claro\n• ROI 3x maior', titleColor: '#22c55e', bgColor: '#001a00' }),
             base({ title: 'QUER ESSA\nTRANSFORMAÇÃO?', content: 'Link na bio para começar hoje!', titleSize: 44, alignment: 'center', titleColor: '#F5A623' }),
@@ -84,11 +84,11 @@ export const STARTER_TEMPLATES: CarouselStarterTemplate[] = [
         category: 'feed',
         slideCount: 5,
         slides: [
-            base({ title: '7 ERROS QUE\nTODO INICIANTE\nCOMETE', content: 'E como evitar cada um →', titleSize: 44, titleFont: 'bebas', bodyFont: 'open-sans', alignment: 'center' }),
-            base({ title: '01', content: 'Não definir um nicho.\nTentar falar com todo mundo é falar com ninguém.', titleSize: 80, titleColor: '#F5A623', titleFont: 'bebas', bodyFont: 'open-sans' }),
-            base({ title: '02', content: 'Focar em likes ao invés de leads.\nVaidade não paga boleto.', titleSize: 80, titleColor: '#F5A623', titleFont: 'bebas', bodyFont: 'open-sans' }),
-            base({ title: '03', content: 'Copiar conteúdo ao invés de adaptar.\nSua audiência percebe.', titleSize: 80, titleColor: '#F5A623', titleFont: 'bebas', bodyFont: 'open-sans' }),
-            base({ title: 'EVITE ESSES\nERROS', content: 'Salve e compartilhe com alguém que precisa!', titleSize: 44, titleFont: 'bebas', bodyFont: 'open-sans', alignment: 'center' }),
+            base({ title: '7 ERROS QUE\nTODO INICIANTE\nCOMETE', content: 'E como evitar cada um →', titleSize: 44, titleFont: 'bebas-neue', bodyFont: 'open-sans', alignment: 'center' }),
+            base({ title: '01', content: 'Não definir um nicho.\nTentar falar com todo mundo é falar com ninguém.', titleSize: 80, titleColor: '#F5A623', titleFont: 'bebas-neue', bodyFont: 'open-sans' }),
+            base({ title: '02', content: 'Focar em likes ao invés de leads.\nVaidade não paga boleto.', titleSize: 80, titleColor: '#F5A623', titleFont: 'bebas-neue', bodyFont: 'open-sans' }),
+            base({ title: '03', content: 'Copiar conteúdo ao invés de adaptar.\nSua audiência percebe.', titleSize: 80, titleColor: '#F5A623', titleFont: 'bebas-neue', bodyFont: 'open-sans' }),
+            base({ title: 'EVITE ESSES\nERROS', content: 'Salve e compartilhe com alguém que precisa!', titleSize: 44, titleFont: 'bebas-neue', bodyFont: 'open-sans', alignment: 'center' }),
         ],
     },
     {
@@ -99,11 +99,11 @@ export const STARTER_TEMPLATES: CarouselStarterTemplate[] = [
         category: 'educacao',
         slideCount: 5,
         slides: [
-            base({ title: 'COMO CRIAR\nCONTEÚDO\nQUE VENDE', content: 'O guia definitivo →', titleSize: 44, titleFont: 'montserrat', bodyFont: 'inter', bgColor: '#0a0a1a', titleColor: '#a78bfa' }),
-            base({ title: 'PASSO 1', content: 'Entenda a dor do seu público.\nFaça pesquisas, leia comentários, ouça.', titleFont: 'montserrat', bodyFont: 'inter', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 28 }),
-            base({ title: 'PASSO 2', content: 'Estruture com framework AIDA:\n\n• Atenção\n• Interesse\n• Desejo\n• Ação', titleFont: 'montserrat', bodyFont: 'inter', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 28 }),
-            base({ title: 'PASSO 3', content: 'Use CTAs claros.\nDiga exatamente o que você quer que a pessoa faça.', titleFont: 'montserrat', bodyFont: 'inter', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 28 }),
-            base({ title: 'APLIQUE\nAGORA!', content: 'Salve esse post e crie seu próximo conteúdo usando essa estrutura.', titleFont: 'montserrat', bodyFont: 'inter', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 44, alignment: 'center' }),
+            base({ title: 'COMO CRIAR\nCONTEÚDO\nQUE VENDE', content: 'O guia definitivo →', titleSize: 44, titleFont: 'montserrat', bodyFont: 'sans', bgColor: '#0a0a1a', titleColor: '#a78bfa' }),
+            base({ title: 'PASSO 1', content: 'Entenda a dor do seu público.\nFaça pesquisas, leia comentários, ouça.', titleFont: 'montserrat', bodyFont: 'sans', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 28 }),
+            base({ title: 'PASSO 2', content: 'Estruture com framework AIDA:\n\n• Atenção\n• Interesse\n• Desejo\n• Ação', titleFont: 'montserrat', bodyFont: 'sans', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 28 }),
+            base({ title: 'PASSO 3', content: 'Use CTAs claros.\nDiga exatamente o que você quer que a pessoa faça.', titleFont: 'montserrat', bodyFont: 'sans', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 28 }),
+            base({ title: 'APLIQUE\nAGORA!', content: 'Salve esse post e crie seu próximo conteúdo usando essa estrutura.', titleFont: 'montserrat', bodyFont: 'sans', bgColor: '#0a0a1a', titleColor: '#a78bfa', titleSize: 44, alignment: 'center' }),
         ],
     },
     {
