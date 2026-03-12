@@ -58,7 +58,7 @@ export const FONT_OPTIONS: FontOption[] = [
   },
   {
     id: 'filson-pro-bold',
-    name: 'Filson Pro Heavy (Premium)',
+    name: 'Filson Pro Heavy (Primo Rico Premium)',
     stack: "'filson-pro', sans-serif",
     category: 'favorita',
     label: 'Geométrica / Time Primo',
@@ -102,11 +102,12 @@ export const FONT_OPTIONS: FontOption[] = [
   },
   {
     id: 'open-sans',
-    name: 'Open Sans',
+    name: 'Open Sans (Primo Rico Premium)',
     stack: "'Open Sans', sans-serif",
     googleFont: 'Open+Sans:wght@300;400;500;600;700;800',
     category: 'sans',
     label: 'Legível / Versátil',
+    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
   },
   {
     id: 'poppins',
