@@ -57,18 +57,10 @@ export const FONT_OPTIONS: FontOption[] = [
   },
   {
     id: 'filson-pro',
-    name: 'Filson Pro',
+    name: 'Filson Pro Bold',
     stack: "'filson-pro', sans-serif",
     category: 'favorita',
     label: 'Geométrica / Typekit',
-  },
-  {
-    id: 'nunito',
-    name: 'Nunito (≈ Filson Pro)',
-    stack: "'Nunito', sans-serif",
-    googleFont: 'Nunito:wght@300;400;500;600;700;800;900',
-    category: 'favorita',
-    label: 'Rounded / Geométrica',
   },
   {
     id: 'quicksand',
