@@ -42,27 +42,31 @@ const ImageAgentChat = lazy(() => import('./components/chat/ImageAgentChat'));
 const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
 
 // ── Helper: cria uma Section vazia/default ──────────────────────────────────────
-const createDefaultSection = (index: number): Section => ({
-  id: `default-${Date.now()}-${index}`,
-  title: index === 0 ? 'Título da Capa' : `Slide ${index + 1}`,
-  content: index === 0 ? 'Comece editando este texto' : 'Adicione seu conteúdo aqui',
-  alignment: 'center',
-  layoutType: 'storytelling',
-  titleFont: 'Plus Jakarta Sans',
-  bodyFont: 'Inter',
-  titleColor: '#FFFFFF',
-  bodyColor: '#e0e0e0',
-  bgColor: '#1a1a2e',
-  brandingColor: '#00E5C3',
-  titleSize: 70,
-  bodySize: 22,
-  imagePosX: 50,
-  imagePosY: 50,
-  imageScale: 1,
-  overlayOpacity: 0,
-  textPosY: 70,
-  showSocialImage: false,
-});
+const createDefaultSection = (index: number, userEmail?: string | null): Section => {
+  const isTimePrimo = userEmail?.toLowerCase() === 'marcela.depaula@timeprimo.com' || userEmail?.toLowerCase() === 'lorena.volpini@timeprimo.com';
+
+  return {
+    id: `default-${Date.now()}-${index}`,
+    title: index === 0 ? 'Título da Capa' : `Slide ${index + 1}`,
+    content: index === 0 ? 'Comece editando este texto' : 'Adicione seu conteúdo aqui',
+    alignment: 'center',
+    layoutType: 'storytelling',
+    titleFont: isTimePrimo ? 'filson-pro-bold' : 'Plus Jakarta Sans',
+    bodyFont: isTimePrimo ? 'filson-pro' : 'Inter',
+    titleColor: '#FFFFFF',
+    bodyColor: '#e0e0e0',
+    bgColor: '#1a1a2e',
+    brandingColor: '#00E5C3',
+    titleSize: 70,
+    bodySize: 22,
+    imagePosX: 50,
+    imagePosY: 50,
+    imageScale: 1,
+    overlayOpacity: 0,
+    textPosY: 70,
+    showSocialImage: false,
+  };
+};
 
 // ── Sidebar inner content (reutilizado no desktop e no mobile sheet) ──────────
 interface SidebarContentProps {
@@ -91,6 +95,7 @@ interface SidebarContentProps {
   onDownloadSlide: (idx: number, s: Section) => Promise<void>;
   onImageUpload: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   onVideoUpload: (sectionId: string, file: File) => void;
+  sessionUserEmail?: string | null;
 }
 
 // Conta slides a partir do formato "texto N" do agente
@@ -109,6 +114,7 @@ function SidebarContent({
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
   setAgentOpen, setImageAgentOpen, isAgentOpen, isImageAgentOpen,
   setActiveSlide, toggleTheme, onDownloadSlide, onImageUpload, onVideoUpload,
+  sessionUserEmail,
 }: SidebarContentProps) {
   const detectedSlides = useMemo(() => countSlidesFromText(textInput), [textInput]);
   const carouselTemplates = useStore(state => state.carouselTemplates);
@@ -128,14 +134,16 @@ function SidebarContent({
   const setSections = useStore(state => state.setSections);
 
   const applyStarterTemplate = (template: typeof STARTER_TEMPLATES[0]) => {
+    const isTimePrimo = sessionUserEmail?.toLowerCase() === 'marcela.depaula@timeprimo.com' || sessionUserEmail?.toLowerCase() === 'lorena.volpini@timeprimo.com';
+
     const newSections = template.slides.map((slide, idx) => ({
       id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
       title: slide.title || '',
       content: slide.content || '',
       alignment: slide.alignment || 'left',
       layoutType: slide.layoutType || 'storytelling',
-      titleFont: slide.titleFont || 'druk',
-      bodyFont: slide.bodyFont || 'montserrat',
+      titleFont: isTimePrimo ? 'filson-pro-bold' : (slide.titleFont || 'druk'),
+      bodyFont: isTimePrimo ? 'filson-pro' : (slide.bodyFont || 'montserrat'),
       titleSize: slide.titleSize || 40,
       bodySize: slide.bodySize || 18,
       bgColor: slide.bgColor || '#000000',
@@ -917,6 +925,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       const node = exportRefs.current[idx];
       if (node) await downloadSlide(node, s, `slide-${idx + 1}`);
     },
+    sessionUserEmail: session?.user?.email,
   };
 
   // AnalyticsPage (admin only)

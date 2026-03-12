@@ -6,6 +6,7 @@ export interface FontOption {
   category: 'favorita' | 'display' | 'sans' | 'serif' | 'mono';
   label?: string; // descrição curta
   adminOnly?: boolean;
+  exclusiveTo?: string[]; // array de emails que podem ver essa fonte
 }
 
 // ── Catálogo de fontes ──────────────────────────────────────────────────────
@@ -56,11 +57,20 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Clean / Premium',
   },
   {
-    id: 'filson-pro',
-    name: 'Filson Pro Bold',
+    id: 'filson-pro-bold',
+    name: 'Filson Pro Bold (Premium)',
     stack: "'filson-pro', sans-serif",
     category: 'favorita',
-    label: 'Geométrica / Typekit',
+    label: 'Geométrica / Time Primo',
+    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
+  },
+  {
+    id: 'filson-pro',
+    name: 'Filson Pro (Premium)',
+    stack: "'filson-pro', sans-serif",
+    category: 'sans',
+    label: 'Geométrica / Time Primo',
+    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
   },
   {
     id: 'quicksand',
@@ -172,8 +182,15 @@ export const FONT_CATEGORIES = [
   { key: 'serif', label: 'Serif Clássicas' },
 ] as const;
 
-export const getFontsByCategory = (cat: string) =>
-  FONT_OPTIONS.filter(f => f.category === cat);
+export const getFontsByCategory = (cat: string, userEmail?: string | null) =>
+  FONT_OPTIONS.filter(f => {
+    if (f.category !== cat) return false;
+    if (f.exclusiveTo && f.exclusiveTo.length > 0) {
+      if (!userEmail) return false;
+      return f.exclusiveTo.includes(userEmail.toLowerCase());
+    }
+    return true;
+  });
 
 export const getFontFamily = (fontKey?: string): string => {
   const font = FONT_OPTIONS.find(f => f.id === fontKey);
