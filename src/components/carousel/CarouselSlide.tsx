@@ -129,7 +129,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                 fontFamily: getFontFamily(section.bodyFont || 'sans'),
                 textAlign: textAlign as any,
                 overflow: 'hidden',
-                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : section.bodyFont === 'filson-pro' ? 300 : 400,
+                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : section.bodyFont === 'filson-pro' ? 400 : 400,
                 lineHeight: 1.65,
               }}
             >
@@ -255,13 +255,13 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
       >
         <div className={`w-full flex flex-col ${textAlign === 'center' ? 'items-center' : textAlign === 'right' ? 'items-end' : 'items-start'}`}>
           <h2
-            className={`font-bold uppercase mb-6 leading-[1.1] whitespace-pre-wrap`}
+            className={`uppercase mb-6 leading-[1.1] whitespace-pre-wrap`}
             style={{
               fontFamily: getFontFamily(section.titleFont || 'anton'),
               fontSize: finalTitleSize,
               color: finalTitleColor,
               textShadow: '0 4px 30px rgba(0,0,0,0.8)',
-              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'filson-pro' ? 400 : undefined
+              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'filson-pro' ? 400 : 700
             }}
           >
             {renderFormattedText(section.title)}
@@ -269,14 +269,14 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
 
           {section.content && (
             <p
-              className={`leading-relaxed whitespace-pre-wrap font-normal`}
+              className={`leading-relaxed whitespace-pre-wrap`}
               style={{
                 fontSize: finalBodySize,
                 fontFamily: getFontFamily(section.bodyFont || 'sans'),
                 color: finalBodyColor,
                 maxWidth: isFullBg ? '95%' : '100%',
                 textShadow: '0 2px 12px rgba(0,0,0,0.6)',
-                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : section.bodyFont === 'filson-pro' ? 300 : 400,
+                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : section.bodyFont === 'filson-pro' ? 400 : 400,
                 opacity: 0.9
               }}
             >
