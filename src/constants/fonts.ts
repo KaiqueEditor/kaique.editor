@@ -56,6 +56,13 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'Clean / Premium',
   },
   {
+    id: 'filson-pro',
+    name: 'Filson Pro',
+    stack: "'filson-pro', sans-serif",
+    category: 'favorita',
+    label: 'Geométrica / Typekit',
+  },
+  {
     id: 'nunito',
     name: 'Nunito (≈ Filson Pro)',
     stack: "'Nunito', sans-serif",
