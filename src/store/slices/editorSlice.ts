@@ -27,6 +27,10 @@ export interface EditorSlice {
   isAdmin: boolean;
   setAdmin: (v: boolean) => void;
 
+  // Current user email
+  userEmail: string | null;
+  setUserEmail: (email: string | null) => void;
+
   // Actions
   setAgentOpen: (isOpen: boolean) => void;
   setShowExportPreview: (show: boolean) => void;
@@ -68,8 +72,10 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
   imageAgentSectionId: null,
   currentProjectId: null,
   isAdmin: false,
+  userEmail: null,
 
   setAdmin: (v) => set({ isAdmin: v }),
+  setUserEmail: (email) => set({ userEmail: email }),
   setAgentOpen: (isOpen) => set({ isAgentOpen: isOpen }),
   setShowExportPreview: (show) => set({ showExportPreview: show }),
   setIsExporting: (isExporting) => set({ isExporting }),

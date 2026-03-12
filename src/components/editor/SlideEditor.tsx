@@ -169,6 +169,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const updateConfig = useStore(state => state.updateConfig);
   const { generate, isGenerating } = useImageGeneration();
   const isAdmin = useStore(state => state.isAdmin);
+  const userEmail = useStore(state => state.userEmail);
 
   const s = section;
   const generating = isGenerating(s.id);
@@ -625,7 +626,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                               style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
                             >
                               {FONT_CATEGORIES.map(cat => {
-                                const options = getFontsByCategory(cat.key, sessionUserEmail).filter(f => (!f.adminOnly || isAdmin));
+                                const options = getFontsByCategory(cat.key, userEmail).filter(f => (!f.adminOnly || isAdmin));
                                 if (options.length === 0) return null;
                                 return (
                                   <optgroup key={cat.key} label={cat.label}>

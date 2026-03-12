@@ -1859,11 +1859,13 @@ export default function App() {
         session.user.user_metadata?.nickname?.toLowerCase().includes('kaiqueseditor') ||
         session.user.email === 'kaiqueseditor@gmail.com';
       useStore.getState().setAdmin(!!isAdm);
+      useStore.getState().setUserEmail(session.user.email ?? null);
 
       // Log login (best-effort)
       cloudStorage.logLogin(session.user.id, session.user.email || '').catch(() => {});
     } else {
       useStore.getState().setAdmin(false);
+      useStore.getState().setUserEmail(null);
     }
   }, [session]);
 
