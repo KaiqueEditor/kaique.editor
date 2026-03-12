@@ -62,7 +62,7 @@ export const FONT_OPTIONS: FontOption[] = [
     stack: "'filson-pro', sans-serif",
     category: 'favorita',
     label: 'Geométrica / Time Primo',
-    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
+    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com', 'kaiqueseditor@gmail.com'],
   },
   {
     id: 'filson-pro',
@@ -70,7 +70,7 @@ export const FONT_OPTIONS: FontOption[] = [
     stack: "'filson-pro', sans-serif",
     category: 'sans',
     label: 'Geométrica / Time Primo',
-    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
+    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com', 'kaiqueseditor@gmail.com'],
   },
   {
     id: 'quicksand',

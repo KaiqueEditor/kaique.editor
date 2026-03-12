@@ -114,7 +114,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
               fontFamily: getFontFamily(section.titleFont || 'open-sans'),
               textAlign: textAlign as any,
               overflow: 'hidden',
-              fontWeight: 400,
+              fontWeight: 700,
               lineHeight: 1.35,
             }}
           >
@@ -254,12 +254,13 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
       >
         <div className={`w-full flex flex-col ${textAlign === 'center' ? 'items-center' : textAlign === 'right' ? 'items-end' : 'items-start'}`}>
           <h2
-            className={`font-black uppercase mb-6 leading-[1.1] whitespace-pre-wrap`}
+            className={`font-bold uppercase mb-6 leading-[1.1] whitespace-pre-wrap`}
             style={{
               fontFamily: getFontFamily(section.titleFont || 'anton'),
               fontSize: finalTitleSize,
               color: finalTitleColor,
-              textShadow: '0 4px 30px rgba(0,0,0,0.8)'
+              textShadow: '0 4px 30px rgba(0,0,0,0.8)',
+              fontWeight: section.titleFont === 'filson-pro-bold' ? 700 : undefined
             }}
           >
             {renderFormattedText(section.title)}
