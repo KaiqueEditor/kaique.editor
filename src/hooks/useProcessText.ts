@@ -33,6 +33,11 @@ export const useProcessText = () => {
   const useAI = useStore(state => state.useAI);
   const { generateAll } = useImageGeneration();
 
+  const isTimePrimo = () => {
+    const email = useStore.getState().userEmail?.toLowerCase();
+    return email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com';
+  };
+
   // Detecta se o texto já está no formato estruturado "Texto N ..." (com ou sem traço)
   const isStructuredRoteiro = (text: string) => /^texto\s+\d+/im.test(text);
 
@@ -63,8 +68,8 @@ export const useProcessText = () => {
               title: dataMap[1] || '',
               content: '',
               layoutType: 'storytelling',
-              titleFont: 'wide',
-              bodyFont: 'montserrat',
+              titleFont: isTimePrimo() ? 'filson-pro-bold' : 'wide',
+              bodyFont: isTimePrimo() ? 'open-sans' : 'montserrat',
               alignment: 'center',
               titleSize: 30,
               bodySize: 10,
@@ -77,6 +82,8 @@ export const useProcessText = () => {
             if (dataMap[i] || dataMap[i + 1]) {
               finalSections.push({
                 ...DEFAULT_SECTION_BASE,
+              titleFont: isTimePrimo() ? 'filson-pro-bold' : 'montserrat',
+              bodyFont: isTimePrimo() ? 'open-sans' : 'montserrat',
                 id: `s-${i}-${Date.now()}`,
                 title: dataMap[i] || '',
                 content: dataMap[i + 1] || '',
@@ -91,8 +98,8 @@ export const useProcessText = () => {
           ...DEFAULT_SECTION_BASE,
           ...s,
           alignment: idx === 0 ? 'center' as const : 'left' as const,
-          titleFont: idx === 0 ? 'wide' : 'montserrat',
-          bodyFont: 'montserrat',
+          titleFont: idx === 0 ? (isTimePrimo() ? 'filson-pro-bold' : 'wide') : (isTimePrimo() ? 'filson-pro-bold' : 'montserrat'),
+          bodyFont: isTimePrimo() ? 'open-sans' : 'montserrat',
           titleSize: 30,
           ...(idx === 0 ? { bodySize: 10 } : {}),
         }));
