@@ -663,7 +663,7 @@ function SidebarContent({
           {/* Botão Adicionar Slide */}
           <button
             onClick={() => {
-              const newSection = createDefaultSection(sections.length, sessionUserEmail);
+              const newSection = createDefaultSection(sections.length, useStore.getState().userEmail);
               useStore.getState().addSection(newSection);
               setActiveSlide(sections.length);
               toast.success('Novo slide adicionado!');
@@ -815,9 +815,9 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       const state = useStore.getState();
       if (state.sections.length === 0) {
         const defaultSlides = [
-          createDefaultSection(0, session?.user?.email),
-          createDefaultSection(1, session?.user?.email),
-          createDefaultSection(2, session?.user?.email),
+          createDefaultSection(0, useStore.getState().userEmail),
+          createDefaultSection(1, useStore.getState().userEmail),
+          createDefaultSection(2, useStore.getState().userEmail),
         ];
         useStore.getState().setSections(defaultSlides);
       }
@@ -1080,7 +1080,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
               </p>
               <button
                 onClick={() => {
-                  const newSection = createDefaultSection(sections.length, session?.user?.email);
+                  const newSection = createDefaultSection(sections.length, useStore.getState().userEmail);
                   useStore.getState().addSection(newSection);
                   setActiveSlide(sections.length);
                   toast.success('Slide adicionado!');
@@ -1103,9 +1103,9 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
               onClick={() => {
                 if (sections.length > 0 && !confirm('Criar um novo carrossel? O atual será salvo automaticamente.')) return;
                 useStore.getState().setSections([
-                  createDefaultSection(0, session?.user?.email),
-                  createDefaultSection(1, session?.user?.email),
-                  createDefaultSection(2, session?.user?.email),
+                  createDefaultSection(0, useStore.getState().userEmail),
+                  createDefaultSection(1, useStore.getState().userEmail),
+                  createDefaultSection(2, useStore.getState().userEmail),
                 ]);
                 setTextInput('');
                 toast.success('Novo carrossel criado!');
