@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, GripVertical, Copy, Search, Paintbrush,
 } from 'lucide-react';
 import { Section } from '../../types';
-import { FONT_OPTIONS, FONT_CATEGORIES } from '../../constants/fonts';
+import { FONT_OPTIONS, FONT_CATEGORIES, getFontsByCategory } from '../../constants/fonts';
 import { useStore } from '../../store';
 import { useImageGeneration } from '../../hooks/useImageGeneration';
 import { geminiService } from '../../services/api/geminiService';
@@ -26,6 +26,7 @@ interface SlideEditorProps {
   onVideoUpload?: (sectionId: string, file: File) => void;
   onImageUpload?: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  sessionUserEmail?: string | null;
 }
 
 // ── Pad de foco da imagem (opção B — miniatura como fundo) ──────────────────
@@ -156,7 +157,7 @@ const FocusPad: React.FC<FocusPadProps> = ({ imageUrl, videoUrl, posX, posY, onC
 // ── SlideEditor ─────────────────────────────────────────────────────────────
 export const SlideEditor: React.FC<SlideEditorProps> = ({
   section, index, isActive, onClick, T: TProp, onDownload,
-  onVideoUpload, onImageUpload, dragHandleProps,
+  onVideoUpload, onImageUpload, dragHandleProps, sessionUserEmail
 }) => {
   const T = TProp || DARK_FALLBACK;
   const sections = useStore(state => state.sections);
@@ -624,7 +625,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                               style={{ padding: '5px 8px', background: T.inputBg, border: `1px solid ${T.inputBorder}`, color: T.textPrimary, cursor: 'pointer' }}
                             >
                               {FONT_CATEGORIES.map(cat => {
-                                const options = FONT_OPTIONS.filter(f => f.category === cat.key && (!f.adminOnly || isAdmin));
+                                const options = getFontsByCategory(cat.key, sessionUserEmail).filter(f => (!f.adminOnly || isAdmin));
                                 if (options.length === 0) return null;
                                 return (
                                   <optgroup key={cat.key} label={cat.label}>

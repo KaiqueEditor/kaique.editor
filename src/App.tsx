@@ -655,6 +655,7 @@ function SidebarContent({
                   onDragStart: () => { dragIdx.current = idx; },
                   onDragEnd: () => { dragIdx.current = null; },
                 }}
+                sessionUserEmail={sessionUserEmail}
               />
             </div>
           ))}

@@ -22,6 +22,7 @@ export const FONT_OPTIONS: FontOption[] = [
     category: 'favorita',
     label: 'Corpo / Títulos',
     adminOnly: true,
+    exclusiveTo: ['kaiqueseditor@gmail.com'],
   },
   {
     id: 'wide',
@@ -31,6 +32,7 @@ export const FONT_OPTIONS: FontOption[] = [
     category: 'favorita',
     label: 'Futurista / Wide',
     adminOnly: true,
+    exclusiveTo: ['kaiqueseditor@gmail.com'],
   },
   {
     id: 'outfit',
