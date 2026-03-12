@@ -65,14 +65,6 @@ export const FONT_OPTIONS: FontOption[] = [
     exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
   },
   {
-    id: 'filson-pro',
-    name: 'Filson Pro Regular (Premium)',
-    stack: "'filson-pro', sans-serif",
-    category: 'sans',
-    label: 'Geométrica / Time Primo',
-    exclusiveTo: ['marcela.depaula@timeprimo.com', 'lorena.volpini@timeprimo.com'],
-  },
-  {
     id: 'quicksand',
     name: 'Quicksand',
     stack: "'Quicksand', sans-serif",
