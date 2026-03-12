@@ -1244,17 +1244,19 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
         {/* Nós de exportação — tecnicamente visíveis para o browser (decode ativo), invisíveis para o usuário */}
         {/* IMPORTANTE: zIndex >= 0 e opacity > 0 são obrigatórios para o Chrome decodificar frames de vídeo */}
+        {/* Container com dimensões reais para garantir que o text layout é idêntico ao preview */}
         <div
           aria-hidden="true"
           style={{
             position: 'fixed',
             top: 0,
             left: 0,
-            width: 0,
-            height: 0,
+            width: `${(EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080) + 20}px`,
+            height: `${(EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440) + 20}px`,
             overflow: 'visible',
             zIndex: 0,
             pointerEvents: 'none',
+            opacity: 0.0001,
           }}
         >
           {sections.map((s, idx) => (

@@ -55,6 +55,22 @@ export const FONT_OPTIONS: FontOption[] = [
     category: 'favorita',
     label: 'Clean / Premium',
   },
+  {
+    id: 'nunito',
+    name: 'Nunito (≈ Filson Pro)',
+    stack: "'Nunito', sans-serif",
+    googleFont: 'Nunito:wght@300;400;500;600;700;800;900',
+    category: 'favorita',
+    label: 'Rounded / Geométrica',
+  },
+  {
+    id: 'quicksand',
+    name: 'Quicksand',
+    stack: "'Quicksand', sans-serif",
+    googleFont: 'Quicksand:wght@300;400;500;600;700',
+    category: 'favorita',
+    label: 'Rounded / Suave',
+  },
 
   // ─── DISPLAY / IMPACTO ─────────────────────────────────────────────────────
   {
