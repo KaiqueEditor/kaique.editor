@@ -792,6 +792,25 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
   // Restaurar último projeto: primeiro do Cloud, depois fallback local
   useEffect(() => {
+    // ── Helper: migra fontes genéricas para as do usuário logado ────────
+    const migrateUserFonts = (sections: Section[]) => {
+      const email = useStore.getState().userEmail?.toLowerCase() ?? '';
+      const isTimePrimoUser = email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com';
+      const isAdminUser = email === 'kaiqueseditor@gmail.com';
+      if (!isTimePrimoUser && !isAdminUser) return;
+
+      const targetTitle = isTimePrimoUser ? 'filson-pro-bold' : 'wide';
+      const targetBody  = isTimePrimoUser ? 'open-sans'       : 'montserrat';
+      const { updateSection } = useStore.getState();
+      sections.forEach(s => {
+        const updates: Partial<typeof s> = {};
+        if (s.titleFont !== targetTitle) updates.titleFont = targetTitle;
+        if (s.bodyFont  !== targetBody)  updates.bodyFont  = targetBody;
+        if (Object.keys(updates).length) updateSection(s.id, updates);
+      });
+    };
+    // ─────────────────────────────────────────────────────────────────────
+
     const restoreFromCloud = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -802,6 +821,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
             if (latest.sections && latest.sections.length > 0) {
               useStore.getState().setSections(latest.sections);
               if (latest.config) useStore.getState().updateConfig(latest.config);
+              migrateUserFonts(latest.sections);
               return; // cloud restored
             }
           }
@@ -816,6 +836,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
           const looksLikeSameSession = state.sections.length === backup.sections.length;
           if (looksLikeSameSession) {
             useStore.getState().setSections(backup.sections);
+            migrateUserFonts(backup.sections);
           }
         }
       } catch { /* no backup */ }
