@@ -302,7 +302,8 @@ export const useExport = () => {
     const posY = section.imagePosY ?? 50;
     const userScale = section.imageScale ?? 1;
     const isStorytelling = section.layoutType === 'storytelling';
-    const videoH = isStorytelling ? Math.round(1440 * 0.55) : 1440;
+    const rawImageHeight = section.imageHeight ?? 55;
+    const videoH = isStorytelling ? Math.round(1440 * (rawImageHeight / 100)) : 1440;
     const bgColor = section.bgColor || '#000000';
 
     // Paraleliza: carrega metadados do vídeo e captura overlay ao mesmo tempo
