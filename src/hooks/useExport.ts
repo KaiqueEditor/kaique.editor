@@ -408,9 +408,9 @@ export const useExport = () => {
           await cloudStorage.logExport(user.id, user.email || '', sections.length, carouselName, 'zip');
         }
       } catch { /* silent */ }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Erro na exportação:', e);
-      toast.error('Erro ao exportar arquivo ZIP.');
+      toast.error(`Erro ao exportar ZIP: ${e?.message || 'Erro desconhecido'}`);
     } finally {
       setIsExporting(false);
       setExportStep(null);
