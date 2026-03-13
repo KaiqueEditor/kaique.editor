@@ -14,16 +14,29 @@ interface TemplateGalleryProps {
 export const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onClose, T: TProp }) => {
     const T = TProp || DARK_FALLBACK;
     const setSections = useStore(state => state.setSections);
+    const userEmail = useStore(state => state.userEmail);
+
+    const getDefaultFonts = () => {
+        const email = userEmail?.toLowerCase();
+        if (email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com') {
+            return { titleFont: 'filson-pro-bold', bodyFont: 'open-sans' };
+        }
+        if (email === 'kaiqueseditor@gmail.com') {
+            return { titleFont: 'wide', bodyFont: 'montserrat' };
+        }
+        return null; // keep template's original fonts
+    };
 
     const applyTemplate = (template: CarouselStarterTemplate) => {
+        const userFonts = getDefaultFonts();
         const sections: Section[] = template.slides.map((slide, idx) => ({
             id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
             title: slide.title || '',
             content: slide.content || '',
             alignment: slide.alignment || 'left',
             layoutType: slide.layoutType || 'storytelling',
-            titleFont: slide.titleFont || 'druk',
-            bodyFont: slide.bodyFont || 'montserrat',
+            titleFont: userFonts?.titleFont ?? (slide.titleFont || 'bebas-neue'),
+            bodyFont: userFonts?.bodyFont ?? (slide.bodyFont || 'montserrat'),
             titleSize: slide.titleSize || 40,
             bodySize: slide.bodySize || 18,
             bgColor: slide.bgColor || '#000000',
