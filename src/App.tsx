@@ -750,7 +750,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     // Also constrain by viewport height: leave ~220px for toolbar + nav + actions
     const availableHeight = window.innerHeight - 220;
     const scaleByHeight = availableHeight / 1440;
-    return Math.min(scaleByWidth, scaleByHeight);
+    return Math.min(scaleByWidth, scaleByHeight) * 0.9;
   });
   useEffect(() => {
     const el = previewContainerRef.current;
@@ -762,7 +762,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       // Leave ~220px for toolbar + navigation + action buttons
       const availableHeight = window.innerHeight - 220;
       const scaleByHeight = availableHeight / 1440;
-      setPreviewScale(Math.min(scaleByWidth, scaleByHeight));
+      setPreviewScale(Math.min(scaleByWidth, scaleByHeight) * 0.9);
     };
     const ro = new ResizeObserver(compute);
     ro.observe(el);
