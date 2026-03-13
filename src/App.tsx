@@ -1867,15 +1867,42 @@ export default function App() {
 
   useEffect(() => {
     if (session?.user) {
+      const email = session.user.email ?? '';
       const isAdm =
-        session.user.email?.toLowerCase().includes('kaiqueseditor') ||
+        email.toLowerCase().includes('kaiqueseditor') ||
         session.user.user_metadata?.nickname?.toLowerCase().includes('kaiqueseditor') ||
-        session.user.email === 'kaiqueseditor@gmail.com';
+        email === 'kaiqueseditor@gmail.com';
       useStore.getState().setAdmin(!!isAdm);
-      useStore.getState().setUserEmail(session.user.email ?? null);
+      useStore.getState().setUserEmail(email || null);
+
+      // ── Migração de fontes ao fazer login ────────────────────────────────
+      // Corrige seções salvas com fontes genéricas (anteriores à implementação de fontes por usuário)
+      const isTimePrimoUser = email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com';
+      const isAdminUser = email === 'kaiqueseditor@gmail.com';
+      if (isTimePrimoUser || isAdminUser) {
+        const targetTitle = isTimePrimoUser ? 'filson-pro-bold' : 'wide';
+        const targetBody  = isTimePrimoUser ? 'open-sans' : 'montserrat';
+        // Fontes genéricas que indicam que o slide ainda não foi personalizado
+        const genericTitles = new Set(['plus-jakarta', 'sans', 'bebas-neue', 'montserrat', 'wide', 'filson-pro-bold']);
+        const genericBodies  = new Set(['sans', 'plus-jakarta', 'montserrat', 'open-sans', 'filson-pro-bold']);
+        setTimeout(() => {
+          const { sections, updateSection } = useStore.getState();
+          sections.forEach(s => {
+            const wTitle = !s.titleFont || genericTitles.has(s.titleFont);
+            const wBody  = !s.bodyFont  || genericBodies.has(s.bodyFont);
+            if (wTitle || wBody) {
+              updateSection(s.id, {
+                ...(wTitle ? { titleFont: targetTitle } : {}),
+                ...(wBody  ? { bodyFont: targetBody }  : {}),
+              });
+            }
+          });
+        }, 800); // Aguarda a restauração do cloud/localStorage
+      }
+      // ────────────────────────────────────────────────────────────────────
 
       // Log login (best-effort)
-      cloudStorage.logLogin(session.user.id, session.user.email || '').catch(() => {});
+      cloudStorage.logLogin(session.user.id, email).catch(() => {});
     } else {
       useStore.getState().setAdmin(false);
       useStore.getState().setUserEmail(null);
