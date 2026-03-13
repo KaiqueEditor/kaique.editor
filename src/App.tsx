@@ -750,7 +750,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     // Also constrain by viewport height: leave ~220px for toolbar + nav + actions
     const availableHeight = window.innerHeight - 220;
     const scaleByHeight = availableHeight / 1440;
-    return Math.min(scaleByWidth, scaleByHeight) * 0.9;
+    return Math.min(scaleByWidth, scaleByHeight);
   });
   useEffect(() => {
     const el = previewContainerRef.current;
@@ -762,7 +762,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       // Leave ~220px for toolbar + navigation + action buttons
       const availableHeight = window.innerHeight - 220;
       const scaleByHeight = availableHeight / 1440;
-      setPreviewScale(Math.min(scaleByWidth, scaleByHeight) * 0.9);
+      setPreviewScale(Math.min(scaleByWidth, scaleByHeight));
     };
     const ro = new ResizeObserver(compute);
     ro.observe(el);
@@ -1486,7 +1486,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 }}
                 style={{
                   width: '100%',
-                  maxWidth: 'min(500px, 90vw)',
+                  maxWidth: 'min(450px, 81vw)',
                   aspectRatio: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080} / ${EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}`,
                   borderRadius: '2rem',
                   border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.1)',
