@@ -262,10 +262,14 @@ export const useExport = () => {
         height: EH,
         cacheBust: true,
         backgroundColor: 'transparent',
-        // Para slides com vídeo: exclui <video> e <img> da overlay.
+        // Para slides com vídeo: exclui o <video> de background.
+        // Cuidado: não podemos excluir todas as <img>, senão o avatar (Roteiro) e outras imagens do layout somem.
+        // O Media de fundo sempre tem object-cover.
         filter: (el: Element) => {
           if (el instanceof HTMLVideoElement) return false;
-          if (hasVideo && el instanceof HTMLImageElement) return false;
+          // Se tiver vídeo, a imagem de fallback do vídeo não deve ir pra overlay, mas o avatar sim.
+          // Identificamos o fallback/fundo pelo object-cover
+          if (hasVideo && el instanceof HTMLImageElement && el.classList.contains('object-cover')) return false;
           return true;
         },
       });
