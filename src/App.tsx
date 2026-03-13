@@ -746,17 +746,29 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     if (typeof window === 'undefined') return 500 / 1080;
     const isMobile = window.innerWidth < 1024;
     const w = Math.min(500, window.innerWidth * (isMobile ? 0.90 : 0.80));
-    return w / 1080;
+    const scaleByWidth = w / 1080;
+    // Also constrain by viewport height: leave ~220px for toolbar + nav + actions
+    const availableHeight = window.innerHeight - 220;
+    const scaleByHeight = availableHeight / 1440;
+    return Math.min(scaleByWidth, scaleByHeight);
   });
   useEffect(() => {
     const el = previewContainerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(entries => {
-      const w = entries[0].contentRect.width;
-      if (w > 0) setPreviewScale(w / 1080);
-    });
+    const compute = () => {
+      const w = el.getBoundingClientRect().width;
+      if (w <= 0) return;
+      const scaleByWidth = w / 1080;
+      // Leave ~220px for toolbar + navigation + action buttons
+      const availableHeight = window.innerHeight - 220;
+      const scaleByHeight = availableHeight / 1440;
+      setPreviewScale(Math.min(scaleByWidth, scaleByHeight));
+    };
+    const ro = new ResizeObserver(compute);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener('resize', compute);
+    compute();
+    return () => { ro.disconnect(); window.removeEventListener('resize', compute); };
   }, []);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
