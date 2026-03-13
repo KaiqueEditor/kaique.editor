@@ -115,7 +115,9 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
               textAlign: textAlign as any,
               overflow: 'hidden',
               fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : 700,
-              lineHeight: 1.35,
+              lineHeight: section.titleFont === 'wide' ? 1.0 : 1.35,
+              textTransform: section.titleFont === 'wide' ? 'uppercase' : undefined,
+              letterSpacing: section.titleFont === 'wide' ? '-0.02em' : undefined,
             }}
           >
             {renderFormattedText(section.title)}
@@ -261,7 +263,10 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
               fontSize: finalTitleSize,
               color: finalTitleColor,
               textShadow: '0 4px 30px rgba(0,0,0,0.8)',
-              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : 700
+              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : 700,
+              lineHeight: section.titleFont === 'wide' ? 1.0 : 1.1,
+              textTransform: section.titleFont === 'wide' ? 'uppercase' : undefined,
+              letterSpacing: section.titleFont === 'wide' ? '-0.02em' : undefined,
             }}
           >
             {renderFormattedText(section.title)}
