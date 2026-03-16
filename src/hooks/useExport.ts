@@ -4,7 +4,9 @@ import { Section, EXPORT_FORMATS } from '../types';
 import { useStore } from '../store';
 import { cloudStorage } from '../services/storage/cloudStorage';
 import { supabase } from '../lib/supabase';
+// @ts-ignore
 import ffmpegCoreURL from '@ffmpeg/core?url';
+// @ts-ignore
 import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
 
 type ExportDeps = {
@@ -126,12 +128,12 @@ const loadFfmpegBridge = async () => {
           outName,
         ]);
 
-        const output = await ffmpeg.readFile(outName);
+        const output = await ffmpeg.readFile(outName) as Uint8Array;
         await ffmpeg.deleteFile(inName).catch(() => { });
         await ffmpeg.deleteFile(overlayName).catch(() => { });
         await ffmpeg.deleteFile(outName).catch(() => { });
 
-        return new Blob([output as Uint8Array], { type: 'video/mp4' });
+        return new Blob([output as unknown as BlobPart], { type: 'video/mp4' });
       };
 
       return { compositeToMp4 };
@@ -358,7 +360,7 @@ export const useExport = () => {
           180000,
           'exportando vídeo'
         );
-        saveAs(mp4, `${label}.mp4`);
+        saveAs(mp4 as unknown as Blob, `${label}.mp4`);
       } else {
         const dataUrl = await captureSlideAsPng(node, 2);
         saveAs(dataUrl, `${label}.png`);

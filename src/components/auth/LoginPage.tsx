@@ -96,8 +96,8 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    // Retorna pra mesma URL que a pessoa logou, em prod ou localhost, já no editor
-                    redirectTo: `${window.location.origin}/editor`
+                    // Retorna pra mesma URL que a pessoa logou, em prod ou localhost
+                    redirectTo: `${window.location.origin}`
                 }
             });
             if (error) throw error;
@@ -239,7 +239,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                             </button>
                         </form>
 
-                        {/* TODO: OAuth desabilitado temporariamente — corrigir redirect callback antes de reativar
+                        {/* OAuth habilitado */}
                         <div className="flex items-center w-full my-1">
                             <div className="flex-1 h-px bg-white/10" />
                             <span className="px-3 text-[10px] uppercase font-bold text-white/30 tracking-widest">
@@ -255,6 +255,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                 className="w-full relative group py-3 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white/10 active:scale-95 border border-white/10"
                                 style={{ background: T.glass }}
                             >
+                                {/* @ts-ignore */}
                                 <FaGoogle size={14} className="text-white group-hover:text-red-400 transition-colors" />
                                 Google
                             </button>
@@ -264,11 +265,11 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                 className="w-full relative group py-3 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white/10 active:scale-95 border border-white/10"
                                 style={{ background: T.glass }}
                             >
+                                {/* @ts-ignore */}
                                 <FaGithub size={15} className="text-white group-hover:text-gray-400 transition-colors" />
                                 GitHub
                             </button>
                         </div>
-                        */}
 
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
 

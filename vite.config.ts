@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom'],
             'ui-vendor': ['lucide-react'],
             'export-vendor': ['html-to-image', 'jszip', 'file-saver'],
-            'ai-vendor': ['@google/genai'],
           },
         },
       },

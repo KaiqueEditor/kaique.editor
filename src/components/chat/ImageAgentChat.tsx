@@ -3,7 +3,6 @@ import { Palette, X, Send, Loader2, Wand2, RefreshCw, Check, Sparkles } from 'lu
 import { ThemeTokens } from '../../constants/theme';
 import { useImageGeneration } from '../../hooks/useImageGeneration';
 import { useStore } from '../../store';
-import { GoogleGenAI } from '@google/genai';
 import { renderFormattedText } from '../../utils/formatters';
 
 interface ImageAgentChatProps {
@@ -73,28 +72,12 @@ const ImageAgentChat: React.FC<ImageAgentChatProps> = ({ isOpen, onClose, sectio
       setGenerated(false);
       setCurrentPrompt(section.imagePrompt || section.title || '');
       chatRef.current = null;
-
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
-      chatRef.current = ai.chats.create({
-        model: 'gemini-2.0-flash',
-        config: {
-          systemInstruction: `Você é um especialista em criação de prompts de imagem para carrosséis virais do Instagram.
-
-Seu objetivo: ajudar a criar o prompt perfeito em inglês para gerar uma imagem impactante.
-
-CONTEXTO DO SLIDE:
-- Título: "${section.title}"
-- Conteúdo: "${section.content}"
-- Prompt atual: "${section.imagePrompt || 'nenhum'}"
-
-REGRAS:
-1. Sempre responda em português
-2. Sugira melhorias e estilos visuais específicos
-3. Quando o usuário aprovar ou pedir para gerar, entregue o prompt final em inglês entre as tags [PROMPT] e [/PROMPT]
-4. O prompt deve incluir: subject, style, lighting, mood, composition
-5. Seja criativo e focado em impacto visual para redes sociais`,
-        },
-      });
+      chatRef.current = {
+        sendMessage: async ({ message }: any) => {
+          await new Promise(r => setTimeout(r, 1000));
+          return { text: "Os agentes inteligentes para criação de imagens estão desligados no modo local." };
+        }
+      };
 
       setMessages([{
         role: 'agent',

@@ -174,7 +174,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const s = section;
   const generating = isGenerating(s.id);
   const update = (updates: Partial<Section>) => updateSection(s.id, updates);
-  const label = index === 0 ? 'CAPA' : index === sections.length - 1 ? 'FINAL' : `FRAME ${index + 1}`;
+  const label = index === 0 ? 'CAPA' : index === sections.length - 1 ? 'FINAL' : `SLIDE ${index + 1}`;
   const hasImage = !!(s.imageUrl || s.videoUrl);
 
   const presets = useStore(state => state.presets);
@@ -294,31 +294,37 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
   // ── Drag & Drop ──
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.types.includes('Files')) setIsDragOver(true);
+    if (e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(true);
+    }
   };
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
+    if (e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+    }
   };
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          update({ imageUrl: reader.result });
-        }
-      };
-      reader.readAsDataURL(file);
-    } else if (file.type.startsWith('video/') && onVideoUpload) {
-      onVideoUpload(s.id, file);
+    if (e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+      const file = e.dataTransfer.files?.[0];
+      if (!file) return;
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            update({ imageUrl: reader.result });
+          }
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type.startsWith('video/') && onVideoUpload) {
+        onVideoUpload(s.id, file);
+      }
     }
   };
 
@@ -1009,7 +1015,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                             style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${T.borderStrong}`, color: T.textSub }}
                           >
                             <Video size={11} />
-                            Este frame será exportado como <strong>.mp4</strong> (15s)
+                            Este slide será exportado como <strong>.mp4</strong> (15s)
                           </div>
                         )}
 

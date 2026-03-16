@@ -24,7 +24,8 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHistory } from './hooks/useHistory';
 import { useFileUpload } from './hooks/useFileUpload';
 import { VideoTrimModal } from './components/editor/VideoTrimModal';
-import { ProjectHistory } from './components/history/ProjectHistory';
+import { ProjectsGalleryModal } from './components/history/ProjectsGalleryModal';
+import { SettingsModal } from './components/settings/SettingsModal';
 import { TemplateGallery } from './components/templates/TemplateGallery';
 import { Onboarding } from './components/onboarding/Onboarding';
 import { CustomThemes } from './components/themes/CustomThemes';
@@ -40,6 +41,7 @@ import { EXPORT_FORMATS } from './types/carousel.types';
 const AgentChat = lazy(() => import('./components/chat/AgentChat'));
 const ImageAgentChat = lazy(() => import('./components/chat/ImageAgentChat'));
 const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
+import { RemotionPreviewModal } from './components/remotion/RemotionPreviewModal';
 
 // ── Helper: cria uma Section vazia/default ──────────────────────────────────────
 const createDefaultSection = (index: number, userEmail?: string | null): Section => {
@@ -624,7 +626,7 @@ function SidebarContent({
 
           <p className="text-[8px] font-black uppercase tracking-widest px-1 pt-3 pb-2 sticky top-0 z-10"
             style={{ color: T.textFaint, background: T.sidebar, backdropFilter: 'blur(8px)' }}>
-            {sections.length} Frame{sections.length !== 1 ? 's' : ''} · Slide {activeSlide + 1} de {sections.length}
+            {sections.length} Slide{sections.length !== 1 ? 's' : ''} · Visualizando capa/slide {activeSlide + 1}
           </p>
           {sections.map((s, idx) => (
             <div
@@ -718,6 +720,8 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
   const { isAdmin } = useAdmin();
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [isRemotionPreviewOpen, setIsRemotionPreviewOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
   const [textInput, setTextInput] = useState('');
   const swipeTouchStart = useRef<number | null>(null);
@@ -1072,7 +1076,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
             <h2 className="text-lg font-black mb-1" style={{ color: T.textPrimary, letterSpacing: '-0.03em' }}>Meus Projetos</h2>
             <p className="text-[10px] font-bold mb-4" style={{ color: T.textFaint }}>Seus carrosséis salvos</p>
           </div>
-          <ProjectHistory
+          <ProjectsGalleryModal
             isOpen={true}
             onClose={() => useStore.getState().setMobileActiveTab('preview')}
           />
@@ -1407,16 +1411,16 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 >
                   {isExportingPDF ? <Loader2 className="animate-spin" size={16} /> : <FileOutput size={16} />}
                 </button>
-                <button
-                  onClick={() => exportAsReels(sections)}
-                  disabled={isExporting || isProcessing}
-                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
-                  style={{ color: isExporting ? T.textFaint : T.textSub }}
-                  title="Exportar Reels (vídeo)"
-                >
-                  🎬
-                </button>
 
+
+                <button
+                  onClick={() => setIsRemotionPreviewOpen(true)}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: '#00E5C3' }}
+                  title="Preview Animado (Remotion)"
+                >
+                  <Play size={16} fill="currentColor" />
+                </button>
                 <button
                   onClick={() => setShowCustomThemes(true)}
                   className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
@@ -1426,6 +1430,14 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                   <Palette size={16} />
                 </button>
                 <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: T.textSub }}
+                  title="Configurações (Agência)"
+                >
+                  <Settings size={16} />
+                </button>
                 <button
                   onClick={() => setHistoryOpen(true)}
                   className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
@@ -1832,14 +1844,25 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         }}
       />
 
-      <ProjectHistory
+      <ProjectsGalleryModal
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
+      />
+
+      <SettingsModal 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
 
 
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} T={T} />}
+      <RemotionPreviewModal
+        isOpen={isRemotionPreviewOpen}
+        onClose={() => setIsRemotionPreviewOpen(false)}
+        sections={sections}
+        config={config}
+      />
     </div >
   );
 }
