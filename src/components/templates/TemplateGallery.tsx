@@ -21,7 +21,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onClose, T: TP
         if (email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com') {
             return { titleFont: 'filson-pro-bold', bodyFont: 'open-sans' };
         }
-        if (email === 'kaiqueseditor@gmail.com') {
+        if (email === 'kaiqueseditor@gmail.com' || email === 'agente.kaique@gmail.com') {
             return { titleFont: 'wide', bodyFont: 'montserrat' };
         }
         return null; // keep template's original fonts

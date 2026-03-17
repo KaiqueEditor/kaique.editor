@@ -47,7 +47,8 @@ import { RemotionPreviewModal } from './components/remotion/RemotionPreviewModal
 // ── Helper: cria uma Section vazia/default ──────────────────────────────────────
 const createDefaultSection = (index: number, userEmail?: string | null): Section => {
   const isTimePrimo = userEmail?.toLowerCase() === 'marcela.depaula@timeprimo.com' || userEmail?.toLowerCase() === 'lorena.volpini@timeprimo.com';
-  const isAdmin = userEmail?.toLowerCase() === 'kaiqueseditor@gmail.com';
+  const adminEmails = ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'];
+  const isAdmin = adminEmails.includes(userEmail?.toLowerCase() ?? '');
 
   return {
     id: `default-${Date.now()}-${index}`,
@@ -101,6 +102,9 @@ interface SidebarContentProps {
   onVideoUpload: (sectionId: string, file: File) => void;
   sessionUserEmail?: string | null;
   onLogout: () => void;
+  onOpenCustomThemes: () => void;
+  onOpenAssets: () => void;
+  onNewCarrossel: () => void;
 }
 
 // Conta slides a partir do formato "texto N" do agente
@@ -119,7 +123,7 @@ function SidebarContent({
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
   setAgentOpen, setImageAgentOpen, isAgentOpen, isImageAgentOpen,
   setActiveSlide, toggleTheme, onDownloadSlide, onImageUpload, onVideoUpload,
-  sessionUserEmail, onLogout,
+  sessionUserEmail, onLogout, onOpenCustomThemes, onOpenAssets, onNewCarrossel,
 }: SidebarContentProps) {
   const detectedSlides = useMemo(() => countSlidesFromText(textInput), [textInput]);
   const carouselTemplates = useStore(state => state.carouselTemplates);
@@ -294,7 +298,18 @@ function SidebarContent({
                 </p>
               </div>
             </div>
-            <ChevronDown size={12} style={{ color: T.textFaint, transform: templatesOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            <div className="flex items-center gap-2">
+              {sections.length > 0 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onNewCarrossel(); }}
+                  className="text-[8px] font-black uppercase tracking-wide px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:scale-105"
+                  style={{ background: `${T.accent}15`, color: T.accent, border: `1px solid ${T.accent}30` }}
+                >
+                  + Novo
+                </button>
+              )}
+              <ChevronDown size={12} style={{ color: T.textFaint, transform: templatesOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            </div>
           </div>
 
           {templatesOpen && (
@@ -612,6 +627,24 @@ function SidebarContent({
                   ))}
                 </div>
               )}
+
+              {/* Acesso rápido: Temas e Galeria */}
+              <div className="flex gap-1.5 px-4 py-3" style={{ borderTop: `1px solid ${T.border}` }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onOpenCustomThemes(); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+                  style={{ background: T.glassMd, color: T.textSub, border: `1px solid ${T.border}` }}
+                >
+                  <Palette size={11} /> Temas
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onOpenAssets(); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+                  style={{ background: T.glassMd, color: T.textSub, border: `1px solid ${T.border}` }}
+                >
+                  <Layers size={11} /> Galeria
+                </button>
+              </div>
             </>)}
           </div>
         </div>
@@ -625,10 +658,13 @@ function SidebarContent({
 
 
 
-          <p className="text-[8px] font-black uppercase tracking-widest px-1 pt-3 pb-2 sticky top-0 z-10"
-            style={{ color: T.textFaint, background: T.sidebar, backdropFilter: 'blur(8px)' }}>
-            {sections.length} Slide{sections.length !== 1 ? 's' : ''} · Visualizando capa/slide {activeSlide + 1}
-          </p>
+          <div className="flex items-center justify-between px-1 pt-3 pb-2 sticky top-0 z-10"
+            style={{ background: T.sidebar, backdropFilter: 'blur(8px)' }}>
+            <p className="text-[8px] font-black uppercase tracking-widest"
+              style={{ color: T.textFaint }}>
+              {sections.length} Slide{sections.length !== 1 ? 's' : ''} · Visualizando capa/slide {activeSlide + 1}
+            </p>
+          </div>
           {sections.map((s, idx) => (
             <div
               key={s.id}
@@ -785,6 +821,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('carrosselpro-onboarding-done'));
   const [showCustomThemes, setShowCustomThemes] = useState(false);
+  const [showNewConfirm, setShowNewConfirm] = useState(false);
   const currentProjectId = useStore(state => state.currentProjectId);
   const setCurrentProjectId = useStore(state => state.setCurrentProjectId);
   const mobileActiveTab = useStore(state => state.mobileActiveTab);
@@ -989,6 +1026,9 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     },
     sessionUserEmail: session?.user?.email,
     onLogout,
+    onOpenCustomThemes: () => setShowCustomThemes(true),
+    onOpenAssets: () => setIsAssetsOpen(true),
+    onNewCarrossel: () => setShowNewConfirm(true),
   };
 
   // AnalyticsPage (admin only)
@@ -1120,15 +1160,18 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
             {/* Novo Carrossel (limpar) */}
             <button
               onClick={() => {
-                if (sections.length > 0 && !confirm('Criar um novo carrossel? O atual será salvo automaticamente.')) return;
-                useStore.getState().setSections([
-                  createDefaultSection(0, useStore.getState().userEmail),
-                  createDefaultSection(1, useStore.getState().userEmail),
-                  createDefaultSection(2, useStore.getState().userEmail),
-                ]);
-                setTextInput('');
-                toast.success('Novo carrossel criado!');
-                useStore.getState().setMobileActiveTab('preview');
+                if (sections.length > 0) {
+                  setShowNewConfirm(true);
+                } else {
+                  useStore.getState().setSections([
+                    createDefaultSection(0, useStore.getState().userEmail),
+                    createDefaultSection(1, useStore.getState().userEmail),
+                    createDefaultSection(2, useStore.getState().userEmail),
+                  ]);
+                  setTextInput('');
+                  toast.success('Novo carrossel criado!');
+                  useStore.getState().setMobileActiveTab('preview');
+                }
               }}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
               style={{ background: T.glass, color: T.textSub, border: `1px dashed ${T.border}` }}
@@ -1442,7 +1485,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  className="hidden lg:flex p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 items-center justify-center"
                   style={{ color: T.textSub }}
                   title="Configurações (Agência)"
                 >
@@ -1872,6 +1915,69 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} T={T} />}
+
+      {/* ── Custom Confirm Modal — Novo Carrossel ── */}
+      {showNewConfirm && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ animation: 'fadeIn 0.15s ease-out' }}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            onClick={() => setShowNewConfirm(false)}
+          />
+          {/* Card */}
+          <div
+            className="relative w-full max-w-sm rounded-3xl overflow-hidden"
+            style={{
+              background: isDark ? 'rgba(28,28,30,0.98)' : 'rgba(255,255,255,0.98)',
+              border: `1px solid ${T.border}`,
+              boxShadow: `0 24px 80px rgba(0,0,0,0.5)`,
+              animation: 'slideUp 0.2s ease-out',
+            }}
+          >
+            <div className="px-6 pt-7 pb-5 text-center">
+              {/* Icon */}
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}25` }}
+              >
+                <FileText size={24} style={{ color: T.accent }} />
+              </div>
+              <h3 className="text-base font-black mb-1.5" style={{ color: T.textPrimary, letterSpacing: '-0.02em' }}>
+                Criar Novo Carrossel?
+              </h3>
+              <p className="text-xs font-medium leading-relaxed" style={{ color: T.textSub }}>
+                O carrossel atual será descartado. Você pode salvar o projeto antes de continuar.
+              </p>
+            </div>
+            <div className="px-5 pb-5 flex gap-2">
+              <button
+                onClick={() => setShowNewConfirm(false)}
+                className="flex-1 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
+                style={{ background: T.glass, color: T.textSub, border: `1px solid ${T.border}` }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  useStore.getState().setSections([]);
+                  setActiveSlide(0);
+                  setTextInput('');
+                  setShowNewConfirm(false);
+                  toast.success('Novo carrossel criado!');
+                }}
+                className="flex-1 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
+                style={{ background: T.accent, color: T.accentText, boxShadow: `0 4px 20px ${T.accent}40` }}
+              >
+                Criar Novo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <RemotionPreviewModal
         isOpen={isRemotionPreviewOpen}
         onClose={() => setIsRemotionPreviewOpen(false)}
@@ -1934,7 +2040,7 @@ export default function App() {
       // ── Migração de fontes ao fazer login ────────────────────────────────
       // Corrige seções salvas com fontes genéricas (anteriores à implementação de fontes por usuário)
       const isTimePrimoUser = email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com';
-      const isAdminUser = email === 'kaiqueseditor@gmail.com';
+      const isAdminUser = email === 'kaiqueseditor@gmail.com' || email === 'agente.kaique@gmail.com';
       if (isTimePrimoUser || isAdminUser) {
         const targetTitle = isTimePrimoUser ? 'filson-pro-bold' : 'wide';
         const targetBody  = isTimePrimoUser ? 'open-sans' : 'montserrat';

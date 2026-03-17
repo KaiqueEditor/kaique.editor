@@ -1,5 +1,5 @@
 import React from 'react';
-import { PenLine, FolderOpen, Eye, Layers, Settings } from 'lucide-react';
+import { PenLine, FolderOpen, Eye, PlusCircle, Settings } from 'lucide-react';
 import { useStore } from '../../store';
 import { getTheme } from '../../constants/theme';
 
@@ -9,7 +9,7 @@ const TABS: { key: Tab; icon: React.ReactNode; label: string; isCenter?: boolean
     { key: 'editor', icon: <PenLine size={20} />, label: 'Editor' },
     { key: 'projects', icon: <FolderOpen size={20} />, label: 'Projetos' },
     { key: 'preview', icon: <Eye size={22} />, label: 'Preview', isCenter: true },
-    { key: 'create', icon: <Layers size={20} />, label: 'Criar' },
+    { key: 'create', icon: <PlusCircle size={20} />, label: 'Criar' },
     { key: 'settings', icon: <Settings size={20} />, label: 'Ajustes' },
 ];
 

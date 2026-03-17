@@ -38,7 +38,10 @@ export const useProcessText = () => {
     return email === 'marcela.depaula@timeprimo.com' || email === 'lorena.volpini@timeprimo.com';
   };
 
-  const isAdmin = () => useStore.getState().userEmail?.toLowerCase() === 'kaiqueseditor@gmail.com';
+  const isAdmin = () => {
+    const email = useStore.getState().userEmail?.toLowerCase() ?? '';
+    return ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'].includes(email);
+  };
 
   const getTitleFont = () => isTimePrimo() ? 'filson-pro-bold' : isAdmin() ? 'wide' : 'wide';
   const getBodyFont  = () => isTimePrimo() ? 'open-sans' : 'montserrat';
