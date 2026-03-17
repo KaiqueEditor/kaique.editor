@@ -5,7 +5,7 @@ import {
   PanelLeft, X, ExternalLink, LayoutTemplate, Settings, Droplets,
   MessageSquareText, ClipboardPaste, Sparkles, FolderOpen, FileOutput,
   PenLine, Copy, Check, Plus, Save, LogOut, BarChart3, Undo2, Redo2,
-  Play, Pause, User,
+  Play, Pause, User, Layers,
 } from 'lucide-react';
 import { AnalyticsPage } from './components/analytics/AnalyticsPage';
 import { useAdmin, clearAdminCache } from './hooks/useAdmin';
@@ -29,6 +29,7 @@ import { SettingsModal } from './components/settings/SettingsModal';
 import { TemplateGallery } from './components/templates/TemplateGallery';
 import { Onboarding } from './components/onboarding/Onboarding';
 import { CustomThemes } from './components/themes/CustomThemes';
+import { AssetGalleryModal } from './components/gallery/AssetGalleryModal';
 import { projectStorage } from './services/storage/projectStorage';
 import { cloudStorage } from './services/storage/cloudStorage';
 import { geminiService } from './services/api/geminiService';
@@ -722,6 +723,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isRemotionPreviewOpen, setIsRemotionPreviewOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
   const [textInput, setTextInput] = useState('');
   const swipeTouchStart = useRef<number | null>(null);
@@ -1429,6 +1431,14 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 >
                   <Palette size={16} />
                 </button>
+                <button
+                  onClick={() => setIsAssetsOpen(true)}
+                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
+                  style={{ color: T.textSub }}
+                  title="Galeria de Assets"
+                >
+                  <Layers size={16} />
+                </button>
                 <div style={{ width: 1, height: 20, background: T.border, margin: '0 4px' }} />
                 <button
                   onClick={() => setIsSettingsOpen(true)}
@@ -1854,6 +1864,11 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         onClose={() => setIsSettingsOpen(false)}
       />
 
+      <AssetGalleryModal
+        isOpen={isAssetsOpen}
+        onClose={() => setIsAssetsOpen(false)}
+      />
+
 
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} T={T} />}
@@ -1874,15 +1889,34 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    // Initial session check — also picks up OAuth tokens from URL hash (#access_token=...)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
+
+      // If we got a session from hash params (OAuth redirect), clean up the URL
+      if (session && window.location.hash.includes('access_token')) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[Auth] Event:', event, session?.user?.email);
       setSession(session);
+
+      // OAuth redirect: when user returns from Google/GitHub, the session is picked up here
+      if (event === 'SIGNED_IN' && session) {
+        setAuthLoading(false);
+        // Clean up the URL hash if present
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -1891,11 +1925,10 @@ export default function App() {
   useEffect(() => {
     if (session?.user) {
       const email = session.user.email ?? '';
-      const isAdm =
-        email.toLowerCase().includes('kaiqueseditor') ||
-        session.user.user_metadata?.nickname?.toLowerCase().includes('kaiqueseditor') ||
-        email === 'kaiqueseditor@gmail.com';
-      useStore.getState().setAdmin(!!isAdm);
+      // Admin detection is now handled by useAdmin() hook reading from DB
+      // We still set the store flag for backward compat, but it will be
+      // overridden by the hook when the profile role is fetched
+      useStore.getState().setAdmin(false);
       useStore.getState().setUserEmail(email || null);
 
       // ── Migração de fontes ao fazer login ────────────────────────────────

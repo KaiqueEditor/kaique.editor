@@ -488,6 +488,156 @@ class CloudStorage {
             exportsByUser: Array.from(userMap.values()).sort((a, b) => b.count - a.count),
         };
     }
+    // ── Phase 4: User Management ─────────────────────────────────────────────
+
+    /** Admin: lista todos os perfis com role e métricas */
+    async getAllUsers(): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        created_at: string;
+        last_sign_in_at?: string;
+    }[]> {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, email, role, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('[CloudStorage] getAllUsers error:', error);
+            return [];
+        }
+
+        return (data || []).map((p: any) => ({
+            id: p.id,
+            email: p.email || 'desconhecido',
+            role: p.role || 'creator',
+            created_at: p.created_at,
+        }));
+    }
+
+    /** Admin: altera o role de um usuário */
+    async updateUserRole(userId: string, newRole: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ role: newRole })
+            .eq('id', userId);
+
+        if (error) {
+            console.error('[CloudStorage] updateUserRole error:', error);
+            return false;
+        }
+        return true;
+    }
+
+    /** Admin: métricas do sistema */
+    async getSystemStats(): Promise<{
+        totalProfiles: number;
+        totalCarousels: number;
+        totalLogins: number;
+        totalExports: number;
+        storageUsedMB: number;
+    }> {
+        const [profiles, carousels, logins, exports] = await Promise.all([
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('carousels').select('*', { count: 'exact', head: true }),
+            supabase.from('login_logs').select('*', { count: 'exact', head: true }),
+            supabase.from('export_logs').select('*', { count: 'exact', head: true }),
+        ]);
+
+        return {
+            totalProfiles: profiles.count || 0,
+            totalCarousels: carousels.count || 0,
+            totalLogins: logins.count || 0,
+            totalExports: exports.count || 0,
+            storageUsedMB: 0, // Supabase não expõe isso via client SDK
+        };
+    }
+
+    // ── Phase 4: Global Assets Gallery ─────────────────────────────────────────
+
+    /** Busca assets globais da plataforma */
+    async getGlobalAssets(type?: 'font' | 'palette' | 'preset'): Promise<{
+        id: string;
+        name: string;
+        type: string;
+        data: any;
+        preview_url?: string;
+        created_at: string;
+    }[]> {
+        try {
+            let query = supabase
+                .from('platform_assets')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (type) {
+                query = query.eq('type', type);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                // Table might not exist yet — graceful fallback
+                console.warn('[CloudStorage] getGlobalAssets:', error.message);
+                return [];
+            }
+
+            return (data || []).map((a: any) => ({
+                id: a.id,
+                name: a.name || 'Sem nome',
+                type: a.type || 'preset',
+                data: a.data || {},
+                preview_url: a.preview_url,
+                created_at: a.created_at,
+            }));
+        } catch {
+            return [];
+        }
+    }
+
+    /** Admin: faz upload de um asset global */
+    async uploadGlobalAsset(asset: {
+        name: string;
+        type: 'font' | 'palette' | 'preset';
+        data: any;
+        preview_url?: string;
+    }): Promise<boolean> {
+        try {
+            const { error } = await supabase.from('platform_assets').insert({
+                name: asset.name,
+                type: asset.type,
+                data: asset.data,
+                preview_url: asset.preview_url,
+            });
+
+            if (error) {
+                console.error('[CloudStorage] uploadGlobalAsset error:', error);
+                return false;
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /** Admin: deleta um asset global */
+    async deleteGlobalAsset(id: string): Promise<boolean> {
+        try {
+            const { error } = await supabase
+                .from('platform_assets')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('[CloudStorage] deleteGlobalAsset error:', error);
+                return false;
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }
 }
 
 export const cloudStorage = new CloudStorage();

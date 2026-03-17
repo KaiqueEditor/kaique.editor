@@ -96,12 +96,19 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    // Retorna pra mesma URL que a pessoa logou, em prod ou localhost
-                    redirectTo: `${window.location.origin}`
+                    redirectTo: `${window.location.origin}`,
+                    queryParams: provider === 'google' ? {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    } : undefined,
+                    skipBrowserRedirect: false,
                 }
             });
             if (error) throw error;
+            // OAuth opens a popup or redirects — if redirected, the page reloads
+            // and supabase.auth.getSession() picks up the tokens from the URL hash
         } catch (error: any) {
+            console.error(`[OAuth ${provider}] Error:`, error);
             toast.error(error.message || `Erro ao conectar com ${provider}`);
         }
     };
