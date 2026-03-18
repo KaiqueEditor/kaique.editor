@@ -2031,10 +2031,9 @@ export default function App() {
   useEffect(() => {
     if (session?.user) {
       const email = session.user.email ?? '';
-      // Admin detection is now handled by useAdmin() hook reading from DB
-      // We still set the store flag for backward compat, but it will be
-      // overridden by the hook when the profile role is fetched
-      useStore.getState().setAdmin(false);
+      // Set admin flag based on email so font dropdowns show PRO fonts immediately
+      const adminEmails = ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'];
+      useStore.getState().setAdmin(adminEmails.includes(email.toLowerCase()));
       useStore.getState().setUserEmail(email || null);
 
       // ── Migração de fontes ao fazer login ────────────────────────────────
