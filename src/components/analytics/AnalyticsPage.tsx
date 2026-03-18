@@ -442,7 +442,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onBack }) => {
                   </div>
                   <div className="p-3">
                     <p className="text-xs font-bold truncate" style={{ color: T.text }}>{c.name || 'Sem título'}</p>
-                    <p className="text-[9px] font-medium mt-1 truncate" style={{ color: T.textFaint }}>{c.email || 'Autor desconhecido'}</p>
+                    <p className="text-[9px] font-medium mt-1 truncate" style={{ color: T.textFaint }}>{c.config?.branding || c.email || 'Autor desconhecido'}</p>
                     <p className="text-[9px] font-medium mt-0.5" style={{ color: T.textFaint }}>{formatRelativeTime(c.updated_at)}</p>
                   </div>
                 </div>

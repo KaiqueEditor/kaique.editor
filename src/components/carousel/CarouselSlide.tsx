@@ -83,7 +83,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             className={`rounded-full overflow-hidden flex-shrink-0 ${!isExport ? 'cursor-pointer transition-all' : ''}`}
             style={{ width: `${48 * scaleFactor}px`, height: `${48 * scaleFactor}px`, border: `2px solid rgba(0,0,0,0.08)` }}
           >
-            <img src={avatar} alt="" className="w-full h-full object-cover" />
+            <img src={avatar} crossOrigin="anonymous" alt="" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col" style={{ gap: `${1 * scaleFactor}px` }}>
             <div className="flex items-center" style={{ gap: `${6 * scaleFactor}px` }}>
@@ -156,6 +156,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                   autoPlay
                   muted
                   playsInline
+                  crossOrigin="anonymous"
                   preload="auto"
                   className="w-full h-full object-cover"
                   style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }}
@@ -170,7 +171,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                   }}
                 />
               ) : section.imageUrl ? (
-                <img src={section.imageUrl} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
+                <img src={section.imageUrl} crossOrigin="anonymous" alt="" className="w-full h-full object-cover" style={{ objectPosition: `${imgPosX}% ${imgPosY}%`, transform: `scale(${imgScale})` }} />
               ) : null}
             </div>
           </div>

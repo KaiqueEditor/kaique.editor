@@ -404,7 +404,7 @@ class CloudStorage {
             const br = log.browser || 'outro';
             browserMap.set(br, (browserMap.get(br) || 0) + 1);
             // User
-            const email = log.user_email || 'anônimo';
+            const email = log.user_email || 'Usuário anônimo';
             const existing = userMap.get(email);
             if (existing) {
                 existing.count += 1;
@@ -466,7 +466,7 @@ class CloudStorage {
 
         for (const log of data) {
             totalSlides += log.slide_count || 0;
-            const email = log.user_email || 'anônimo';
+            const email = log.user_email || 'Usuário anônimo';
             const existing = userMap.get(email);
             if (existing) {
                 existing.count += 1;
