@@ -20,13 +20,27 @@ Editor visual completo, agentes de IA integrados e exportação em alta qualidad
 
 <div align="center">
 
-### Login — Autenticação Segura
+### Editor Desktop
+
+<img src="docs/images/editor-desktop.png" alt="Editor Desktop — sidebar com roteiro e templates, canvas com preview em tempo real" width="700" />
+
+> Layout de 2 colunas: **Sidebar** (roteiro, templates, formato, estilos) + **Canvas** (preview do slide em alta qualidade com controles de exportação)
+
+---
+
+### Editor Mobile
+
+<img src="docs/images/editor-mobile.png" alt="Editor Mobile — preview fullscreen com bottom tab bar" width="320" />
+
+> Interface mobile-first com **Bottom Tab Bar**, preview fullscreen e toolbar compacta — edite direto do celular
+
+---
+
+### Login
 
 <img src="docs/images/login-page.png" alt="Tela de login com OAuth" width="700" />
 
-> Login com **Email/Senha**, **Google OAuth** ou **GitHub OAuth** — autenticação via Supabase
-
-<!-- TODO: adicionar screenshots reais do editor desktop, mobile e exemplos de carrosseis -->
+> Autenticação com **Email/Senha**, **Google** ou **GitHub** — via Supabase
 
 </div>
 
