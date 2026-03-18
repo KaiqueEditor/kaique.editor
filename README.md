@@ -20,35 +20,13 @@ Editor visual completo, agentes de IA integrados e exportação em alta qualidad
 
 <div align="center">
 
-### Editor Desktop — 3 Colunas
-
-<img src="docs/images/editor-desktop.png" alt="Editor Desktop com sidebar, canvas e painel de propriedades" width="700" />
-
-> Layout profissional de 3 colunas: **Sidebar** (roteiro + templates), **Canvas** (preview do slide em tempo real), **Painel de Propriedades** (tipografia, cores, imagem)
-
----
-
-### Mobile — Editor Nativo
-
-<img src="docs/images/mobile-editor.png" alt="Editor mobile com bottom tab bar" width="320" />
-
-> Interface mobile-first com **Bottom Tab Bar**, preview fullscreen e editing inline — crie carrosséis direto do celular
-
----
-
-### Exemplo de Carrosseis Gerados
-
-<img src="docs/images/carousel-examples.png" alt="Exemplos de carrosseis criados na plataforma" width="700" />
-
-> Carrosséis profissionais criados na plataforma com diferentes estilos, paletas e layouts
-
----
-
 ### Login — Autenticação Segura
 
 <img src="docs/images/login-page.png" alt="Tela de login com OAuth" width="700" />
 
 > Login com **Email/Senha**, **Google OAuth** ou **GitHub OAuth** — autenticação via Supabase
+
+<!-- TODO: adicionar screenshots reais do editor desktop, mobile e exemplos de carrosseis -->
 
 </div>
 
