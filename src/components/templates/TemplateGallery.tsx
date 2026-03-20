@@ -36,7 +36,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onClose, T: TP
             alignment: slide.alignment || 'left',
             layoutType: slide.layoutType || 'storytelling',
             titleFont: userFonts?.titleFont ?? (slide.titleFont || 'bebas-neue'),
-            bodyFont: userFonts?.bodyFont ?? (slide.bodyFont || 'montserrat'),
+            bodyFont: userFonts?.bodyFont ?? (slide.bodyFont || 'sans'),
             titleSize: slide.titleSize || 40,
             bodySize: slide.bodySize || 18,
             bgColor: slide.bgColor || '#000000',

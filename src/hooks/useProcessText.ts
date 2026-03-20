@@ -8,8 +8,8 @@ import { useImageGeneration } from './useImageGeneration';
 const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePrompt'> = {
   alignment: 'left',
   layoutType: 'storytelling',
-  titleFont: 'montserrat',
-  bodyFont: 'montserrat',
+  titleFont: 'bebas-neue',
+  bodyFont: 'sans',
   bgColor: '#000000',
   titleColor: '#ffffff',
   bodyColor: '#ffffff',
@@ -43,8 +43,8 @@ export const useProcessText = () => {
     return ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'].includes(email);
   };
 
-  const getTitleFont = () => isTimePrimo() ? 'filson-pro-bold' : isAdmin() ? 'wide' : 'wide';
-  const getBodyFont  = () => isTimePrimo() ? 'open-sans' : 'montserrat';
+  const getTitleFont = () => isTimePrimo() ? 'filson-pro-bold' : isAdmin() ? 'wide' : 'bebas-neue';
+  const getBodyFont  = () => isTimePrimo() ? 'open-sans' : isAdmin() ? 'montserrat' : 'sans';
 
   // Detecta se o texto já está no formato estruturado "Texto N ..." (com ou sem traço)
   const isStructuredRoteiro = (text: string) => /^texto\s+\d+/im.test(text);

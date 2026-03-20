@@ -538,7 +538,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             {(() => {
               const fontSlots = [
                 { label: 'Título', fontKey: 'titleFont', sizeKey: 'titleSize', defaultFont: 'bebas-neue', defaultSize: 30, sizeMin: 10, sizeMax: 120, sizeStep: 2 },
-                { label: 'Corpo', fontKey: 'bodyFont', sizeKey: 'bodySize', defaultFont: 'montserrat', defaultSize: 20, sizeMin: 10, sizeMax: 60, sizeStep: 1 },
+                { label: 'Corpo', fontKey: 'bodyFont', sizeKey: 'bodySize', defaultFont: 'sans', defaultSize: 20, sizeMin: 10, sizeMax: 60, sizeStep: 1 },
               ];
               return (
                 <div className="space-y-3">
