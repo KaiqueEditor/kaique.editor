@@ -180,6 +180,11 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const presets = useStore(state => state.presets);
   const savePreset = useStore(state => state.savePreset);
   const deletePreset = useStore(state => state.deletePreset);
+  
+  const exportFormatKey = useStore(state => state.exportFormat);
+  const fmt = EXPORT_FORMATS.find(f => f.key === exportFormatKey) || EXPORT_FORMATS[0];
+  const formatWidth = fmt.width;
+  const formatHeight = fmt.height;
 
   // Aplica o estilo visual deste slide a todos os outros
   const applyStyleToAll = () => {
@@ -504,20 +509,20 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             <div className="lg:hidden flex justify-center">
               <div className="rounded-2xl overflow-hidden relative" style={{
                 width: '60%',
-                aspectRatio: '1080 / 1440',
+                aspectRatio: `${formatWidth} / ${formatHeight}`,
                 border: `1px solid ${T.border}`,
                 boxShadow: `0 4px 16px rgba(0,0,0,0.25)`,
               }}>
                 <div style={{
                   position: 'absolute', top: 0, left: 0,
-                  width: 1080, height: 1440,
+                  width: formatWidth, height: formatHeight,
                   transform: 'scale(var(--mini-scale))',
                   transformOrigin: 'top left',
                 }} ref={el => {
                   if (el) {
                     const parent = el.parentElement;
                     if (parent) {
-                      const scale = parent.clientWidth / 1080;
+                      const scale = parent.clientWidth / formatWidth;
                       el.style.setProperty('--mini-scale', String(scale));
                     }
                   }
@@ -528,8 +533,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     index={index}
                     total={sections.length}
                     isExport={true}
-                    formatWidth={1080}
-                    formatHeight={1440}
+                    formatWidth={formatWidth}
+                    formatHeight={formatHeight}
                   />
                 </div>
               </div>

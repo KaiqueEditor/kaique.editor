@@ -270,8 +270,8 @@ export const useExport = () => {
         filter: (el: Element) => {
           if (el instanceof HTMLVideoElement) return false;
           // Se tiver vídeo, a imagem de fallback do vídeo não deve ir pra overlay, mas o avatar sim.
-          // Identificamos o fallback/fundo pelo object-cover
-          if (hasVideo && el instanceof HTMLImageElement && el.classList.contains('object-cover')) return false;
+          // O avatar em social-post usa object-cover, então não podemos filtrar cegamente img.object-cover
+          if (hasVideo && el instanceof HTMLImageElement && el.classList.contains('bg-media-fallback')) return false;
           return true;
         },
       });
