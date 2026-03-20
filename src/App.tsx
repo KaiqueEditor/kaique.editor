@@ -39,8 +39,6 @@ import type { ThemeTokens } from './constants/theme';
 import type { Section, ProjectConfig } from './types/carousel.types';
 import { EXPORT_FORMATS } from './types/carousel.types';
 
-const AgentChat = lazy(() => import('./components/chat/AgentChat'));
-const ImageAgentChat = lazy(() => import('./components/chat/ImageAgentChat'));
 const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
 import { RemotionPreviewModal } from './components/remotion/RemotionPreviewModal';
 
@@ -91,10 +89,6 @@ interface SidebarContentProps {
   handleProcessText: () => void;
   updateConfig: (patch: Partial<ProjectConfig>) => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>, cb: (url: string) => void) => void;
-  setAgentOpen: (v: boolean) => void;
-  setImageAgentOpen: (open: boolean, id?: string | null) => void;
-  isAgentOpen: boolean;
-  isImageAgentOpen: boolean;
   setActiveSlide: (idx: number) => void;
   toggleTheme: () => void;
   onDownloadSlide: (idx: number, s: Section) => Promise<void>;
@@ -121,7 +115,6 @@ function SidebarContent({
   T, isDark, textInput, setTextInput, profileOpen, setProfileOpen,
   setMobileSidebarOpen, config, sections, activeSlide, isProcessing,
   globalAvatarInputRef, handleProcessText, updateConfig, handleAvatarUpload,
-  setAgentOpen, setImageAgentOpen, isAgentOpen, isImageAgentOpen,
   setActiveSlide, toggleTheme, onDownloadSlide, onImageUpload, onVideoUpload,
   sessionUserEmail, onLogout, onOpenCustomThemes, onOpenAssets, onNewCarrossel,
 }: SidebarContentProps) {
@@ -728,19 +721,14 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const sections = useStore(state => state.sections);
   const activeSlide = useStore(state => state.activeSlide);
   const config = useStore(state => state.config);
-  const isAgentOpen = useStore(state => state.isAgentOpen);
   const showExportPreview = useStore(state => state.showExportPreview);
   const generatingIds = useStore(state => state.generatingIds);
   const theme = useStore(state => state.theme);
-  const isImageAgentOpen = useStore(state => state.isImageAgentOpen);
-  const imageAgentSectionId = useStore(state => state.imageAgentSectionId);
 
   const setActiveSlide = useStore(state => state.setActiveSlide);
-  const setAgentOpen = useStore(state => state.setAgentOpen);
   const setShowExportPreview = useStore(state => state.setShowExportPreview);
   const updateConfig = useStore(state => state.updateConfig);
   const toggleTheme = useStore(state => state.toggleTheme);
-  const setImageAgentOpen = useStore(state => state.setImageAgentOpen);
   const { processText, isProcessing } = useProcessText();
   const { exportRefs, exportAll, exportAsReels, downloadSlide, isExporting, exportStep } = useExport();
   const { exportPDF, isExportingPDF } = useExportPDF();
@@ -1000,7 +988,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const handleAgentApply = (text: string) => {
     setTextInput(text);
     processText(text);
-    setAgentOpen(false);
     toast.success('Roteiro aplicado! Gerando carrossel...');
   };
 
@@ -1015,8 +1002,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     mobileSidebarOpen, setMobileSidebarOpen, config, sections, activeSlide,
     isProcessing, globalAvatarInputRef, handleProcessText,
     updateConfig,
-    handleAvatarUpload, setAgentOpen,
-    setImageAgentOpen, isAgentOpen, isImageAgentOpen,
+    handleAvatarUpload,
     setActiveSlide, toggleTheme,
     onImageUpload: handleImageUpload,
     onVideoUpload: handleVideoUploadRequest,
@@ -1833,32 +1819,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         </div>{/* /Content Area */}
 
       </main >
-
-      {/* ══════════════════════════════════════
-          DRAWERS (AgentChat e ImageAgentChat)
-      ══════════════════════════════════════ */}
-      < Suspense fallback={null} >
-        {isAgentOpen && (
-          <AgentChat
-            isOpen={isAgentOpen}
-            onClose={() => setAgentOpen(false)}
-            onApplyText={handleAgentApply}
-            T={T}
-          />
-        )
-        }
-      </Suspense >
-
-      <Suspense fallback={null}>
-        {isImageAgentOpen && (
-          <ImageAgentChat
-            isOpen={isImageAgentOpen}
-            onClose={() => setImageAgentOpen(false)}
-            sectionId={imageAgentSectionId}
-            T={T}
-          />
-        )}
-      </Suspense>
 
       <Suspense fallback={null}>
         {showExportPreview && (

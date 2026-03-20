@@ -3,8 +3,6 @@ import { Theme } from '../../constants/theme';
 import { StylePreset, ExportFormatKey } from '../../types/carousel.types';
 
 export interface EditorSlice {
-  // UI state
-  isAgentOpen: boolean;
   showExportPreview: boolean;
   isExporting: boolean;
   exportStep: string | null;
@@ -15,9 +13,7 @@ export interface EditorSlice {
   // Theme
   theme: Theme;
 
-  // Image Agent
-  isImageAgentOpen: boolean;
-  imageAgentSectionId: string | null;
+// Image Agent (Removed)
 
   // Track the current project ID
   currentProjectId: string | null;
@@ -32,7 +28,6 @@ export interface EditorSlice {
   setUserEmail: (email: string | null) => void;
 
   // Actions
-  setAgentOpen: (isOpen: boolean) => void;
   setShowExportPreview: (show: boolean) => void;
   setIsExporting: (isExporting: boolean) => void;
   setExportStep: (step: string | null) => void;
@@ -42,7 +37,6 @@ export interface EditorSlice {
   setGeneratingIds: (ids: string[]) => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
-  setImageAgentOpen: (open: boolean, sectionId?: string | null) => void;
   setUseAI: (v: boolean) => void;
 
   // Export format
@@ -60,7 +54,6 @@ export interface EditorSlice {
 }
 
 export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
-  isAgentOpen: false,
   showExportPreview: false,
   isExporting: false,
   exportStep: null,
@@ -68,15 +61,12 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
   generatingIds: [],
   useAI: true,
   theme: 'dark',
-  isImageAgentOpen: false,
-  imageAgentSectionId: null,
   currentProjectId: null,
   isAdmin: false,
   userEmail: null,
 
   setAdmin: (v) => set({ isAdmin: v }),
   setUserEmail: (email) => set({ userEmail: email }),
-  setAgentOpen: (isOpen) => set({ isAgentOpen: isOpen }),
   setShowExportPreview: (show) => set({ showExportPreview: show }),
   setIsExporting: (isExporting) => set({ isExporting }),
   setExportStep: (step) => set({ exportStep: step }),
@@ -101,7 +91,6 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
     localStorage.setItem('myhub-theme', next);
     return { theme: next };
   }),
-  setImageAgentOpen: (open, sectionId = null) => set({ isImageAgentOpen: open, imageAgentSectionId: sectionId }),
   setUseAI: (v: boolean) => set({ useAI: v }),
 
   setCurrentProjectId: (id: string | null) => set({ currentProjectId: id }),
