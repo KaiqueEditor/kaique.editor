@@ -363,7 +363,9 @@ export const useExport = () => {
         saveAs(mp4 as unknown as Blob, `${label}.mp4`);
       } else {
         const dataUrl = await captureSlideAsPng(node, 2);
-        saveAs(dataUrl, `${label}.png`);
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        saveAs(blob, `${label}.png`);
       }
     } catch (e) {
       console.error('Erro ao baixar slide:', e);

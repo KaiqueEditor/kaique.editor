@@ -108,8 +108,12 @@ export const createCarouselSlice: StateCreator<CarouselSlice> = (set) => ({
   })),
 
   deleteSection: (id) => set((state) => {
+    const newSections = state.sections.filter(s => s.id !== id);
+    if (newSections.length === 0) return {}; // Impede apagar se for o único slide
+    
     state._pushHistory();
-    return { sections: state.sections.filter(s => s.id !== id) };
+    const newActiveSlide = Math.min(state.activeSlide, newSections.length - 1);
+    return { sections: newSections, activeSlide: newActiveSlide };
   }),
 
   duplicateSection: (id) => set((state) => {
