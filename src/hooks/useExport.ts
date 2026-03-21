@@ -195,10 +195,29 @@ export const useExport = () => {
 
   const captureSlideAsPng = useCallback(async (node: HTMLDivElement, pixelRatio = 1): Promise<string> => {
     const { htmlToImage } = await loadExportDeps();
-    const parent = node.parentElement;
-    if (parent) parent.style.opacity = '1';
-    // Pequeno delay para garantir que o browser renderizou o slide
-    await new Promise(r => setTimeout(r, 150));
+    // O nó de captura (innerRef) → wrapper div → container fixo (opacity: 0.0001)
+    // Precisamos tornar o container fixo visível para o html-to-image funcionar.
+    const wrapper = node.parentElement;
+    const fixedContainer = wrapper?.parentElement;
+    if (fixedContainer) fixedContainer.style.opacity = '1';
+
+    // Pré-carregar todas as imagens do slide para evitar canvas tainted / imagens em branco
+    const images = node.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(img =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>(resolve => {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+              // Timeout de segurança — não trava export se imagem não carregar
+              setTimeout(resolve, 3000);
+            })
+      )
+    );
+
+    // Delay para garantir que o browser renderizou o slide com todas as imagens
+    await new Promise(r => setTimeout(r, 300));
     try {
       let dataUrl = '';
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -210,12 +229,12 @@ export const useExport = () => {
             height: EH,
             skipAutoScale: true,
             includeQueryParams: true,
-            fetchRequestInit: { mode: 'cors' },
+            fetchRequestInit: { mode: 'cors', credentials: 'omit' },
           });
           if (dataUrl && dataUrl.length > 200) break;
         } catch(err) {
           console.warn(`Tentativa ${attempt + 1} de captura falhou:`, err);
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise(r => setTimeout(r, 800));
         }
       }
       if (!dataUrl || dataUrl.length <= 200) {
@@ -223,16 +242,17 @@ export const useExport = () => {
       }
       return dataUrl;
     } finally {
-      if (parent) parent.style.opacity = '0.0001';
+      if (fixedContainer) fixedContainer.style.opacity = '0.0001';
     }
   }, [EW, EH]);
 
   const captureOverlay = useCallback(async (node: HTMLDivElement): Promise<HTMLImageElement> => {
     const { htmlToImage } = await loadExportDeps();
     const hasVideo = !!node.querySelector('video');
-    const parent = node.parentElement;
+    const wrapper = node.parentElement;
+    const fixedContainer = wrapper?.parentElement;
 
-    if (parent) parent.style.opacity = '1';
+    if (fixedContainer) fixedContainer.style.opacity = '1';
 
     // Para slides com vídeo: torna o fundo do container transparente e exclui o
     // elemento <video> da captura (filter). Assim o frame congelado do vídeo não
@@ -253,7 +273,7 @@ export const useExport = () => {
     const restore = () => {
       node.style.backgroundColor = originalBg;
       if (textAreaEl) textAreaEl!.style.backgroundColor = '';
-      if (parent) parent.style.opacity = '0.0001';
+      if (fixedContainer) fixedContainer.style.opacity = '0.0001';
     };
 
     let overlayDataUrl: string;

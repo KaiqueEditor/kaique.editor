@@ -38,10 +38,18 @@ export function useAutoSave({
             let thumbnailDataUrl: string | undefined;
             const firstSlide = exportRefs.current[0];
             if (firstSlide) {
-                const { toJpeg } = await import('html-to-image');
-                thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.3, pixelRatio: 0.15 });
+                // Tornar container fixo visível temporariamente para a captura
+                const wrapper = firstSlide.parentElement;
+                const fixedContainer = wrapper?.parentElement;
+                if (fixedContainer) fixedContainer.style.opacity = '1';
+                await new Promise(r => setTimeout(r, 100));
+                try {
+                    const { toJpeg } = await import('html-to-image');
+                    thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.3, pixelRatio: 0.15 });
+                } finally {
+                    if (fixedContainer) fixedContainer.style.opacity = '0.0001';
+                }
             }
-
             // Salvar localmente com ID fixo — sempre sobrescreve o mesmo slot
             await projectStorage.saveProject(
                 AUTO_BACKUP_ID,

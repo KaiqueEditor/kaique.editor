@@ -894,9 +894,16 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       let thumbnailDataUrl;
       const firstSlide = exportRefs.current[0];
       if (firstSlide) {
-        // Usa JPEG com scale menor para não deformar nem pesar
-        const { toJpeg } = await import('html-to-image');
-        thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.5, pixelRatio: 0.25 });
+        const wrapper = firstSlide.parentElement;
+        const fixedContainer = wrapper?.parentElement;
+        if (fixedContainer) fixedContainer.style.opacity = '1';
+        await new Promise(r => setTimeout(r, 100));
+        try {
+          const { toJpeg } = await import('html-to-image');
+          thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.5, pixelRatio: 0.25 });
+        } finally {
+          if (fixedContainer) fixedContainer.style.opacity = '0.0001';
+        }
       }
 
       const name = sections[0]?.title || 'Sem título';
@@ -927,12 +934,22 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     const fmtW = fmt?.width ?? 1080;
     const fmtH = fmt?.height ?? 1440;
     const images: string[] = [];
-    for (let i = 0; i < sections.length; i++) {
-      const node = exportRefs.current[i];
-      if (!node) continue;
-      const { toPng } = await import('html-to-image');
-      const dataUrl = await toPng(node, { width: fmtW, height: fmtH, pixelRatio: 1 });
-      images.push(dataUrl);
+    // Tornar container fixo visível para captura dos slides
+    const firstNode = exportRefs.current[0];
+    const pdfWrapper = firstNode?.parentElement;
+    const pdfFixedContainer = pdfWrapper?.parentElement;
+    if (pdfFixedContainer) pdfFixedContainer.style.opacity = '1';
+    await new Promise(r => setTimeout(r, 200));
+    try {
+      for (let i = 0; i < sections.length; i++) {
+        const node = exportRefs.current[i];
+        if (!node) continue;
+        const { toPng } = await import('html-to-image');
+        const dataUrl = await toPng(node, { width: fmtW, height: fmtH, pixelRatio: 1, cacheBust: true, fetchRequestInit: { mode: 'cors', credentials: 'omit' } });
+        images.push(dataUrl);
+      }
+    } finally {
+      if (pdfFixedContainer) pdfFixedContainer.style.opacity = '0.0001';
     }
     await exportPDF(images, sections[0]?.title || 'Carrossel', fmtW, fmtH);
   }, [sections, exportRefs, exportPDF, exportFormat]);
@@ -1369,9 +1386,8 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 left: `${idx * 1100}px`,
                 width: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}px`,
                 height: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}px`,
-                // opacity: 0.0001 — quase invisível mas mantém o pipeline de render ativo
-                // NÃO usar 0, display:none, visibility:hidden ou zIndex negativo
-                opacity: 0.0001,
+                // Sem opacity aqui — o container pai já controla visibilidade.
+                // Dupla opacity impedia a captura correta das imagens.
                 pointerEvents: 'none',
               }}
             >
