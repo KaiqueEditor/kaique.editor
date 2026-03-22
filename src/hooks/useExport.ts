@@ -156,6 +156,77 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: str
 };
 
 /**
+ * Converte todas as <img> de um nó DOM para data URLs inline (base64).
+ * Evita que html-to-image refaça fetch CORS — que falha silenciosamente
+ * em CDNs (Supabase Storage, Unsplash, DALL·E, etc.), causando imagens
+ * em branco na exportação.
+ *
+ * Estratégia:
+ * 1. Tenta via canvas (rápido — usa o bitmap já carregado pelo browser).
+ * 2. Se canvas der "tainted", faz fetch + blob → data URL.
+ * 3. Se ambos falharem, a imagem permanece com o src original (fallback).
+ *
+ * Retorna uma função de restore que devolve os src originais.
+ */
+const inlineImagesToDataUrl = async (node: HTMLElement): Promise<() => void> => {
+  const images = Array.from(node.querySelectorAll('img'));
+  const saved: { el: HTMLImageElement; originalSrc: string }[] = [];
+
+  await Promise.all(
+    images.map(async (img) => {
+      const src = img.src;
+      if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+
+      // 1) Tenta canvas — funciona se crossOrigin="anonymous" foi respeitado
+      try {
+        if (img.complete && img.naturalWidth > 0) {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          const ctx = c.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = c.toDataURL('image/png');
+            if (dataUrl && dataUrl.length > 200) {
+              saved.push({ el: img, originalSrc: src });
+              img.src = dataUrl;
+              return;
+            }
+          }
+        }
+      } catch { /* canvas tainted — fallback para fetch */ }
+
+      // 2) Fetch → blob → data URL
+      try {
+        const resp = await fetch(src, { mode: 'cors', credentials: 'omit' });
+        const blob = await resp.blob();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        if (dataUrl && dataUrl.length > 200) {
+          saved.push({ el: img, originalSrc: src });
+          img.src = dataUrl;
+        }
+      } catch {
+        console.warn('[Export] Não conseguiu inlinear imagem:', src.slice(0, 80));
+      }
+    })
+  );
+
+  // Aguarda o browser processar os novos src
+  await new Promise(r => setTimeout(r, 50));
+
+  return () => {
+    for (const { el, originalSrc } of saved) {
+      el.src = originalSrc;
+    }
+  };
+};
+
+/**
  * Carrega metadados do vídeo sem criar canvas nem reproduzir.
  * Retorna largura, altura e duração.
  */
@@ -216,6 +287,9 @@ export const useExport = () => {
       )
     );
 
+    // Converte imagens externas → data URLs para evitar falha CORS silenciosa do html-to-image
+    const restoreImages = await inlineImagesToDataUrl(node);
+
     // Delay para garantir que o browser renderizou o slide com todas as imagens
     await new Promise(r => setTimeout(r, 300));
     try {
@@ -224,7 +298,7 @@ export const useExport = () => {
         try {
           dataUrl = await htmlToImage.toPng(node, {
             pixelRatio,
-            cacheBust: true,
+            cacheBust: false,
             width: EW,
             height: EH,
             skipAutoScale: true,
@@ -242,6 +316,7 @@ export const useExport = () => {
       }
       return dataUrl;
     } finally {
+      restoreImages();
       if (fixedContainer) fixedContainer.style.opacity = '0.0001';
     }
   }, [EW, EH]);
@@ -276,13 +351,16 @@ export const useExport = () => {
       if (fixedContainer) fixedContainer.style.opacity = '0.0001';
     };
 
+    // Converte imagens → data URLs para evitar CORS
+    const restoreImages = await inlineImagesToDataUrl(node);
+
     let overlayDataUrl: string;
     try {
       overlayDataUrl = await htmlToImage.toPng(node, {
         pixelRatio: 1,
         width: EW,
         height: EH,
-        cacheBust: true,
+        cacheBust: false,
         backgroundColor: 'transparent',
         // Para slides com vídeo: exclui o <video> de background.
         // Cuidado: não podemos excluir todas as <img>, senão o avatar (Roteiro) e outras imagens do layout somem.
@@ -296,10 +374,12 @@ export const useExport = () => {
         },
       });
     } catch (e) {
+      restoreImages();
       restore();
       throw e;
     }
 
+    restoreImages();
     restore();
 
     const img = new Image();
@@ -574,6 +654,7 @@ export const useExport = () => {
     exportAll,
     exportAsReels,
     downloadSlide,
+    captureSlideAsPng,
     isExporting,
     exportStep,
   };

@@ -730,7 +730,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const updateConfig = useStore(state => state.updateConfig);
   const toggleTheme = useStore(state => state.toggleTheme);
   const { processText, isProcessing } = useProcessText();
-  const { exportRefs, exportAll, exportAsReels, downloadSlide, isExporting, exportStep } = useExport();
+  const { exportRefs, exportAll, exportAsReels, downloadSlide, captureSlideAsPng, isExporting, exportStep } = useExport();
   const { exportPDF, isExportingPDF } = useExportPDF();
   const { handleAvatarUpload, handleImageUpload, validateVideoUpload, applyVideoClip } = useFileUpload();
   const { undo, redo } = useHistory();
@@ -934,25 +934,20 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     const fmtW = fmt?.width ?? 1080;
     const fmtH = fmt?.height ?? 1440;
     const images: string[] = [];
-    // Tornar container fixo visível para captura dos slides
-    const firstNode = exportRefs.current[0];
-    const pdfWrapper = firstNode?.parentElement;
-    const pdfFixedContainer = pdfWrapper?.parentElement;
-    if (pdfFixedContainer) pdfFixedContainer.style.opacity = '1';
-    await new Promise(r => setTimeout(r, 200));
-    try {
-      for (let i = 0; i < sections.length; i++) {
-        const node = exportRefs.current[i];
-        if (!node) continue;
-        const { toPng } = await import('html-to-image');
-        const dataUrl = await toPng(node, { width: fmtW, height: fmtH, pixelRatio: 1, cacheBust: true, fetchRequestInit: { mode: 'cors', credentials: 'omit' } });
+    for (let i = 0; i < sections.length; i++) {
+      const node = exportRefs.current[i];
+      if (!node) continue;
+      try {
+        const dataUrl = await captureSlideAsPng(node);
         images.push(dataUrl);
+      } catch (err) {
+        console.warn(`PDF: falha ao capturar slide ${i + 1}:`, err);
       }
-    } finally {
-      if (pdfFixedContainer) pdfFixedContainer.style.opacity = '0.0001';
     }
-    await exportPDF(images, sections[0]?.title || 'Carrossel', fmtW, fmtH);
-  }, [sections, exportRefs, exportPDF, exportFormat]);
+    if (images.length > 0) {
+      await exportPDF(images, sections[0]?.title || 'Carrossel', fmtW, fmtH);
+    }
+  }, [sections, exportRefs, exportPDF, exportFormat, captureSlideAsPng]);
 
   // Caption AI
   const [caption, setCaption] = useState('');
