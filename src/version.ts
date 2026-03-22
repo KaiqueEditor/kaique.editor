@@ -1,0 +1,33 @@
+/**
+ * Versão do app — altere aqui a cada deploy relevante.
+ * Exibida sutilmente no rodapé da sidebar.
+ *
+ * Formato: MAJOR.MINOR.PATCH
+ *  - MAJOR: mudanças de arquitetura / breaking changes
+ *  - MINOR: features novas
+ *  - PATCH: bugfixes e ajustes
+ */
+export const APP_VERSION = '2.1.0';
+
+export const VERSION_NOTES: { version: string; date: string; changes: string[] }[] = [
+  {
+    version: '2.1.0',
+    date: '2026-03-21',
+    changes: [
+      'Fix: imagens não desapareciam mais na exportação (inline data URLs antes do html-to-image)',
+      'Fix: exportação PDF agora usa o mesmo pipeline protegido contra CORS',
+      'Adicionado sistema de versionamento visível no app',
+    ],
+  },
+  {
+    version: '2.0.0',
+    date: '2026-03-17',
+    changes: [
+      'Mega Redesign 2026 — layout 3 colunas desktop',
+      'Mobile: BottomTabBar nativo',
+      'Export multi-formato (Carousel, Stories, Feed, LinkedIn)',
+      'FFmpeg WASM para composição de vídeo',
+      'Auto-save + cloud sync via Supabase',
+    ],
+  },
+];

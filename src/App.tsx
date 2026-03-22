@@ -38,6 +38,7 @@ import { STARTER_TEMPLATES } from './constants/starterTemplates';
 import type { ThemeTokens } from './constants/theme';
 import type { Section, ProjectConfig } from './types/carousel.types';
 import { EXPORT_FORMATS } from './types/carousel.types';
+import { APP_VERSION, VERSION_NOTES } from './version';
 
 const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
 import { RemotionPreviewModal } from './components/remotion/RemotionPreviewModal';
@@ -712,6 +713,26 @@ function SidebarContent({
           </button>
         </div>
       )}
+
+      {/* Version badge — sutil no rodapé */}
+      <div className="flex-shrink-0 flex items-center justify-center py-3 border-t" style={{ borderColor: T.border }}>
+        <button
+          onClick={() => {
+            const latest = VERSION_NOTES[0];
+            if (latest) {
+              toast(
+                `v${latest.version} (${latest.date})\n${latest.changes.map(c => `• ${c}`).join('\n')}`,
+                { duration: 6000, icon: '📋', style: { maxWidth: '420px', whiteSpace: 'pre-wrap', fontSize: '11px', lineHeight: '1.5' } }
+              );
+            }
+          }}
+          className="text-[9px] font-medium tracking-wider transition-all hover:opacity-100"
+          style={{ color: T.textFaint, opacity: 0.4 }}
+          title={`CarrosselPro v${APP_VERSION}`}
+        >
+          v{APP_VERSION}
+        </button>
+      </div>
     </div>
   );
 }
