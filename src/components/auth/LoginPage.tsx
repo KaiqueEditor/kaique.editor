@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { APP_VERSION } from '../../version';
 
 // Reusing editor design tokens for consistency
 const T = {
@@ -297,6 +298,9 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                 <div className="mt-8 flex items-center gap-2 text-white/30 text-[10px] font-medium tracking-wider uppercase">
                     <Sparkles size={12} /> Desbloqueie o poder infinito
                 </div>
+                <span className="mt-2 text-[9px] font-medium tracking-wider" style={{ color: 'rgba(255,255,255,0.15)' }}>
+                    v{APP_VERSION}
+                </span>
             </div>
         </div>
     );
