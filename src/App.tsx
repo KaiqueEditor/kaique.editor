@@ -41,7 +41,7 @@ import { EXPORT_FORMATS } from './types/carousel.types';
 import { APP_VERSION, VERSION_NOTES } from './version';
 
 const ExportPreview = lazy(() => import('./components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
-import { RemotionPreviewModal } from './components/remotion/RemotionPreviewModal';
+import { inlineImagesToDataUrl } from './hooks/useExport';
 
 // ── Helper: cria uma Section vazia/default ──────────────────────────────────────
 const createDefaultSection = (index: number, userEmail?: string | null): Section => {
@@ -751,7 +751,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const updateConfig = useStore(state => state.updateConfig);
   const toggleTheme = useStore(state => state.toggleTheme);
   const { processText, isProcessing } = useProcessText();
-  const { exportRefs, exportAll, exportAsReels, downloadSlide, captureSlideAsPng, isExporting, exportStep } = useExport();
+  const { exportRefs, exportAll, downloadSlide, captureSlideAsPng, isExporting, exportStep } = useExport();
   const { exportPDF, isExportingPDF } = useExportPDF();
   const { handleAvatarUpload, handleImageUpload, validateVideoUpload, applyVideoClip } = useFileUpload();
   const { undo, redo } = useHistory();
@@ -766,7 +766,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
   const { isAdmin } = useAdmin();
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [isRemotionPreviewOpen, setIsRemotionPreviewOpen] = useState(false);
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
@@ -889,22 +889,8 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     }, 1500);
   }, []);
 
-  // Auto-salvar local (2s debounce)
-  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  useEffect(() => {
-    if (sections.length === 0) return;
-    setAutoSaveStatus('saving');
-    const timer = setTimeout(async () => {
-      try {
-        await projectStorage.saveProject('auto-backup', 'Rascunho Automático', sections, config);
-        setAutoSaveStatus('saved');
-        setTimeout(() => setAutoSaveStatus('idle'), 2500);
-      } catch {
-        setAutoSaveStatus('idle');
-      }
-    }, 2000);
-    return () => { clearTimeout(timer); };
-  }, [sections, config]);
+  // Auto-save status é controlado pelo useAutoSave hook
+  const [autoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
 
   const [savingProject, setSavingProject] = useState(false);
@@ -918,11 +904,14 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         const wrapper = firstSlide.parentElement;
         const fixedContainer = wrapper?.parentElement;
         if (fixedContainer) fixedContainer.style.opacity = '1';
+        // Protege contra CORS para thumbnails
+        const restoreImages = await inlineImagesToDataUrl(firstSlide);
         await new Promise(r => setTimeout(r, 100));
         try {
           const { toJpeg } = await import('html-to-image');
           thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.5, pixelRatio: 0.25 });
         } finally {
+          restoreImages();
           if (fixedContainer) fixedContainer.style.opacity = '0.0001';
         }
       }
@@ -1477,14 +1466,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
 
                 <button
-                  onClick={() => setIsRemotionPreviewOpen(true)}
-                  className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
-                  style={{ color: '#00E5C3' }}
-                  title="Preview Animado (Remotion)"
-                >
-                  <Play size={16} fill="currentColor" />
-                </button>
-                <button
                   onClick={() => setShowCustomThemes(true)}
                   className="p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90"
                   style={{ color: T.textSub }}
@@ -1970,12 +1951,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
           </div>
         </div>
       )}
-      <RemotionPreviewModal
-        isOpen={isRemotionPreviewOpen}
-        onClose={() => setIsRemotionPreviewOpen(false)}
-        sections={sections}
-        config={config}
-      />
+
     </div >
   );
 }

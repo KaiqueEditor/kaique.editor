@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, MutableRefObject } from 'react';
 import { projectStorage } from '../services/storage/projectStorage';
+import { inlineImagesToDataUrl } from './useExport';
 import type { Section, ProjectConfig } from '../types';
 
 const AUTO_SAVE_INTERVAL = 3 * 60 * 1000; // 3 minutos
@@ -42,11 +43,14 @@ export function useAutoSave({
                 const wrapper = firstSlide.parentElement;
                 const fixedContainer = wrapper?.parentElement;
                 if (fixedContainer) fixedContainer.style.opacity = '1';
+                // Protege contra CORS para thumbnails
+                const restoreImages = await inlineImagesToDataUrl(firstSlide);
                 await new Promise(r => setTimeout(r, 100));
                 try {
                     const { toJpeg } = await import('html-to-image');
                     thumbnailDataUrl = await toJpeg(firstSlide, { quality: 0.3, pixelRatio: 0.15 });
                 } finally {
+                    restoreImages();
                     if (fixedContainer) fixedContainer.style.opacity = '0.0001';
                 }
             }

@@ -7,9 +7,19 @@
  *  - MINOR: features novas
  *  - PATCH: bugfixes e ajustes
  */
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.2.0';
 
 export const VERSION_NOTES: { version: string; date: string; changes: string[] }[] = [
+  {
+    version: '2.2.0',
+    date: '2026-03-22',
+    changes: [
+      'Removido Remotion Player (código não utilizado)',
+      'Removido export Reels (código não utilizado)',
+      'Fix: thumbnails de projeto protegidas contra CORS (inlineImagesToDataUrl)',
+      'Fix: removido auto-save duplicado (mantém apenas o hook useAutoSave)',
+    ],
+  },
   {
     version: '2.1.0',
     date: '2026-03-21',

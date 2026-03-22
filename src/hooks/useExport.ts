@@ -168,7 +168,7 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: str
  *
  * Retorna uma função de restore que devolve os src originais.
  */
-const inlineImagesToDataUrl = async (node: HTMLElement): Promise<() => void> => {
+export const inlineImagesToDataUrl = async (node: HTMLElement): Promise<() => void> => {
   const images = Array.from(node.querySelectorAll('img'));
   const saved: { el: HTMLImageElement; originalSrc: string }[] = [];
 
@@ -522,137 +522,11 @@ export const useExport = () => {
     }
   }, [composeVideoAsMp4, captureSlideAsPng, setIsExporting, setExportStep, isExporting]);
 
-  // ── Reels Export (MP4-like via canvas + MediaRecorder) ──
-  const exportAsReels = useCallback(async (sections: Section[]) => {
-    if (isExporting) return;
-    setIsExporting(true);
-    setExportStep('Preparando Reels...');
 
-    try {
-      // 1. Capture all slides as images
-      const slideImages: HTMLImageElement[] = [];
-      for (let i = 0; i < sections.length; i++) {
-        setExportStep(`Capturando slide ${i + 1}/${sections.length}...`);
-        const node = exportRefs.current[i];
-        if (!node) continue;
-        const dataUrl = await captureSlideAsPng(node, 2);
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = reject;
-          img.src = dataUrl;
-        });
-        slideImages.push(img);
-      }
-
-      if (slideImages.length === 0) {
-        toast.error('Nenhum slide foi capturado.');
-        return;
-      }
-
-      setExportStep('Gerando vídeo...');
-
-      // 2. Setup canvas
-      const W = 1080;
-      const H = 1440;
-      const canvas = document.createElement('canvas');
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext('2d')!;
-
-      // 3. Setup MediaRecorder
-      const stream = canvas.captureStream(30);
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm';
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5_000_000 });
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-
-      const recordingDone = new Promise<Blob>(resolve => {
-        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
-      });
-
-      recorder.start();
-
-      // 4. Render frames with transitions
-      const SLIDE_DURATION = 3000; // ms per slide
-      const TRANSITION_DURATION = 500; // ms fade
-      const FPS = 30;
-      const FRAME_MS = 1000 / FPS;
-
-      for (let slideIdx = 0; slideIdx < slideImages.length; slideIdx++) {
-        const totalMs = slideIdx < slideImages.length - 1 ? SLIDE_DURATION : SLIDE_DURATION - TRANSITION_DURATION;
-
-        // Draw static frames
-        const staticFrames = Math.floor((totalMs - TRANSITION_DURATION) / FRAME_MS);
-        for (let f = 0; f < staticFrames; f++) {
-          ctx.clearRect(0, 0, W, H);
-          ctx.drawImage(slideImages[slideIdx], 0, 0, W, H);
-          await new Promise(r => setTimeout(r, FRAME_MS));
-        }
-
-        // Transition to next slide
-        if (slideIdx < slideImages.length - 1) {
-          const transFrames = Math.floor(TRANSITION_DURATION / FRAME_MS);
-          for (let f = 0; f < transFrames; f++) {
-            const progress = f / transFrames;
-            ctx.clearRect(0, 0, W, H);
-            // Current slide slides out left
-            ctx.globalAlpha = 1;
-            ctx.save();
-            ctx.translate(-W * progress, 0);
-            ctx.drawImage(slideImages[slideIdx], 0, 0, W, H);
-            ctx.restore();
-            // Next slide slides in from right
-            ctx.save();
-            ctx.translate(W * (1 - progress), 0);
-            ctx.drawImage(slideImages[slideIdx + 1], 0, 0, W, H);
-            ctx.restore();
-            await new Promise(r => setTimeout(r, FRAME_MS));
-          }
-        }
-      }
-
-      // Hold last frame a bit
-      for (let f = 0; f < FPS; f++) {
-        ctx.clearRect(0, 0, W, H);
-        ctx.drawImage(slideImages[slideImages.length - 1], 0, 0, W, H);
-        await new Promise(r => setTimeout(r, FRAME_MS));
-      }
-
-      recorder.stop();
-      const videoBlob = await recordingDone;
-
-      setExportStep('Baixando...');
-
-      // 5. Download
-      const { saveAs } = await import('file-saver');
-      const fileName = `reels-${sections[0]?.title?.slice(0, 20) || 'carousel'}-${Date.now()}.webm`;
-      saveAs(videoBlob, fileName);
-
-      toast.success('Reels exportado com sucesso! 🎬');
-
-      // Log
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await cloudStorage.logExport(user.id, user.email || '', sections.length, sections[0]?.title || '', 'zip');
-        }
-      } catch { /* silent */ }
-    } catch (e) {
-      console.error('Erro ao exportar Reels:', e);
-      toast.error('Erro ao gerar vídeo Reels.');
-    } finally {
-      setIsExporting(false);
-      setExportStep(null);
-    }
-  }, [captureSlideAsPng, setIsExporting, setExportStep, isExporting]);
 
   return {
     exportRefs,
     exportAll,
-    exportAsReels,
     downloadSlide,
     captureSlideAsPng,
     isExporting,
