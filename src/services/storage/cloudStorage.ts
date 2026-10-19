@@ -184,7 +184,7 @@ class CloudStorage {
             if (data) return data as CloudCarousel;
             // Registro apagado em outro lugar: cai para criar um novo.
         }
-        return this.createCarousel(userId, name, sections, cleanConfig, thumbnailUrl);
+        return this.createCarousel(userId, name, cleanSections, cleanConfig, thumbnailUrl);
     }
 
     /** Insere um novo carrossel */
