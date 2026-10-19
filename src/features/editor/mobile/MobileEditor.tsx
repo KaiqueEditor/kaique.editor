@@ -182,7 +182,7 @@ export function MobileEditor(props: MobileEditorProps) {
 
       {/* Folha de controles */}
       <section aria-label="Controles do slide"
-        className="glass absolute left-2 right-2 bottom-2 z-30 rounded-[30px] flex flex-col transition-[height] duration-300 ease-out"
+        className="glass absolute left-2 right-2 bottom-2 z-30 rounded-ui-xl flex flex-col transition-[height] duration-300 ease-out"
         style={{ height: sheetH - 8 }}>
         <button type="button" onClick={() => setTab(t => (t ? null : 'texto'))} aria-label={tab ? 'Recolher controles' : 'Abrir controles'}
           className="h-5 flex-shrink-0 flex items-center justify-center">

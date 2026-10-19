@@ -48,7 +48,7 @@ export function DesktopEditor(props: DesktopEditorProps) {
         </>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 text-center px-6">
-          <h1 className="text-large font-bold">Comece um carrossel</h1>
+          <h1 className="font-display font-light text-title1">Comece um carrossel</h1>
           <p className="text-body text-muted max-w-md">Cole um roteiro, abra um projeto salvo ou use um modelo pronto pelo menu Carrossel.Pro.</p>
           <div className="flex gap-2">
             <button type="button" onClick={() => setImportOpen(true)}

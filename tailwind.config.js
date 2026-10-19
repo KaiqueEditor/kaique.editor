@@ -37,7 +37,7 @@ export default {
         'ui-md': 'var(--radius-md)',
         'ui-lg': 'var(--radius-lg)',
         'ui-xl': 'var(--radius-xl)',
-        pill: '9999px',
+        pill: 'var(--radius-pill)',
       },
       // Escala tipográfica do Apple HIG (tamanho / entrelinha)
       fontSize: {

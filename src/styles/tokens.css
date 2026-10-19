@@ -1,68 +1,65 @@
 /*
- * Design tokens — Carrossel.Pro 3.0 · "Glass" · cores do Instagram
- * Neutros do Instagram (preto, #121212, #262626 / branco, #DBDBDB), o azul de
- * ação do botão "Seguir" (#0095F6) e o gradiente da marca reservado para o
- * que é principal: botão de ação, ponto do logo e anel do slide ativo.
+ * Design tokens — Carrossel.Pro 3.0 · Monocromático com detalhes do Instagram
+ * Preto e branco puros, cantos retos e tipografia larga. A cor aparece só em
+ * detalhes da marca Instagram: a barra do botão principal, o ponto do logo e
+ * o anel de Stories no slide ativo.
  * Cores em "r g b" para o Tailwind aplicar opacidade (bg-surface/60).
  * Espelhado em src/constants/theme.ts (estilos inline legados).
  */
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
-  /* Neutros — do fundo para a frente */
-  --c-bg: 0 0 0;               /* #000000  base */
-  --c-canvas: 10 10 10;        /* #0A0A0A  atrás do slide */
-  --c-surface: 18 18 18;       /* #121212  elevado 1 */
-  --c-surface-2: 38 38 38;     /* #262626  elevado 2 / hover */
-  --c-raised: 54 54 54;        /* #363636  item selecionado em controles */
-  --c-line: 38 38 38;          /* #262626  separadores */
-  --c-line-strong: 54 54 54;   /* #363636  bordas de campo */
-  /* Texto */
-  --c-text: 245 245 245;       /* #F5F5F5  primário */
-  --c-text-2: 219 219 219;     /* #DBDBDB  rótulos */
-  --c-muted: 168 168 168;      /* #A8A8A8  secundário */
-  --c-faint: 142 142 142;      /* #8E8E8E  terciário (6:1 no fundo) */
-  /* Ação: azul do Instagram (preenchimentos sem texto, seleção, links) */
-  --c-accent: 0 149 246;       /* #0095F6 */
-  --c-accent-hover: 24 119 242;/* #1877F2 */
-  --c-accent-text: 0 149 246;  /* #0095F6  (6:1 sobre o preto) */
-  --c-on-accent: 255 255 255;
-  --c-danger: 237 73 86;       /* #ED4956  vermelho do Instagram */
+  --c-bg: 0 0 0;               /* #000000 */
+  --c-canvas: 12 12 12;        /* #0C0C0C  atrás do slide */
+  --c-surface: 20 20 20;       /* #141414 */
+  --c-surface-2: 32 32 32;     /* #202020 */
+  --c-raised: 44 44 44;        /* #2C2C2C  item selecionado em controles */
+  --c-line: 38 38 38;          /* #262626 */
+  --c-line-strong: 64 64 64;   /* #404040 */
+  --c-text: 255 255 255;
+  --c-text-2: 224 224 224;     /* #E0E0E0 */
+  --c-muted: 166 166 166;      /* #A6A6A6 */
+  --c-faint: 140 140 140;      /* #8C8C8C  (6:1 no preto) */
+  /* Ação = o próprio branco: botão principal invertido, seleção, foco */
+  --c-accent: 255 255 255;
+  --c-accent-hover: 230 230 230;
+  --c-accent-text: 255 255 255;
+  --c-on-accent: 26 26 26;
+  --c-danger: 237 73 86;       /* #ED4956 */
   --c-success: 88 195 34;      /* #58C322 */
 
-  /* Material de vidro */
-  --glass-tint: 22 22 22;
-  --glass-alpha: 0.64;
-  --glass-edge: rgba(255, 255, 255, 0.10);
-  --glass-highlight: rgba(255, 255, 255, 0.12);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --glass-tint: 10 10 10;
+  --glass-alpha: 0.72;
+  --glass-edge: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --c-bg: 255 255 255;         /* #FFFFFF */
-  --c-canvas: 239 239 239;     /* #EFEFEF */
-  --c-surface: 250 250 250;    /* #FAFAFA */
-  --c-surface-2: 239 239 239;  /* #EFEFEF */
+  --c-bg: 255 255 255;
+  --c-canvas: 242 242 242;     /* #F2F2F2 */
+  --c-surface: 255 255 255;
+  --c-surface-2: 240 240 240;  /* #F0F0F0 */
   --c-raised: 255 255 255;
-  --c-line: 239 239 239;       /* #EFEFEF */
-  --c-line-strong: 219 219 219;/* #DBDBDB */
-  --c-text: 0 0 0;             /* #000000 */
-  --c-text-2: 38 38 38;        /* #262626 */
-  --c-muted: 115 115 115;      /* #737373 */
-  --c-faint: 115 115 115;      /* #737373  (4.7:1 no branco) */
-  --c-accent: 0 149 246;       /* #0095F6 */
-  --c-accent-hover: 24 119 242;
-  --c-accent-text: 0 116 204;  /* #0074CC  (4.9:1 no branco) */
+  --c-line: 229 229 229;       /* #E5E5E5 */
+  --c-line-strong: 26 26 26;   /* #1A1A1A  bordas pretas, como na referência */
+  --c-text: 26 26 26;          /* #1A1A1A */
+  --c-text-2: 51 51 51;        /* #333333 */
+  --c-muted: 107 107 107;      /* #6B6B6B  (5.3:1 no branco) */
+  --c-faint: 107 107 107;
+  --c-accent: 26 26 26;        /* preto */
+  --c-accent-hover: 0 0 0;
+  --c-accent-text: 26 26 26;
   --c-on-accent: 255 255 255;
-  --c-danger: 237 73 86;       /* #ED4956 */
+  --c-danger: 214 41 58;       /* #D6293A */
   --c-success: 61 138 22;      /* #3D8A16 */
 
   --glass-tint: 255 255 255;
-  --glass-alpha: 0.72;
-  --glass-edge: rgba(0, 0, 0, 0.08);
+  --glass-alpha: 0.82;
+  --glass-edge: rgba(26, 26, 26, 0.14);
   --glass-highlight: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
 }
 
 /* Gradientes da marca Instagram */
@@ -74,6 +71,16 @@
 }
 
 .bg-brand { background-image: var(--brand-gradient); }
+
+/* Barra do gradiente do Instagram na borda esquerda (botão principal) */
+.ig-edge { position: relative; overflow: hidden; }
+.ig-edge::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background-image: var(--story-gradient);
+}
 .bg-story { background-image: var(--story-gradient); }
 .text-brand {
   background-image: var(--story-gradient);
@@ -83,16 +90,17 @@
 }
 
 :root {
-  /* SF Pro no Mac/iPhone; Inter como fallback com métricas parecidas */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  /* Lexend no texto; Lexend Zetta (larga e fina) nos títulos */
+  --font-sans: 'Lexend', system-ui, sans-serif;
+  --font-display: 'Lexend Zetta', 'Lexend', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Geist Mono', monospace;
 
-  /* Cantos — escala 1.4x */
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  /* Cantos retos: só um arredondado mínimo para não serrilhar */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-pill: 3px;
 
   /* Alturas de controle — alvo de toque 44px */
   --control-h: 36px;

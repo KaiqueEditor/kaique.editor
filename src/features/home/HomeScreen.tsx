@@ -41,7 +41,7 @@ function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode; labe
 function QuickAction({ icon, title, text, onClick }: { icon: React.ReactNode; title: string; text: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="flex items-center gap-4 p-4 rounded-ui-lg bg-surface hover:bg-surface-2 text-left transition-colors active:scale-[0.99]">
+      className="flex items-center gap-4 p-4 rounded-ui-lg bg-surface border border-line hover:border-fg/40 text-left transition-colors active:scale-[0.99]">
       <span className="w-11 h-11 rounded-full bg-accent/15 text-accent-text flex items-center justify-center flex-shrink-0" aria-hidden="true">{icon}</span>
       <span className="flex flex-col gap-0.5 min-w-0">
         <span className="text-subhead font-semibold">{title}</span>
@@ -128,7 +128,7 @@ export function HomeScreen(props: HomeScreenProps) {
       <main className="flex-1 min-w-0 overflow-y-auto">
         <div className="max-w-[1180px] mx-auto px-4 py-6 lg:px-10 lg:py-10 flex flex-col gap-6 lg:gap-8">
           <header className="flex items-center justify-between gap-4 lg:gap-6 flex-wrap">
-            <h1 className="text-title1 lg:text-large font-bold">Seus carrosséis</h1>
+            <h1 className="font-display font-light text-title2 lg:text-title1 tracking-tight">Seus carrosséis</h1>
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <label className="h-10 flex-1 lg:flex-none lg:w-[300px] px-3.5 rounded-pill bg-fg/[0.07] flex items-center gap-2.5 text-faint focus-within:ring-4 focus-within:ring-accent/30">
                 <Search size={16} aria-hidden="true" />

@@ -49,8 +49,8 @@ export function UIKit() {
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="flex flex-col gap-2">
             <p className="text-footnote font-semibold text-accent-text">Fase 1 · Fundação</p>
-            <h1 className="text-large font-bold">Limpo, leve e translúcido.</h1>
-            <p className="text-body text-muted max-w-xl">Cinzas em escala, o azul e o gradiente do Instagram, a fonte do sistema e painéis de vidro sobre o seu conteúdo.</p>
+            <h1 className="font-display font-light text-title1">Preto, branco e um toque de Instagram.</h1>
+            <p className="text-body text-muted max-w-xl">Monocromático, cantos retos e tipografia larga. A cor do Instagram aparece só nos detalhes.</p>
           </div>
           <Button onClick={toggleTheme}>Tema {theme === 'dark' ? 'escuro' : 'claro'}</Button>
         </div>
