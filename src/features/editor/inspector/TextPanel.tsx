@@ -51,12 +51,12 @@ export function TextPanel() {
 
       <Group title="Tipografia">
         <div className="grid grid-cols-[minmax(0,1fr)_76px] gap-2.5 items-end">
-          <Field label="Fonte do título">{id => <FontSelect id={id} value={s.titleFont || 'bebas-neue'} onChange={v => update({ titleFont: v })} />}</Field>
+          <Field label="Fonte do título">{id => <FontSelect id={id} value={isSocial && (!s.titleFont || s.titleFont === 'sans') ? 'manrope' : s.titleFont || 'bebas-neue'} onChange={v => update({ titleFont: v })} />}</Field>
           <Field label="Tamanho">
             {id => <Input id={id} type="number" min={10} max={160} step={2} value={s.titleSize ?? 30}
               onChange={e => update({ titleSize: clamp(Number(e.target.value) || 10, 10, 160) })} />}
           </Field>
-          <Field label="Fonte do texto">{id => <FontSelect id={id} value={s.bodyFont || 'sans'} onChange={v => update({ bodyFont: v })} />}</Field>
+          <Field label="Fonte do texto">{id => <FontSelect id={id} value={isSocial && (!s.bodyFont || s.bodyFont === 'sans') ? 'manrope' : s.bodyFont || 'sans'} onChange={v => update({ bodyFont: v })} />}</Field>
           <Field label="Tamanho">
             {id => <Input id={id} type="number" min={8} max={80} step={1} value={s.bodySize ?? 20}
               onChange={e => update({ bodySize: clamp(Number(e.target.value) || 8, 8, 80) })} />}

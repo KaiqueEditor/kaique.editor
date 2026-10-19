@@ -35,28 +35,49 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
   formatHeight = 1440,
 }) => {
   // Proporção real da mídia do Post X (limitada entre 16:9 e 4:5, como no X)
-  const [mediaRatio, setMediaRatio] = React.useState(16 / 9);
+  const mediaRatioRef = React.useRef(16 / 9);
+  const remeasureRef = React.useRef<() => void>(() => {});
   const onMediaSize = (w: number, h: number) => {
-    if (w > 0 && h > 0) setMediaRatio(Math.min(16 / 9, Math.max(4 / 5, w / h)));
+    if (w > 0 && h > 0) {
+      mediaRatioRef.current = Math.min(16 / 9, Math.max(4 / 5, w / h));
+      remeasureRef.current();
+    }
   };
   // Post X: se texto + imagem não couberem, o post inteiro diminui por igual (como um print)
   const fitRef = React.useRef<HTMLDivElement>(null);
   const [fit, setFit] = React.useState(1);
+  const [mediaH, setMediaH] = React.useState<number | null>(null);
   React.useLayoutEffect(() => {
     const el = fitRef.current;
     const root = el?.parentElement;
     if (!el || !root) return;
     const measure = () => {
       const cs = getComputedStyle(root);
-      const avail = root.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-      const need = el.offsetHeight;
-      const next = avail > 0 && need > avail ? avail / need : 1;
+      const header = el.previousElementSibling as HTMLElement | null;
+      const avail = root.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (header?.offsetHeight ?? 0);
+      let need = el.offsetHeight;
+      // Imagem ocupa o espaço que sobra (no máximo a proporção real, no mínimo 30% do slide)
+      const wrap = el.querySelector<HTMLElement>('[data-post-media]');
+      const box = wrap?.firstElementChild as HTMLElement | null;
+      if (wrap && box) {
+        const rest = need - wrap.offsetHeight;
+        const pad = wrap.offsetHeight - box.offsetHeight;
+        const natural = box.offsetWidth / mediaRatioRef.current;
+        const h = Math.round(Math.min(natural, Math.max(avail - rest - pad, root.clientHeight * 0.3)));
+        setMediaH(prev => (prev !== null && Math.abs(prev - h) < 1 ? prev : h));
+        need = rest + pad + h;
+      }
+      const next = avail > 0 && need > avail + 1 ? avail / need : 1;
       setFit(prev => (Math.abs(prev - next) > 0.005 ? next : prev));
     };
     measure();
+    remeasureRef.current = measure;
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     ro.observe(root);
+    if (el.previousElementSibling) ro.observe(el.previousElementSibling);
+    // fontes carregando mudam a altura do texto
+    document.fonts?.ready.then(measure);
     return () => ro.disconnect();
   }, [section.layoutType]);
   const layout = section.layoutType || 'storytelling';
@@ -112,25 +133,25 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           paddingBottom: `${(isExport ? 64 * (formatHeight / 1440) + 40 : 46)}px`,
         }}
       >
-        <div ref={fitRef} className="flex flex-col flex-shrink-0 w-full" style={{ transform: fit < 1 ? `scale(${fit})` : undefined, transformOrigin: 'top center' }}>
-        {/* Header com avatar */}
-        <div className="flex items-center flex-shrink-0" style={{ gap: `${14 * scaleFactor}px`, paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${4 * scaleFactor}px` }}>
+        {/* Header com avatar — sempre igual em todos os slides */}
+        <div className="flex items-center flex-shrink-0" style={{ gap: `${12 * scaleFactor}px`, paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${4 * scaleFactor}px` }}>
           <div
             onClick={!isExport ? onAvatarClick : undefined}
             className={`rounded-full overflow-hidden flex-shrink-0 ${!isExport ? 'cursor-pointer transition-all' : ''}`}
-            style={{ width: `${48 * scaleFactor}px`, height: `${48 * scaleFactor}px`, border: `2px solid rgba(0,0,0,0.08)` }}
+            style={{ width: `${66 * scaleFactor}px`, height: `${66 * scaleFactor}px` }}
           >
             <img src={avatar} crossOrigin="anonymous" alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="flex flex-col" style={{ gap: `${1 * scaleFactor}px` }}>
-            <div className="flex items-center" style={{ gap: `${6 * scaleFactor}px` }}>
-              <span className="font-bold" style={{ fontSize: `${18 * scaleFactor}px`, fontFamily: X_FONT_STACK, color: finalBrandingColor }}>{config.branding || 'Seu Nome'}</span>
-              <VerifiedBadge size={16 * scaleFactor} />
+          <div className="flex flex-col" style={{ gap: `${2 * scaleFactor}px` }}>
+            <div className="flex items-center" style={{ gap: `${7 * scaleFactor}px` }}>
+              <span className="font-bold" style={{ fontSize: `${22 * scaleFactor}px`, lineHeight: 1.15, fontFamily: X_FONT_STACK, color: finalBrandingColor }}>{config.branding || 'Seu Nome'}</span>
+              <VerifiedBadge size={20 * scaleFactor} />
             </div>
-            <span style={{ fontSize: `${15 * scaleFactor}px`, fontFamily: X_FONT_STACK, color: '#71767b' }}>{config.handle || '@seuusuario'}</span>
+            <span style={{ fontSize: `${21 * scaleFactor}px`, lineHeight: 1.15, fontFamily: X_FONT_STACK, color: '#71767b' }}>{config.handle || '@seuusuario'}</span>
           </div>
         </div>
 
+        <div ref={fitRef} className="flex flex-col flex-shrink-0 w-full" style={{ transform: fit < 1 ? `scale(${fit})` : undefined, transformOrigin: 'top left' }}>
         {/* Conteúdo de texto — nunca encolhe por causa da imagem */}
         <div
           className="flex flex-col overflow-hidden"
@@ -180,8 +201,8 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
 
         {/* Imagem — segue a proporção real dela */}
         {showImage && hasImage && (
-          <div className="flex-shrink-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingBottom: `${16 * scaleFactor}px` }}>
-            <div className="relative w-full rounded-[1rem] overflow-hidden" style={{ aspectRatio: `${mediaRatio}`, background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)` }}>
+          <div data-post-media className="flex-shrink-0" style={{ paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${16 * scaleFactor}px` }}>
+            <div className="relative w-full rounded-[1rem] overflow-hidden" style={{ ...(mediaH ? { height: `${mediaH}px` } : { aspectRatio: `${mediaRatioRef.current}` }), background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)` }}>
               {isGenerating ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
                   <Loader2 className="animate-spin" size={32 * scaleFactor} />
