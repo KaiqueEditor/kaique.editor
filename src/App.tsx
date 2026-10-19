@@ -9,7 +9,7 @@ import { cloudStorage } from './services/storage/cloudStorage';
 import { CarrosselApp } from './screens/EditorScreen';
 import { UIKit } from './screens/UIKit';
 import { DomainMove } from './features/move/DomainMove';
-import { isOldHost } from './lib/domainMove';
+import { isOldHost, newHostReady } from './lib/domainMove';
 
 // ── Aplicação Autenticada ───────────────────────────────────────────────────────
 
@@ -23,6 +23,11 @@ export default function App() {
 
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [moveReady, setMoveReady] = useState(false);
+
+  useEffect(() => {
+    if (isOldHost()) newHostReady().then(setMoveReady);
+  }, []);
 
   useEffect(() => {
     // Initial session check — also picks up OAuth tokens from URL hash (#access_token=...)
@@ -112,8 +117,8 @@ export default function App() {
     );
   }
 
-  // Endereço antigo: leva projetos e sessão para procarrossel.com.br
-  if (isOldHost()) return <DomainMove userId={session.user.id} />;
+  // Endereço antigo: leva projetos e sessão para procarrossel.com.br (só quando ele já responde)
+  if (moveReady) return <DomainMove userId={session.user.id} />;
 
   return <CarrosselApp session={session} onLogout={async () => {
     clearAdminCache();

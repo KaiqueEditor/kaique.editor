@@ -19,6 +19,25 @@ export const NEW_ORIGIN = DEV_SIMULATION ? window.location.origin : 'https://pro
 export const isOldHost = (host = window.location.hostname) =>
   DEV_SIMULATION || /^kaique-editor(-[a-z0-9-]+)?\.vercel\.app$/.test(host);
 
+/**
+ * O endereço novo já responde? Enquanto o DNS/SSL não estiver pronto, o
+ * endereço antigo continua funcionando normalmente, sem redirecionar.
+ */
+export async function newHostReady(timeoutMs = 5000): Promise<boolean> {
+  if (DEV_SIMULATION) return true;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    // no-cors: só interessa se o servidor respondeu (falha de DNS/SSL rejeita).
+    await fetch(`${NEW_ORIGIN}/manifest.json?probe=${Date.now()}`, { mode: 'no-cors', cache: 'no-store', signal: ctrl.signal });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const CARRIED_KEYS = [
   'carrosselpro-store',
   'carrosselpro-custom-themes',
