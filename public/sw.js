@@ -1,69 +1,16 @@
-// CarrosselPro Service Worker — cache-first for static assets, network-first for API
-const CACHE_NAME = 'carrosselpro-v2';
-const STATIC_ASSETS = [
-    '/',
-    '/manifest.json',
-];
+// Service worker de remoção.
+// O worker antigo servia uma cópia velha do index.html do cache; depois de um
+// deploy ela apontava para arquivos que não existem mais e a página ficava em
+// branco. O navegador sempre busca este arquivo na rede, então esta versão
+// substitui a antiga, apaga os caches, se desregistra e recarrega as abas.
+self.addEventListener('install', () => self.skipWaiting());
 
-// Install: pre-cache shell
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-    );
-    self.skipWaiting();
-});
-
-// Activate: clean old caches
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) =>
-            Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-        )
-    );
-    self.clients.claim();
-});
-
-// Fetch: network-first for API, cache-first for static
-self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
-
-    // Skip non-GET requests
-    if (event.request.method !== 'GET') return;
-
-    // Supabase / API calls: network-only
-    if (url.hostname.includes('supabase') || url.pathname.startsWith('/api')) return;
-
-    // FFmpeg / WASM: NUNCA interceptar — arquivos grandes demais pro Cache API
-    // e o COEP header corrompe a resposta quando cache.put() falha
-    if (url.pathname.includes('/ffmpeg') || url.pathname.endsWith('.wasm')) return;
-
-    // Google Fonts: cache-first
-    if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-        event.respondWith(
-            caches.match(event.request).then((cached) =>
-                cached || fetch(event.request).then((response) => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-                    return response;
-                })
-            )
-        );
-        return;
-    }
-
-    // App assets: stale-while-revalidate
-    event.respondWith(
-        caches.match(event.request).then((cached) => {
-            const fetchPromise = fetch(event.request)
-                .then((response) => {
-                    if (response.ok) {
-                        const clone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-                    }
-                    return response;
-                })
-                .catch(() => cached);
-            return cached || fetchPromise;
-        })
-    );
+    event.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+        await self.registration.unregister();
+        const clients = await self.clients.matchAll({ type: 'window' });
+        clients.forEach((client) => client.navigate(client.url));
+    })());
 });
