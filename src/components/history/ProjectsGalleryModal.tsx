@@ -206,7 +206,7 @@ export const ProjectsGalleryModal: React.FC<ProjectsGalleryModalProps> = ({ isOp
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-64 pl-9 pr-4 py-2.5 rounded-2xl text-sm transition-all focus:outline-none focus:ring-2"
-                                style={{ background: T.sidebar, color: T.textPrimary, border: `1px solid ${T.border}`, ringColor: T.accent }}
+                                style={{ background: T.sidebar, color: T.textPrimary, border: `1px solid ${T.border}` }}
                             />
                         </div>
                         <div className="flex rounded-2xl p-1" style={{ background: T.sidebar, border: `1px solid ${T.border}` }}>

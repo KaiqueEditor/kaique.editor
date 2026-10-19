@@ -64,7 +64,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onClose, T: TP
                     <div className="flex items-center gap-3">
                         <Sparkles size={20} style={{ color: T.accent }} />
                         <div>
-                            <h2 className="text-lg font-black tracking-tight" style={{ color: T.text }}>Templates</h2>
+                            <h2 className="text-lg font-black tracking-tight" style={{ color: T.textPrimary }}>Templates</h2>
                             <p className="text-[11px] font-medium" style={{ color: T.textSub }}>Escolha um modelo pra começar rápido</p>
                         </div>
                     </div>
@@ -90,7 +90,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onClose, T: TP
                                     <div className="flex items-center gap-3 mb-3">
                                         <span className="text-2xl">{template.emoji}</span>
                                         <div>
-                                            <h3 className="text-sm font-black tracking-tight" style={{ color: T.text }}>{template.name}</h3>
+                                            <h3 className="text-sm font-black tracking-tight" style={{ color: T.textPrimary }}>{template.name}</h3>
                                             <p className="text-[10px] font-medium" style={{ color: T.textFaint }}>{template.slideCount} slides</p>
                                         </div>
                                     </div>

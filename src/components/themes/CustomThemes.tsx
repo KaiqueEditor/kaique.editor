@@ -96,7 +96,7 @@ export const CustomThemes: React.FC<CustomThemesProps> = ({ onClose, T: TProp })
                     <div className="flex items-center gap-3">
                         <Palette size={20} style={{ color: T.accent }} />
                         <div>
-                            <h2 className="text-lg font-black tracking-tight" style={{ color: T.text }}>Temas Personalizados</h2>
+                            <h2 className="text-lg font-black tracking-tight" style={{ color: T.textPrimary }}>Temas Personalizados</h2>
                             <p className="text-[11px] font-medium" style={{ color: T.textSub }}>Salve e reutilize suas paletas de cores</p>
                         </div>
                     </div>
@@ -119,7 +119,7 @@ export const CustomThemes: React.FC<CustomThemesProps> = ({ onClose, T: TProp })
                                                 <div key={i} className="w-5 h-5 rounded-md" style={{ background: c, border: `1px solid ${T.border}` }} />
                                             ))}
                                         </div>
-                                        <span className="flex-1 text-xs font-bold truncate" style={{ color: T.text }}>{theme.name}</span>
+                                        <span className="flex-1 text-xs font-bold truncate" style={{ color: T.textPrimary }}>{theme.name}</span>
                                         <button
                                             onClick={() => applyTheme(theme)}
                                             className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wide transition-all active:scale-95"
@@ -147,7 +147,7 @@ export const CustomThemes: React.FC<CustomThemesProps> = ({ onClose, T: TProp })
                                 onChange={e => setName(e.target.value)}
                                 placeholder="Nome do tema..."
                                 className="w-full px-4 py-2.5 rounded-xl text-sm font-bold outline-none"
-                                style={{ background: T.glassMd, border: `1px solid ${T.border}`, color: T.text }}
+                                style={{ background: T.glassMd, border: `1px solid ${T.border}`, color: T.textPrimary }}
                                 onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setCreating(false); }}
                             />
 

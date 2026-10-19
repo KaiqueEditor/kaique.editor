@@ -57,8 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                             style={{ 
                                 background: T.card, 
                                 border: `1px solid ${T.border}`, 
-                                color: T.textPrimary,
-                                ringColor: T.accent
+                                color: T.textPrimary
                             }}
                         />
                         <p className="text-[10px]" style={{ color: T.textSub }}>Utilizado como texto padrão nos slides de capa e encerramento, e rodapés gerais.</p>
@@ -78,8 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                             style={{ 
                                 background: T.card, 
                                 border: `1px solid ${T.border}`, 
-                                color: T.textPrimary,
-                                ringColor: T.accent
+                                color: T.textPrimary
                             }}
                         />
                          <p className="text-[10px]" style={{ color: T.textSub }}>Aparece em layouts onde a marca pessoal fica visível na página.</p>
@@ -99,8 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                             style={{ 
                                 background: T.card, 
                                 border: `1px solid ${T.border}`, 
-                                color: T.textPrimary,
-                                ringColor: T.accent
+                                color: T.textPrimary
                             }}
                         />
                         <p className="text-[10px]" style={{ color: T.textSub }}>Se definido, aparecerá discretamente no rodapé de todas as imagens exportadas.</p>

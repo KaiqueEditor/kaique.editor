@@ -1,0 +1,102 @@
+/*
+ * Design tokens — Carrossel.Pro 3.0 · "Glass"
+ * Linguagem inspirada no Apple HIG: cinzas neutros em escala, um azul de
+ * ação, tipografia do sistema (SF no Mac/iPhone) e materiais translúcidos.
+ * Cores em "r g b" para o Tailwind aplicar opacidade (bg-surface/60).
+ * Espelhado em src/constants/theme.ts (estilos inline legados).
+ */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  /* Cinzas — do fundo para a frente */
+  --c-bg: 11 11 13;            /* #0B0B0D  base */
+  --c-canvas: 17 17 19;        /* #111113  atrás do slide */
+  --c-surface: 28 28 30;       /* #1C1C1E  elevado 1 */
+  --c-surface-2: 44 44 46;     /* #2C2C2E  elevado 2 / hover */
+  --c-raised: 72 72 74;        /* #48484A  item selecionado em controles */
+  --c-line: 44 44 46;          /* #2C2C2E  separadores */
+  --c-line-strong: 58 58 60;   /* #3A3A3C  bordas de campo */
+  /* Texto */
+  --c-text: 245 245 247;       /* #F5F5F7  primário */
+  --c-text-2: 199 199 204;     /* #C7C7CC  rótulos */
+  --c-muted: 152 152 159;      /* #98989F  secundário */
+  --c-faint: 142 142 147;      /* #8E8E93  terciário (6:1 no fundo) */
+  /* Ação */
+  --c-accent: 0 113 227;       /* #0071E3  preenchimento (5:1 com branco) */
+  --c-accent-hover: 0 119 237; /* #0077ED */
+  --c-accent-text: 41 151 255; /* #2997FF  links e seleção sobre escuro */
+  --c-on-accent: 255 255 255;
+  --c-danger: 255 69 58;       /* #FF453A */
+  --c-success: 48 209 88;      /* #30D158 */
+
+  /* Material de vidro */
+  --glass-tint: 30 30 32;
+  --glass-alpha: 0.62;
+  --glass-edge: rgba(255, 255, 255, 0.10);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --c-bg: 245 245 247;         /* #F5F5F7 */
+  --c-canvas: 232 232 237;     /* #E8E8ED */
+  --c-surface: 255 255 255;
+  --c-surface-2: 242 242 247;  /* #F2F2F7 */
+  --c-raised: 255 255 255;
+  --c-line: 229 229 234;       /* #E5E5EA */
+  --c-line-strong: 209 209 214;/* #D1D1D6 */
+  --c-text: 29 29 31;          /* #1D1D1F */
+  --c-text-2: 58 58 60;        /* #3A3A3C */
+  --c-muted: 110 110 115;      /* #6E6E73 */
+  --c-faint: 110 110 115;      /* #6E6E73  (4.9:1 no fundo) */
+  --c-accent: 0 113 227;       /* #0071E3 */
+  --c-accent-hover: 0 119 237;
+  --c-accent-text: 0 102 204;  /* #0066CC */
+  --c-on-accent: 255 255 255;
+  --c-danger: 215 0 21;        /* #D70015 */
+  --c-success: 36 138 61;      /* #248A3D */
+
+  --glass-tint: 255 255 255;
+  --glass-alpha: 0.68;
+  --glass-edge: rgba(0, 0, 0, 0.06);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+:root {
+  /* SF Pro no Mac/iPhone; Inter como fallback com métricas parecidas */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Geist Mono', monospace;
+
+  /* Cantos — escala 1.4x */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* Alturas de controle — alvo de toque 44px */
+  --control-h: 36px;
+  --control-h-lg: 44px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Material "liquid glass": translúcido, desfoca o que está atrás,
+   borda fina e brilho na aresta superior. */
+.glass {
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: rgb(var(--c-surface));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

@@ -1,10 +1,19 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #000000;
+  font-family: var(--font-sans);
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-text));
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--c-accent-text));
+  outline-offset: 2px;
 }
 
 .no-scrollbar::-webkit-scrollbar {
