@@ -1,8 +1,8 @@
 import type { Section } from '../types/carousel.types';
 import { plainText } from '../utils/formatters';
 
-/** Mesma pilha de fontes que o X usa quando a Chirp não está disponível. */
-export const X_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+/** Fonte padrão do Post X: Manrope, a mais próxima dos posts de referência. */
+export const X_FONT_STACK = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 export const TWEET_LIMIT = 280;
 

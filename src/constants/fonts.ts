@@ -109,6 +109,14 @@ export const FONT_OPTIONS: FontOption[] = [
     label: 'UI / Moderno',
   },
   {
+    id: 'manrope',
+    name: 'Manrope',
+    stack: "'Manrope', sans-serif",
+    googleFont: 'Manrope:wght@400;500;600;700;800',
+    category: 'sans',
+    label: 'Post X / Limpo',
+  },
+  {
     id: 'roboto',
     name: 'Roboto',
     stack: "'Roboto', sans-serif",
