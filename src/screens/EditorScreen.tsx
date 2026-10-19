@@ -29,6 +29,10 @@ import { inlineImagesToDataUrl } from '../hooks/useExport';
 import { createDefaultSection } from '../lib/sections';
 import { SidebarContent, type SidebarContentProps } from '../components/layout/Sidebar';
 import { DesktopEditor } from '../features/editor/DesktopEditor';
+import { HomeScreen } from '../features/home/HomeScreen';
+import type { Project } from '../features/home/useProjects';
+import { STARTER_TEMPLATES } from '../constants/starterTemplates';
+import { buildTemplateSections } from '../lib/sections';
 import { Button, Dialog } from '../ui';
 
 const ExportPreview = lazy(() => import('../components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
@@ -142,6 +146,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
             if (latest.sections && latest.sections.length > 0) {
               useStore.getState().setSections(latest.sections);
               if (latest.config) useStore.getState().updateConfig(latest.config);
+              useStore.getState().setCurrentProjectId(latest.id);
               return; // cloud restored
             }
           }
@@ -188,10 +193,45 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   }, [sections, config]);
   const autoSaveStatus = 'idle' as 'idle' | 'saving' | 'saved';
 
+  // Desktop: tela inicial (projetos) ou editor.
+  const [desktopView, setDesktopView] = useState<'home' | 'editor'>('home');
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const markClean = () => setTimeout(() => setDirty(false), 50);
+  const openEditor = () => { setActiveSlide(0); setDesktopView('editor'); };
+
+  const handleOpenProject = (p: Project) => {
+    useStore.getState().setSections(p.sections);
+    if (p.config) updateConfig(p.config);
+    setCurrentProjectId(p.id);
+    openEditor();
+    markClean();
+  };
+  const startNewProject = (slides: Section[]) => {
+    useStore.getState().setSections(slides);
+    setCurrentProjectId(null);
+    setTextInput('');
+    openEditor();
+  };
+  const handleNewBlank = () => {
+    const email = useStore.getState().userEmail;
+    startNewProject([0, 1, 2].map(i => createDefaultSection(i, email)));
+  };
+  const handleNewFromTemplate = (id: string) => {
+    const t = STARTER_TEMPLATES.find(x => x.id === id);
+    if (t) startNewProject(buildTemplateSections(t, useStore.getState().userEmail));
+  };
+  const handleNewFromRoteiro = (text: string) => {
+    setCurrentProjectId(null);
+    setTextInput(text);
+    processText(text);
+    openEditor();
+  };
+  const goHome = () => { if (dirty) setConfirmLeave(true); else setDesktopView('home'); };
+
 
   const [savingProject, setSavingProject] = useState(false);
 
-  const handleManualSave = useCallback(async () => {
+  const handleManualSave = useCallback(async (): Promise<boolean> => {
     setSavingProject(true);
     try {
       let thumbnailDataUrl;
@@ -212,24 +252,28 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         }
       }
 
-      const name = sections[0]?.title || 'Sem título';
-      const idToSave = currentProjectId || (Date.now().toString() + Math.random().toString(36).slice(2, 6));
+      const name = sections[0]?.title?.trim() || 'Sem título';
+      let savedId = currentProjectId;
 
-      await projectStorage.saveProject(idToSave, name, sections, config, thumbnailDataUrl);
-      if (!currentProjectId) setCurrentProjectId(idToSave);
-
-      // Cloud save (Supabase)
+      // Nuvem primeiro: atualiza o projeto aberto ou cria um novo e adota o id dele.
       try {
         const userId = session?.user?.id;
         if (userId) {
-          await cloudStorage.saveCarousel(userId, name, sections, config, thumbnailDataUrl);
+          const row = await cloudStorage.saveCarousel(userId, name, sections, config, thumbnailDataUrl, currentProjectId);
+          if (row) savedId = row.id;
         }
-      } catch { /* cloud save is best-effort */ }
+      } catch { /* nuvem é best-effort; a cópia local garante o trabalho */ }
+
+      if (!savedId) savedId = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+      await projectStorage.saveProject(savedId, name, sections, config, thumbnailDataUrl);
+      setCurrentProjectId(savedId);
 
       setDirty(false);
       toast.success('Projeto salvo');
+      return true;
     } catch (err) {
       toast.error('Erro ao salvar o projeto');
+      return false;
     } finally {
       setSavingProject(false);
     }
@@ -371,6 +415,20 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       {/* ══════════════════════════════════════
           EDITOR DESKTOP — canvas central + vidro
       ══════════════════════════════════════ */}
+      {desktopView === 'home' ? (
+        <HomeScreen
+          userId={session?.user?.id}
+          userEmail={session?.user?.email}
+          isAdmin={isAdmin}
+          isProcessing={isProcessing}
+          onOpenProject={handleOpenProject}
+          onNewBlank={handleNewBlank}
+          onNewFromRoteiro={handleNewFromRoteiro}
+          onNewFromTemplate={handleNewFromTemplate}
+          onOpenAnalytics={() => setShowAnalytics(true)}
+          onLogout={onLogout}
+        />
+      ) : (
       <DesktopEditor
         saveStatus={savingProject ? 'saving' : dirty ? 'dirty' : 'saved'}
         exporting={isExporting}
@@ -383,7 +441,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         onPreview={() => setShowExportPreview(true)}
         onExportZip={() => exportAll(sections)}
         onExportPDF={handleExportPDF}
-        onOpenProjects={() => setHistoryOpen(true)}
+        onOpenProjects={goHome}
         onNewCarousel={() => setShowNewConfirm(true)}
         onOpenThemes={() => setShowCustomThemes(true)}
         onOpenAssets={() => setIsAssetsOpen(true)}
@@ -400,6 +458,27 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
           if (node && s) await downloadSlide(node, s, `slide-${idx + 1}`);
         }}
       />
+      )}
+
+      <Dialog
+        open={confirmLeave}
+        onClose={() => setConfirmLeave(false)}
+        title="Salvar antes de sair?"
+        description="Este carrossel tem alterações que ainda não foram salvas."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmLeave(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={() => { setConfirmLeave(false); setDirty(false); setDesktopView('home'); }}>Sair sem salvar</Button>
+            <Button variant="primary" loading={savingProject} onClick={async () => {
+              const ok = await handleManualSave();
+              setConfirmLeave(false);
+              if (ok) setDesktopView('home');
+            }}>Salvar e sair</Button>
+          </>
+        }
+      >
+        {null}
+      </Dialog>
       <input ref={desktopAvatarInputRef} type="file" accept="image/*" className="hidden" onChange={e => { handleAvatarUpload(e, url => updateConfig({ avatarUrl: url })); e.target.value = ''; }} />
 
       {/* ══════════════════════════════════════

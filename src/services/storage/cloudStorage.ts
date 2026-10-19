@@ -130,13 +130,17 @@ class CloudStorage {
         return processed;
     }
 
-    /** Salva ou atualiza o carrossel mais recente do usuário no cloud */
+    /**
+     * Salva o carrossel aberto: atualiza o registro `carouselId` quando ele existe
+     * na nuvem; senão cria um novo. (Antes sobrescrevia sempre o mais recente.)
+     */
     async saveCarousel(
         userId: string,
         name: string,
         sections: Section[],
         config: ProjectConfig,
         thumbnailDataUrl?: string,
+        carouselId?: string | null,
     ): Promise<CloudCarousel | null> {
         // Upload images to Storage and clean sections
         const cleanSections = await this.processSectionsForCloud(userId, sections);
@@ -154,17 +158,9 @@ class CloudStorage {
             thumbnailUrl = await this.uploadImageToStorage(userId, thumbnailDataUrl, 'thumb') || undefined;
         }
 
-        // Buscar o carrossel mais recente do usuário para atualizar
-        const { data: existing } = await supabase
-            .from('carousels')
-            .select('id')
-            .eq('user_id', userId)
-            .order('updated_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        if (existing) {
-            const updatePayload: any = {
+        const isCloudId = !!carouselId && /^[0-9a-f-]{36}$/i.test(carouselId);
+        if (isCloudId) {
+            const updatePayload: Record<string, unknown> = {
                 name,
                 sections: cleanSections,
                 config: cleanConfig,
@@ -176,18 +172,19 @@ class CloudStorage {
             const { data, error } = await supabase
                 .from('carousels')
                 .update(updatePayload)
-                .eq('id', existing.id)
+                .eq('id', carouselId)
+                .eq('user_id', userId)
                 .select()
-                .single();
+                .maybeSingle();
 
             if (error) {
                 console.error('[CloudStorage] save error:', error);
                 return null;
             }
-            return data as CloudCarousel;
-        } else {
-            return this.createCarousel(userId, name, sections, config, thumbnailUrl);
+            if (data) return data as CloudCarousel;
+            // Registro apagado em outro lugar: cai para criar um novo.
         }
+        return this.createCarousel(userId, name, sections, cleanConfig, thumbnailUrl);
     }
 
     /** Insere um novo carrossel */

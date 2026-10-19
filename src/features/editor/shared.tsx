@@ -1,7 +1,7 @@
 import React, { useId } from 'react';
 import { useStore } from '../../store';
 import { EXPORT_FORMATS } from '../../types/carousel.types';
-import type { Section } from '../../types/carousel.types';
+import type { ProjectConfig, Section } from '../../types/carousel.types';
 import { CarouselSlide } from '../../components/carousel/CarouselSlide';
 import { FONT_CATEGORIES, getFontsByCategory } from '../../constants/fonts';
 import { Select, cx } from '../../ui';
@@ -28,11 +28,14 @@ interface SlideThumbProps {
   total: number;
   width: number;
   className?: string;
+  /** Config do projeto (padrão: a do editor aberto). */
+  config?: ProjectConfig;
 }
 
 /** Miniatura real do slide (o mesmo componente da exportação, em escala). */
-export function SlideThumb({ section, index, total, width, className }: SlideThumbProps) {
-  const config = useStore(s => s.config);
+export function SlideThumb({ section, index, total, width, className, config: configProp }: SlideThumbProps) {
+  const storeConfig = useStore(s => s.config);
+  const config = configProp ?? storeConfig;
   const fmt = useFormat();
   const scale = width / fmt.width;
   return (
