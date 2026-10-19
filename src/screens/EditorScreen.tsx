@@ -28,6 +28,8 @@ import { EXPORT_FORMATS } from '../types/carousel.types';
 import { inlineImagesToDataUrl } from '../hooks/useExport';
 import { createDefaultSection } from '../lib/sections';
 import { SidebarContent, type SidebarContentProps } from '../components/layout/Sidebar';
+import { DesktopEditor } from '../features/editor/DesktopEditor';
+import { Button, Dialog } from '../ui';
 
 const ExportPreview = lazy(() => import('../components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
 
@@ -52,11 +54,6 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   useKeyboardShortcuts({ onUndo: undo, onRedo: redo });
 
   const exportFormat = useStore(state => state.exportFormat);
-  const setExportFormat = useStore(state => state.setExportFormat);
-  const brandKits = useStore(state => state.brandKits);
-  const saveBrandKit = useStore(state => state.saveBrandKit);
-  const deleteBrandKit = useStore(state => state.deleteBrandKit);
-  const applyBrandKit = useStore(state => state.applyBrandKit);
 
   const { isAdmin } = useAdmin();
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -64,10 +61,10 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const globalAvatarInputRef = useRef<HTMLInputElement>(null);
+  const desktopAvatarInputRef = useRef<HTMLInputElement>(null);
   const [textInput, setTextInput] = useState('');
   const swipeTouchStart = useRef<number | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
   const autoPlayRef = useRef({ activeSlide, sections: sections.length });
   autoPlayRef.current = { activeSlide, sections: sections.length };
 
@@ -80,7 +77,6 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         setIsAutoPlaying(false);
         setActiveSlide(0);
       } else {
-        setSlideDirection('left');
         setActiveSlide(cur + 1);
       }
     }, 2500);
@@ -117,8 +113,6 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   }, []);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  // Mobile: false = editor+preview integrado (padrão), true = full canvas gallery
-  const [mobilePreviewMode, setMobilePreviewMode] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -167,7 +161,10 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       } catch { /* no backup */ }
     };
 
-    restoreFromCloud();
+    // Só começa a contar mudanças depois que a restauração (e os slides padrão) assentaram.
+    restoreFromCloud().finally(() => {
+      setTimeout(() => { trackChanges.current = true; setDirty(false); }, 1800);
+    });
 
     // Se não existem slides, cria um set padrão para o usuário poder começar imediatamente
     setTimeout(() => {
@@ -183,8 +180,13 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     }, 1500);
   }, []);
 
-  // Auto-save status é controlado pelo useAutoSave hook
-  const [autoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  // Status de salvamento: qualquer mudança depois da restauração inicial marca como "não salvo".
+  const [dirty, setDirty] = useState(false);
+  const trackChanges = useRef(false);
+  useEffect(() => {
+    if (trackChanges.current) setDirty(true);
+  }, [sections, config]);
+  const autoSaveStatus = 'idle' as 'idle' | 'saving' | 'saved';
 
 
   const [savingProject, setSavingProject] = useState(false);
@@ -224,13 +226,14 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         }
       } catch { /* cloud save is best-effort */ }
 
-      toast.success('Projeto salvo com sucesso!');
+      setDirty(false);
+      toast.success('Projeto salvo');
     } catch (err) {
       toast.error('Erro ao salvar o projeto');
     } finally {
       setSavingProject(false);
     }
-  }, [currentProjectId, setCurrentProjectId, sections, config, exportRefs]);
+  }, [currentProjectId, setCurrentProjectId, sections, config, exportRefs, session]);
 
   // Exportar PDF: renderiza cada slide como PNG e compila
   const handleExportPDF = useCallback(async () => {
@@ -252,15 +255,6 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       await exportPDF(images, sections[0]?.title || 'Carrossel', fmtW, fmtH);
     }
   }, [sections, exportRefs, exportPDF, exportFormat, captureSlideAsPng]);
-
-  // Novo Carrossel
-  const setSections = useStore(state => state.setSections);
-  const handleNewCarousel = () => {
-    if (sections.length > 0 && !confirm('Criar um novo carrossel? O atual será salvo automaticamente.')) return;
-    setSections([]);
-    setTextInput('');
-    toast.success('Pronto! Comece um novo carrossel.');
-  };
 
   const T = getTheme(theme);
   const isDark = theme === 'dark';
@@ -310,30 +304,103 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       style={{ background: T.bgCanvas, WebkitTapHighlightColor: 'transparent' }}
     >
       <Toaster
-        position="top-right"
+        position="bottom-center"
+        containerStyle={{ bottom: 80 }}
         toastOptions={{
+          className: 'glass',
           style: {
-            background: isDark ? 'rgba(28,28,30,0.98)' : 'rgba(255,255,255,0.98)',
+            background: undefined,
             color: T.textPrimary,
-            border: `1px solid ${T.border}`,
-            backdropFilter: 'blur(20px)',
-            borderRadius: '14px',
-            fontWeight: 600,
-            fontSize: '13px',
+            borderRadius: '999px',
+            padding: '8px 16px',
+            fontWeight: 500,
+            fontSize: '15px',
           },
-          success: { iconTheme: { primary: T.accent, secondary: T.accentText } },
+          success: { iconTheme: { primary: T.success, secondary: '#ffffff' } },
         }}
       />
 
+      {/* Nós de exportação: sempre montados (desktop e celular) */}
+        {/* Nós de exportação — tecnicamente visíveis para o browser (decode ativo), invisíveis para o usuário */}
+        {/* IMPORTANTE: zIndex >= 0 e opacity > 0 são obrigatórios para o Chrome decodificar frames de vídeo */}
+        {/* Container com dimensões reais para garantir que o text layout é idêntico ao preview */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: `${(EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080) + 20}px`,
+            height: `${(EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440) + 20}px`,
+            overflow: 'visible',
+            zIndex: 0,
+            pointerEvents: 'none',
+            opacity: 0.0001,
+          }}
+        >
+          {sections.map((s, idx) => (
+            <div
+              key={`exp-${s.id}`}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: `${idx * 1100}px`,
+                width: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}px`,
+                height: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}px`,
+                // Sem opacity aqui — o container pai já controla visibilidade.
+                // Dupla opacity impedia a captura correta das imagens.
+                pointerEvents: 'none',
+              }}
+            >
+              <CarouselSlide
+                innerRef={el => { exportRefs.current[idx] = el; }}
+                section={s}
+                config={config}
+                index={idx}
+                total={sections.length}
+                isExport={true}
+                isGenerating={generatingIds.includes(s.id)}
+                formatWidth={EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}
+                formatHeight={EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}
+              />
+            </div>
+          ))}
+        </div>
+
+
       {/* ══════════════════════════════════════
-          SIDEBAR — desktop sticky
+          EDITOR DESKTOP — canvas central + vidro
       ══════════════════════════════════════ */}
-      <aside
-        className="hidden lg:flex w-[460px] flex-shrink-0 flex-col max-h-screen sticky top-0 z-20 transition-colors duration-300"
-        style={{ background: T.sidebar, borderRight: `1px solid ${T.border}` }}
-      >
-        <SidebarContent {...sidebarProps} />
-      </aside>
+      <DesktopEditor
+        saveStatus={savingProject ? 'saving' : dirty ? 'dirty' : 'saved'}
+        exporting={isExporting}
+        exportStep={exportStep}
+        exportingPDF={isExportingPDF}
+        isAdmin={isAdmin}
+        userEmail={session?.user?.email}
+        isProcessing={isProcessing}
+        onSave={handleManualSave}
+        onPreview={() => setShowExportPreview(true)}
+        onExportZip={() => exportAll(sections)}
+        onExportPDF={handleExportPDF}
+        onOpenProjects={() => setHistoryOpen(true)}
+        onNewCarousel={() => setShowNewConfirm(true)}
+        onOpenThemes={() => setShowCustomThemes(true)}
+        onOpenAssets={() => setIsAssetsOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenAnalytics={() => setShowAnalytics(true)}
+        onLogout={onLogout}
+        onProcessRoteiro={text => { setTextInput(text); processText(text); setActiveSlide(0); }}
+        onAvatarClick={() => desktopAvatarInputRef.current?.click()}
+        onImageUpload={handleImageUpload}
+        onVideoUpload={handleVideoUploadRequest}
+        onDownloadSlide={async idx => {
+          const node = exportRefs.current[idx];
+          const s = sections[idx];
+          if (node && s) await downloadSlide(node, s, `slide-${idx + 1}`);
+        }}
+      />
+      <input ref={desktopAvatarInputRef} type="file" accept="image/*" className="hidden" onChange={e => { handleAvatarUpload(e, url => updateConfig({ avatarUrl: url })); e.target.value = ''; }} />
 
       {/* ══════════════════════════════════════
           MOBILE SIDEBAR — overlay sheet (opens from Editor tab)
@@ -556,55 +623,9 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
           CANVAS PRINCIPAL (desktop: sempre visível / mobile: só na tab Preview)
       ══════════════════════════════════════ */}
       <main
-        className={`flex-1 flex flex-col transition-colors duration-300 pb-24 lg:pb-0 ${mobileActiveTab !== 'preview' ? 'hidden lg:flex' : ''}`}
+        className={`flex-1 flex-col transition-colors duration-300 pb-24 lg:hidden ${mobileActiveTab !== 'preview' ? 'hidden' : 'flex'}`}
         style={{ background: T.bgCanvas, height: '100dvh', overflow: 'hidden' }}
       >
-
-        {/* Nós de exportação — tecnicamente visíveis para o browser (decode ativo), invisíveis para o usuário */}
-        {/* IMPORTANTE: zIndex >= 0 e opacity > 0 são obrigatórios para o Chrome decodificar frames de vídeo */}
-        {/* Container com dimensões reais para garantir que o text layout é idêntico ao preview */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: `${(EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080) + 20}px`,
-            height: `${(EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440) + 20}px`,
-            overflow: 'visible',
-            zIndex: 0,
-            pointerEvents: 'none',
-            opacity: 0.0001,
-          }}
-        >
-          {sections.map((s, idx) => (
-            <div
-              key={`exp-${s.id}`}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: `${idx * 1100}px`,
-                width: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}px`,
-                height: `${EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}px`,
-                // Sem opacity aqui — o container pai já controla visibilidade.
-                // Dupla opacity impedia a captura correta das imagens.
-                pointerEvents: 'none',
-              }}
-            >
-              <CarouselSlide
-                innerRef={el => { exportRefs.current[idx] = el; }}
-                section={s}
-                config={config}
-                index={idx}
-                total={sections.length}
-                isExport={true}
-                isGenerating={generatingIds.includes(s.id)}
-                formatWidth={EXPORT_FORMATS.find(f => f.key === exportFormat)?.width ?? 1080}
-                formatHeight={EXPORT_FORMATS.find(f => f.key === exportFormat)?.height ?? 1440}
-              />
-            </div>
-          ))}
-        </div>
 
         {/* ── Content Area — preenche espaço restante, scroll se necessário ── */}
         <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar flex flex-col">
@@ -774,7 +795,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
               <div className="flex items-center gap-3">
                 <button
                   disabled={activeSlide === 0}
-                  onClick={() => { setSlideDirection('right'); setActiveSlide(activeSlide - 1); setIsAutoPlaying(false); }}
+                  onClick={() => { setActiveSlide(activeSlide - 1); setIsAutoPlaying(false); }}
                   className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
                   style={{ color: T.textPrimary, background: T.glass, border: `1px solid ${T.border}` }}
                 >
@@ -825,7 +846,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
 
                 <button
                   disabled={activeSlide === sections.length - 1}
-                  onClick={() => { setSlideDirection('left'); setActiveSlide(activeSlide + 1); setIsAutoPlaying(false); }}
+                  onClick={() => { setActiveSlide(activeSlide + 1); setIsAutoPlaying(false); }}
                   className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-20 disabled:hover:scale-100"
                   style={{ color: T.textPrimary, background: T.glass, border: `1px solid ${T.border}` }}
                 >
@@ -1063,68 +1084,31 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} T={T} />}
 
-      {/* ── Custom Confirm Modal — Novo Carrossel ── */}
-      {showNewConfirm && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-          style={{ animation: 'fadeIn 0.15s ease-out' }}
-        >
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-            onClick={() => setShowNewConfirm(false)}
-          />
-          {/* Card */}
-          <div
-            className="relative w-full max-w-sm rounded-3xl overflow-hidden"
-            style={{
-              background: isDark ? 'rgba(28,28,30,0.98)' : 'rgba(255,255,255,0.98)',
-              border: `1px solid ${T.border}`,
-              boxShadow: `0 24px 80px rgba(0,0,0,0.5)`,
-              animation: 'slideUp 0.2s ease-out',
-            }}
-          >
-            <div className="px-6 pt-7 pb-5 text-center">
-              {/* Icon */}
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}25` }}
-              >
-                <FileText size={24} style={{ color: T.accent }} />
-              </div>
-              <h3 className="text-base font-black mb-1.5" style={{ color: T.textPrimary, letterSpacing: '-0.02em' }}>
-                Criar Novo Carrossel?
-              </h3>
-              <p className="text-xs font-medium leading-relaxed" style={{ color: T.textSub }}>
-                O carrossel atual será descartado. Você pode salvar o projeto antes de continuar.
-              </p>
-            </div>
-            <div className="px-5 pb-5 flex gap-2">
-              <button
-                onClick={() => setShowNewConfirm(false)}
-                className="flex-1 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
-                style={{ background: T.glass, color: T.textSub, border: `1px solid ${T.border}` }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  useStore.getState().setSections([]);
-                  setActiveSlide(0);
-                  setTextInput('');
-                  setShowNewConfirm(false);
-                  toast.success('Novo carrossel criado!');
-                }}
-                className="flex-1 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
-                style={{ background: T.accent, color: T.accentText, boxShadow: `0 4px 20px ${T.accent}40` }}
-              >
-                Criar Novo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showNewConfirm}
+        onClose={() => setShowNewConfirm(false)}
+        title="Criar um carrossel novo?"
+        description="O carrossel atual será descartado. Salve antes se quiser guardar."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowNewConfirm(false)}>Cancelar</Button>
+            <Button variant="primary" onClick={() => {
+              useStore.getState().setSections([
+                createDefaultSection(0, useStore.getState().userEmail),
+                createDefaultSection(1, useStore.getState().userEmail),
+                createDefaultSection(2, useStore.getState().userEmail),
+              ]);
+              setActiveSlide(0);
+              setTextInput('');
+              setCurrentProjectId(null);
+              setShowNewConfirm(false);
+              toast.success('Carrossel novo criado');
+            }}>Criar novo</Button>
+          </>
+        }
+      >
+        {null}
+      </Dialog>
 
     </div >
   );

@@ -8,7 +8,7 @@ import type { ThemeTokens } from '../../constants/theme';
 import type { Section, ProjectConfig } from '../../types/carousel.types';
 import { EXPORT_FORMATS } from '../../types/carousel.types';
 import { APP_VERSION, VERSION_NOTES } from '../../version';
-import { createDefaultSection, countSlidesFromText } from '../../lib/sections';
+import { createDefaultSection, countSlidesFromText, buildTemplateSections } from '../../lib/sections';
 
 // ── Sidebar inner content (reutilizado no desktop e no mobile sheet) ──────────
 export interface SidebarContentProps {
@@ -68,29 +68,7 @@ export function SidebarContent({
   const setSections = useStore(state => state.setSections);
 
   const applyStarterTemplate = (template: typeof STARTER_TEMPLATES[0]) => {
-    const isTimePrimo = sessionUserEmail?.toLowerCase() === 'marcela.depaula@timeprimo.com' || sessionUserEmail?.toLowerCase() === 'lorena.volpini@timeprimo.com';
-
-    const newSections = template.slides.map((slide, idx) => ({
-      id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
-      title: slide.title || '',
-      content: slide.content || '',
-      alignment: slide.alignment || 'left',
-      layoutType: slide.layoutType || 'storytelling',
-      titleFont: isTimePrimo ? 'filson-pro-bold' : (slide.titleFont || 'bebas-neue'),
-      bodyFont: isTimePrimo ? 'open-sans' : (slide.bodyFont || 'sans'),
-      titleSize: slide.titleSize || 40,
-      bodySize: slide.bodySize || 18,
-      bgColor: slide.bgColor || '#000000',
-      titleColor: slide.titleColor || '#ffffff',
-      bodyColor: slide.bodyColor || '#cccccc',
-      brandingColor: slide.brandingColor || '#ffffff',
-      imagePosX: slide.imagePosX ?? 50,
-      imagePosY: slide.imagePosY ?? 50,
-      imageScale: slide.imageScale ?? 1,
-      overlayOpacity: slide.overlayOpacity ?? 0,
-      textPosY: slide.textPosY ?? 85,
-      showSocialImage: slide.showSocialImage ?? false,
-    } as any));
+    const newSections = buildTemplateSections(template, sessionUserEmail);
     setSections(newSections);
     setTemplatesOpen(false);
     toast.success(`Template "${template.name}" aplicado!`);
