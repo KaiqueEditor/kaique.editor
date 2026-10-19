@@ -34,9 +34,6 @@ export interface Section {
   showSocialImage: boolean;
   avatarUrl?: string;
   postTitleBold?: boolean;            // false = título com o mesmo peso do texto (tweet corrido)
-  postVAlign?: 'top' | 'center';      // posição do post no slide
-  postShowMeta?: boolean;             // linha "hora · data · visualizações"
-  postShowStats?: boolean;            // barra de respostas, reposts, curtidas e salvos
   // Video trim
   videoTrimStart?: number; // segundos — ponto de início da janela de 15s
 }
@@ -57,31 +54,7 @@ export interface ProjectConfig {
   watermark: string;   // Marca d'água discreta no rodapé de todos os slides
   avatarUrl: string;
   numSlides: number;
-  verified?: VerifiedStyle;     // selo ao lado do nome no Post X (padrão: azul)
-  postMeta?: PostMeta;          // números exibidos no rodapé do Post X
 }
-
-export type VerifiedStyle = 'blue' | 'gold' | 'gray' | 'none';
-
-export interface PostMeta {
-  time: string;
-  date: string;
-  views: string;
-  replies: string;
-  reposts: string;
-  likes: string;
-  bookmarks: string;
-}
-
-export const DEFAULT_POST_META: PostMeta = {
-  time: '10:42',
-  date: '19 de out. de 2026',
-  views: '1,2 mi',
-  replies: '284',
-  reposts: '1,9 mil',
-  likes: '12 mil',
-  bookmarks: '3,4 mil',
-};
 
 export interface Project {
   id: string;

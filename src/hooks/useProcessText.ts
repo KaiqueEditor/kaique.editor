@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Section } from '../types';
 import { useStore } from '../store';
-import { X_THEMES, splitThread, xThemeStyle } from '../lib/xPost';
+import { splitThread } from '../lib/xPost';
 
 const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePrompt'> = {
   alignment: 'left',
@@ -57,7 +57,10 @@ export const useProcessText = () => {
         const stamp = Date.now();
         finalSections = splitThread(rawText).map((post, idx) => ({
           ...DEFAULT_SECTION_BASE,
-          ...xThemeStyle(X_THEMES[0]),
+          bgColor: '#ffffff',
+          titleColor: '#0f1419',
+          bodyColor: '#0f1419',
+          brandingColor: '#0f1419',
           id: `x-${idx + 1}-${stamp}`,
           title: post.title,
           content: post.content,
@@ -70,7 +73,6 @@ export const useProcessText = () => {
           textPosY: 85,
           imagePosY: 50,
           showSocialImage: false,
-          postTitleBold: false, // thread de verdade: tudo no mesmo peso
         }));
       } else if (isStructuredRoteiro(rawText)) {
         // Parse structured roteiro format (com ou sem traço)

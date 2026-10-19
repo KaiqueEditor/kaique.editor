@@ -1,11 +1,10 @@
 import { useRef } from 'react';
 import { AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
 import { useStore } from '../../../store';
-import type { Section, VerifiedStyle } from '../../../types/carousel.types';
+import type { Section } from '../../../types/carousel.types';
 import { Button, Field, Input, Segmented, Slider, Textarea, cx } from '../../../ui';
 import { FontSelect, Group, useActiveSection } from '../shared';
 import { useFileUpload } from '../../../hooks/useFileUpload';
-import { VerifiedBadge } from '../../../components/icons/VerifiedBadge';
 import { TWEET_LIMIT, tweetLength } from '../../../lib/xPost';
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
@@ -93,17 +92,6 @@ export function TextPanel() {
             <Field label="Nome">{id => <Input id={id} value={config.branding} onChange={e => updateConfig({ branding: e.target.value })} placeholder="Seu nome" />}</Field>
             <Field label="@ usuário">{id => <Input id={id} value={config.handle} onChange={e => updateConfig({ handle: e.target.value })} placeholder="@perfil" />}</Field>
           </div>
-          <Segmented<VerifiedStyle>
-            label="Selo"
-            value={config.verified ?? 'blue'}
-            onChange={verified => updateConfig({ verified })}
-            options={[
-              { value: 'blue', label: <><VerifiedBadge size={15} variant="blue" />Azul</> },
-              { value: 'gold', label: <><VerifiedBadge size={15} variant="gold" />Ouro</> },
-              { value: 'gray', label: <><VerifiedBadge size={15} variant="gray" />Cinza</> },
-              { value: 'none', label: 'Sem' },
-            ]}
-          />
         </Group>
       )}
     </div>

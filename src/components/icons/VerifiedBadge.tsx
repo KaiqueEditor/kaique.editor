@@ -1,28 +1,12 @@
 import React from 'react';
-import type { VerifiedStyle } from '../../types';
 
 interface VerifiedBadgeProps {
   size?: number;
-  variant?: VerifiedStyle;
 }
 
-const FILL: Record<Exclude<VerifiedStyle, 'none'>, string> = {
-  blue: '#1d9bf0',
-  gold: '#e2b719',
-  gray: '#829aab',
-};
-
-/** Selo de verificado no formato do X (azul, dourado de empresa ou cinza de governo). */
-export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({ size = 16, variant = 'blue' }) => {
-  if (variant === 'none') return null;
-  return (
-    <svg aria-label="Verificado" role="img" viewBox="0 0 22 22" width={size} height={size} style={{ flexShrink: 0 }}>
-      <title>Verificado</title>
-      <path
-        fill={FILL[variant]}
-        d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816z"
-      />
-      <path fill="#ffffff" d="M9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" />
-    </svg>
-  );
-};
+export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({ size = 16 }) => (
+  <svg aria-label="Verificado" fill="rgb(0, 149, 246)" height={size} role="img" viewBox="0 0 40 40" width={size}>
+    <title>Verificado</title>
+    <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fillRule="evenodd"></path>
+  </svg>
+);

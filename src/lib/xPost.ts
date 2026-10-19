@@ -1,36 +1,8 @@
 import type { Section } from '../types/carousel.types';
 import { plainText } from '../utils/formatters';
 
-/** Temas oficiais do X (claro, "dim" e preto) + um creme para marca pessoal. */
-export interface XTheme { name: string; bg: string; text: string; secondary: string; border: string }
-
-export const X_THEMES: XTheme[] = [
-  { name: 'Claro', bg: '#ffffff', text: '#0f1419', secondary: '#536471', border: '#cfd9de' },
-  { name: 'Dim', bg: '#15202b', text: '#f7f9f9', secondary: '#8b98a5', border: '#38444d' },
-  { name: 'Preto', bg: '#000000', text: '#e7e9ea', secondary: '#71767b', border: '#2f3336' },
-  { name: 'Creme', bg: '#faf7f2', text: '#1a1a1a', secondary: '#6b6258', border: '#e4ddd2' },
-];
-
-const luminance = (hex: string) => {
-  const c = hex.replace('#', '');
-  if (c.length < 6) return 1;
-  const [r, g, b] = [0, 2, 4].map(i => parseInt(c.slice(i, i + 2), 16));
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-};
-
-/** Cinza secundário e cor de borda que combinam com o fundo do post. */
-export function xColors(bg: string): Pick<XTheme, 'secondary' | 'border'> {
-  const known = X_THEMES.find(t => t.bg.toLowerCase() === bg.toLowerCase());
-  if (known) return known;
-  return luminance(bg) > 0.5
-    ? { secondary: '#536471', border: '#cfd9de' }
-    : { secondary: '#8b98a5', border: '#38444d' };
-}
-
-/** Estilo do tema aplicado a um slide. */
-export const xThemeStyle = (t: XTheme): Partial<Section> => ({
-  bgColor: t.bg, titleColor: t.text, bodyColor: t.text, brandingColor: t.text,
-});
+/** Mesma pilha de fontes que o X usa quando a Chirp não está disponível. */
+export const X_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
 export const TWEET_LIMIT = 280;
 

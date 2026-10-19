@@ -93,7 +93,4 @@ export const pickSlideStyle = (s: Section): Partial<Section> => ({
   textPosY: s.textPosY,
   imageHeight: s.imageHeight,
   postTitleBold: s.postTitleBold,
-  postVAlign: s.postVAlign,
-  postShowMeta: s.postShowMeta,
-  postShowStats: s.postShowStats,
 });

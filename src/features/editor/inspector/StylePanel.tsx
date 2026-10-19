@@ -4,8 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useStore } from '../../../store';
 import { STARTER_TEMPLATES } from '../../../constants/starterTemplates';
 import { buildTemplateSections, pickSlideStyle } from '../../../lib/sections';
-import { DEFAULT_POST_META, type PostMeta, type Section, type StylePreset } from '../../../types/carousel.types';
-import { X_THEMES, xThemeStyle } from '../../../lib/xPost';
+import type { Section, StylePreset } from '../../../types/carousel.types';
 import { Button, Field, Input, Segmented, cx } from '../../../ui';
 import { ColorField, Group, useActiveSection } from '../shared';
 
@@ -16,6 +15,12 @@ const FEED_PALETTES: Palette[] = [
   { name: 'Dourado', bg: '#000000', title: '#F5A623', body: '#c8860f', brand: '#F5A623' },
   { name: 'Cinza', bg: '#000000', title: '#cccccc', body: '#888888', brand: '#cccccc' },
   { name: 'Bege', bg: '#000000', title: '#e8d5b0', body: '#b5936a', brand: '#e8d5b0' },
+];
+const SOCIAL_PALETTES: Palette[] = [
+  { name: 'Claro', bg: '#ffffff', title: '#0f1419', body: '#536471', brand: '#0f1419' },
+  { name: 'Noite', bg: '#15202b', title: '#ffffff', body: '#8b98a5', brand: '#ffffff' },
+  { name: 'Creme', bg: '#faf7f2', title: '#1a1a1a', body: '#555555', brand: '#1a1a1a' },
+  { name: 'Roxo', bg: '#f0e6ff', title: '#2d1b69', body: '#6b46c1', brand: '#2d1b69' },
 ];
 
 /** Amostra de cores: fundo à esquerda, título e texto à direita. */
@@ -64,25 +69,13 @@ export function StylePanel() {
   if (!s) return null;
 
   const isSocial = s.layoutType === 'social-post';
-  const meta = { ...DEFAULT_POST_META, ...config.postMeta };
-  const setMeta = (patch: Partial<PostMeta>) => updateConfig({ postMeta: { ...meta, ...patch } });
+  const palettes = isSocial ? SOCIAL_PALETTES : FEED_PALETTES;
 
   const setLayout = (layoutType: Section['layoutType']) => {
     if (layoutType === s.layoutType) return;
     update(layoutType === 'social-post'
-      ? { layoutType, ...xThemeStyle(X_THEMES[0]), alignment: 'left' }
+      ? { layoutType, bgColor: '#ffffff', titleColor: '#0f1419', bodyColor: '#536471', brandingColor: '#0f1419', alignment: 'left' }
       : { layoutType, bgColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff', brandingColor: '#ffffff' });
-  };
-
-  /** Tema do X vale para todos os posts do carrossel, como no app. */
-  const applyXTheme = (t: typeof X_THEMES[number]) => {
-    sections.forEach(sec => { if (sec.layoutType === 'social-post') updateSection(sec.id, xThemeStyle(t)); });
-    toast.success(`Tema ${t.name} aplicado aos posts`);
-  };
-
-  /** Liga/desliga uma parte do rodapé em todos os posts. */
-  const toggleAll = (key: 'postShowMeta' | 'postShowStats', on: boolean) => {
-    sections.forEach(sec => { if (sec.layoutType === 'social-post') updateSection(sec.id, { [key]: on }); });
   };
 
   const applyToAll = () => {
@@ -140,16 +133,12 @@ export function StylePanel() {
         />
       </Group>
 
-      <Group title={isSocial ? 'Tema do X' : 'Cores'}>
+      <Group title="Cores">
         <div className="grid grid-cols-4 gap-2.5">
-          {isSocial
-            ? X_THEMES.map(t => (
-              <PaletteChip key={t.name} label={t.name} bg={t.bg} title={t.text} body={t.secondary} onClick={() => applyXTheme(t)} />
-            ))
-            : FEED_PALETTES.map(p => (
-              <PaletteChip key={p.name} label={p.name} bg={p.bg} title={p.title} body={p.body}
-                onClick={() => update({ bgColor: p.bg, titleColor: p.title, bodyColor: p.body, brandingColor: p.brand })} />
-            ))}
+          {palettes.map(p => (
+            <PaletteChip key={p.name} label={p.name} bg={p.bg} title={p.title} body={p.body}
+              onClick={() => update({ bgColor: p.bg, titleColor: p.title, bodyColor: p.body, brandingColor: p.brand })} />
+          ))}
         </div>
         <div className="flex justify-between px-1 pt-1">
           <ColorField label="Fundo" value={s.bgColor || (isSocial ? '#ffffff' : '#000000')} onChange={v => update({ bgColor: v })} />
@@ -158,45 +147,6 @@ export function StylePanel() {
           <ColorField label="Marca" value={s.brandingColor || '#ffffff'} onChange={v => update({ brandingColor: v })} />
         </div>
       </Group>
-
-      {isSocial && (
-        <Group title="Post no slide">
-          <Segmented<'top' | 'center'>
-            label="Posição"
-            value={s.postVAlign ?? 'top'}
-            onChange={postVAlign => update({ postVAlign })}
-            options={[
-              { value: 'top', label: 'No topo' },
-              { value: 'center', label: 'Centralizado' },
-            ]}
-          />
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center justify-between gap-3 text-subhead cursor-pointer">
-              Hora, data e visualizações
-              <input type="checkbox" className="w-4 h-4 accent-current" checked={!!s.postShowMeta} onChange={e => toggleAll('postShowMeta', e.target.checked)} />
-            </label>
-            <label className="flex items-center justify-between gap-3 text-subhead cursor-pointer">
-              Respostas, reposts e curtidas
-              <input type="checkbox" className="w-4 h-4 accent-current" checked={!!s.postShowStats} onChange={e => toggleAll('postShowStats', e.target.checked)} />
-            </label>
-          </div>
-          {(s.postShowMeta || s.postShowStats) && (
-            <div className="grid grid-cols-3 gap-2">
-              {s.postShowMeta && <>
-                <Field label="Hora">{id => <Input id={id} value={meta.time} onChange={e => setMeta({ time: e.target.value })} />}</Field>
-                <Field label="Data">{id => <Input id={id} value={meta.date} onChange={e => setMeta({ date: e.target.value })} />}</Field>
-                <Field label="Visualiz.">{id => <Input id={id} value={meta.views} onChange={e => setMeta({ views: e.target.value })} />}</Field>
-              </>}
-              {s.postShowStats && <>
-                <Field label="Respostas">{id => <Input id={id} value={meta.replies} onChange={e => setMeta({ replies: e.target.value })} />}</Field>
-                <Field label="Reposts">{id => <Input id={id} value={meta.reposts} onChange={e => setMeta({ reposts: e.target.value })} />}</Field>
-                <Field label="Curtidas">{id => <Input id={id} value={meta.likes} onChange={e => setMeta({ likes: e.target.value })} />}</Field>
-                <Field label="Salvos">{id => <Input id={id} value={meta.bookmarks} onChange={e => setMeta({ bookmarks: e.target.value })} />}</Field>
-              </>}
-            </div>
-          )}
-        </Group>
-      )}
 
       {sections.length > 1 && (
         <Button onClick={applyToAll}>Aplicar estilo a todos os slides</Button>

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Section, ProjectConfig, DEFAULT_POST_META } from '../../types';
+import { Section, ProjectConfig } from '../../types';
 import { SlideFooter } from './SlideFooter';
 import { VerifiedBadge } from '../icons/VerifiedBadge';
 import { getFontFamily } from '../../constants/fonts';
 import { renderFormattedText } from '../../utils/formatters';
-import { Bookmark, Heart, Loader2, MessageCircle, MoreHorizontal, Repeat2, Share } from 'lucide-react';
-import { xColors } from '../../lib/xPost';
+import { Loader2 } from 'lucide-react';
+import { X_FONT_STACK } from '../../lib/xPost';
 
 const DEFAULT_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23334155'/><circle cx='20' cy='15' r='7' fill='%2394a3b8'/><ellipse cx='20' cy='33' rx='11' ry='8' fill='%2394a3b8'/></svg>`;
 
@@ -39,6 +39,26 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
   const onMediaSize = (w: number, h: number) => {
     if (w > 0 && h > 0) setMediaRatio(Math.min(16 / 9, Math.max(4 / 5, w / h)));
   };
+  // Post X: se texto + imagem não couberem, o post inteiro diminui por igual (como um print)
+  const fitRef = React.useRef<HTMLDivElement>(null);
+  const [fit, setFit] = React.useState(1);
+  React.useLayoutEffect(() => {
+    const el = fitRef.current;
+    const root = el?.parentElement;
+    if (!el || !root) return;
+    const measure = () => {
+      const cs = getComputedStyle(root);
+      const avail = root.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const need = el.offsetHeight;
+      const next = avail > 0 && need > avail ? avail / need : 1;
+      setFit(prev => (Math.abs(prev - next) > 0.005 ? next : prev));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [section.layoutType]);
   const layout = section.layoutType || 'storytelling';
   const isSocial = layout === 'social-post';
   const isFullBg = layout === 'background';
@@ -76,97 +96,81 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
     const avatar = section.avatarUrl || config.avatarUrl || DEFAULT_AVATAR;
     const showImage = section.showSocialImage !== false;
     const hasImage = !!(section.imageUrl || section.videoUrl);
-    const bg = section.bgColor || '#ffffff';
-    const { secondary, border } = xColors(bg);
-    const centered = section.postVAlign === 'center';
     const titleBold = section.postTitleBold !== false;
-    const meta = { ...DEFAULT_POST_META, ...config.postMeta };
-    const px = (n: number) => `${n * scaleFactor}px`;
-    const sans = getFontFamily('sans');
+    // Fonte padrão do post imita a do X; outras fontes escolhidas continuam valendo
+    const postFont = (key?: string) => (!key || key === 'sans' ? X_FONT_STACK : getFontFamily(key));
     // textPosY controla o espaço do topo — igual ao Feed que controla do fundo
-    const socialTopPad = centered ? 0 : (manualTextOffset * 0.4) * scaleFactor;
-    // espaço reservado para o rodapé "arrasta pro lado"
-    const footerSpace = (isExport ? 64 * (formatHeight / 1440) + 40 : 46);
-    const stats: { icon: React.ReactNode; value: string; label: string }[] = [
-      { icon: <MessageCircle size={20 * scaleFactor} strokeWidth={1.75} />, value: meta.replies, label: 'respostas' },
-      { icon: <Repeat2 size={20 * scaleFactor} strokeWidth={1.75} />, value: meta.reposts, label: 'reposts' },
-      { icon: <Heart size={20 * scaleFactor} strokeWidth={1.75} />, value: meta.likes, label: 'curtidas' },
-      { icon: <Bookmark size={20 * scaleFactor} strokeWidth={1.75} />, value: meta.bookmarks, label: 'salvos' },
-    ];
+    const socialTopPad = (manualTextOffset * 0.4) * scaleFactor;
     return (
       <div
         ref={innerRef}
         className="flex flex-col relative overflow-hidden"
         style={{
           ...containerStyle,
-          backgroundColor: bg,
+          backgroundColor: finalBrandingBgColor,
           paddingTop: `${socialTopPad}px`,
-          paddingBottom: `${footerSpace}px`,
-          justifyContent: centered ? 'center' : 'flex-start',
+          paddingBottom: `${(isExport ? 64 * (formatHeight / 1440) + 40 : 46)}px`,
         }}
       >
+        <div ref={fitRef} className="flex flex-col flex-shrink-0 w-full" style={{ transform: fit < 1 ? `scale(${fit})` : undefined, transformOrigin: 'top center' }}>
         {/* Header com avatar */}
-        <div className="flex items-start flex-shrink-0" style={{ gap: px(12), paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: px(4) }}>
+        <div className="flex items-center flex-shrink-0" style={{ gap: `${14 * scaleFactor}px`, paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${4 * scaleFactor}px` }}>
           <div
             onClick={!isExport ? onAvatarClick : undefined}
-            className={`rounded-full overflow-hidden flex-shrink-0 ${!isExport ? 'cursor-pointer' : ''}`}
-            style={{ width: px(48), height: px(48) }}
+            className={`rounded-full overflow-hidden flex-shrink-0 ${!isExport ? 'cursor-pointer transition-all' : ''}`}
+            style={{ width: `${48 * scaleFactor}px`, height: `${48 * scaleFactor}px`, border: `2px solid rgba(0,0,0,0.08)` }}
           >
             <img src={avatar} crossOrigin="anonymous" alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="flex flex-col min-w-0 flex-1" style={{ gap: px(1), paddingTop: px(2) }}>
-            <div className="flex items-center min-w-0" style={{ gap: px(4) }}>
-              <span className="font-bold truncate" style={{ fontSize: px(17), fontFamily: sans, color: finalBrandingColor }}>{config.branding || 'Seu Nome'}</span>
-              <VerifiedBadge size={18 * scaleFactor} variant={config.verified ?? 'blue'} />
+          <div className="flex flex-col" style={{ gap: `${1 * scaleFactor}px` }}>
+            <div className="flex items-center" style={{ gap: `${6 * scaleFactor}px` }}>
+              <span className="font-bold" style={{ fontSize: `${18 * scaleFactor}px`, fontFamily: X_FONT_STACK, color: finalBrandingColor }}>{config.branding || 'Seu Nome'}</span>
+              <VerifiedBadge size={16 * scaleFactor} />
             </div>
-            <span className="truncate" style={{ fontSize: px(15), fontFamily: sans, color: secondary }}>{config.handle || '@seuusuario'}</span>
+            <span style={{ fontSize: `${15 * scaleFactor}px`, fontFamily: X_FONT_STACK, color: '#71767b' }}>{config.handle || '@seuusuario'}</span>
           </div>
-          <MoreHorizontal size={20 * scaleFactor} color={secondary} style={{ flexShrink: 0, marginTop: px(4) }} />
         </div>
 
-        {/* Conteúdo de texto */}
+        {/* Conteúdo de texto — nunca encolhe por causa da imagem */}
         <div
           className="flex flex-col overflow-hidden"
           style={{
             paddingLeft: `${paddingX * 1.2}px`,
             paddingRight: `${paddingX * 1.2}px`,
-            paddingTop: px(16),
-            paddingBottom: px(12),
-            gap: px(titleBold ? 16 : 12),
-            // o texto nunca encolhe por causa da imagem: a fonte fica igual
+            paddingTop: `${20 * scaleFactor}px`,
+            paddingBottom: `${16 * scaleFactor}px`,
+            gap: `${16 * scaleFactor}px`,
             flex: '0 0 auto',
           }}
         >
-          {section.title && (
-            <h2
-              style={{
-                fontSize: finalTitleSize,
-                color: finalTitleColor,
-                fontFamily: getFontFamily(section.titleFont || 'sans'),
-                textAlign: textAlign as any,
-                whiteSpace: 'pre-wrap',
-                overflowWrap: 'anywhere',
-                fontWeight: !titleBold ? 400 : section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : section.titleFont?.startsWith('gilroy') ? 400 : 700,
-                lineHeight: section.titleFont === 'wide' ? 1.15 : 1.35,
-                textTransform: section.titleFont === 'wide' ? 'uppercase' : undefined,
-                letterSpacing: section.titleFont === 'wide' ? '-0.01em' : undefined,
-              }}
-            >
-              {renderFormattedText(section.title)}
-            </h2>
-          )}
+          <h2
+            style={{
+              fontSize: finalTitleSize,
+              color: finalTitleColor,
+              fontFamily: postFont(section.titleFont),
+              textAlign: textAlign as any,
+              whiteSpace: 'pre-wrap',
+              overflowWrap: 'anywhere',
+              fontWeight: !titleBold ? 400 : section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : section.titleFont?.startsWith('gilroy') ? 400 : 700,
+              lineHeight: section.titleFont === 'wide' ? 1.15 : 1.35,
+              textTransform: section.titleFont === 'wide' ? 'uppercase' : undefined,
+              letterSpacing: section.titleFont === 'wide' ? '-0.01em' : undefined,
+            }}
+          >
+            {renderFormattedText(section.title)}
+          </h2>
 
           {section.content && (
             <p
               style={{
                 fontSize: finalBodySize,
                 color: finalBodyColor,
-                fontFamily: getFontFamily(section.bodyFont || 'sans'),
+                fontFamily: postFont(section.bodyFont),
                 textAlign: textAlign as any,
                 whiteSpace: 'pre-wrap',
                 overflowWrap: 'anywhere',
                 fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : 400,
-                lineHeight: 1.5,
+                lineHeight: 1.45,
               }}
             >
               {renderFormattedText(section.content)}
@@ -174,12 +178,12 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           )}
         </div>
 
-        {/* Imagem */}
+        {/* Imagem — segue a proporção real dela */}
         {showImage && hasImage && (
-          <div className="min-h-0 flex flex-col" style={{ flex: '0 1 auto', paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: px(12) }}>
-            <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${mediaRatio}`, maxHeight: '100%', borderRadius: px(16), border: `1px solid ${border}`, background: 'rgba(128,128,128,0.08)' }}>
+          <div className="flex-shrink-0" style={{ paddingLeft: `${paddingX}px`, paddingRight: `${paddingX}px`, paddingBottom: `${16 * scaleFactor}px` }}>
+            <div className="relative w-full rounded-[1rem] overflow-hidden" style={{ aspectRatio: `${mediaRatio}`, background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)` }}>
               {isGenerating ? (
-                <div className="w-full h-full flex items-center justify-center animate-pulse" style={{ color: secondary }}>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
                   <Loader2 className="animate-spin" size={32 * scaleFactor} />
                 </div>
               ) : section.videoUrl ? (
@@ -212,30 +216,9 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             </div>
           </div>
         )}
+        </div>
 
-        {/* Hora · data · visualizações */}
-        {section.postShowMeta && (
-          <div className="flex-shrink-0 flex items-center flex-wrap" style={{ paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingTop: px(4), paddingBottom: px(12), gap: px(4), fontSize: px(15), fontFamily: sans, color: secondary }}>
-            <span>{meta.time}</span><span>·</span><span>{meta.date}</span>
-            {meta.views && <><span>·</span><span><b style={{ color: finalBrandingColor, fontWeight: 700 }}>{meta.views}</b> Visualizações</span></>}
-          </div>
-        )}
-
-        {/* Respostas, reposts, curtidas, salvos */}
-        {section.postShowStats && (
-          <div className="flex-shrink-0" style={{ marginLeft: `${paddingX * 1.2}px`, marginRight: `${paddingX * 1.2}px`, borderTop: `1px solid ${border}`, borderBottom: `1px solid ${border}`, paddingTop: px(10), paddingBottom: px(10) }}>
-            <div className="flex items-center justify-between" style={{ color: secondary, fontFamily: sans, fontSize: px(14) }}>
-              {stats.map(st => (
-                <span key={st.label} className="flex items-center" style={{ gap: px(6) }} aria-label={`${st.value} ${st.label}`}>
-                  {st.icon}{st.value}
-                </span>
-              ))}
-              <Share size={18 * scaleFactor} strokeWidth={1.75} />
-            </div>
-          </div>
-        )}
-
-        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} formatHeight={formatHeight} bgColor={bg} />
+        <SlideFooter index={index} total={total} isExport={isExport} signature={config.watermark || config.handle || ''} isSocial={true} formatHeight={formatHeight} bgColor={section.bgColor || '#ffffff'} />
       </div>
     );
   }
