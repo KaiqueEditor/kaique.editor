@@ -4,7 +4,7 @@ import { TopBar, type SaveStatus, type TopBarActions } from './TopBar';
 import { SlideRail } from './SlideRail';
 import { CanvasStage } from './CanvasStage';
 import { Inspector } from './inspector/Inspector';
-import { ImportRoteiroDialog } from './ImportRoteiroDialog';
+import { ImportRoteiroDialog, type RoteiroMode } from './ImportRoteiroDialog';
 
 interface DesktopEditorProps extends Omit<TopBarActions, 'onImportRoteiro'> {
   saveStatus: SaveStatus;
@@ -14,7 +14,7 @@ interface DesktopEditorProps extends Omit<TopBarActions, 'onImportRoteiro'> {
   isAdmin: boolean;
   userEmail?: string | null;
   isProcessing: boolean;
-  onProcessRoteiro: (text: string) => void;
+  onProcessRoteiro: (text: string, mode: RoteiroMode) => void;
   onAvatarClick: () => void;
   onImageUpload: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   onVideoUpload: (sectionId: string, file: File) => void;
@@ -67,7 +67,7 @@ export function DesktopEditor(props: DesktopEditorProps) {
         open={importOpen}
         busy={isProcessing}
         onClose={() => setImportOpen(false)}
-        onConfirm={text => { onProcessRoteiro(text); setImportOpen(false); }}
+        onConfirm={(text, mode) => { onProcessRoteiro(text, mode); setImportOpen(false); }}
       />
     </div>
   );

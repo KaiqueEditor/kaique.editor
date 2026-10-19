@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Section } from '../types';
 import { useStore } from '../store';
+import { X_THEMES, splitThread, xThemeStyle } from '../lib/xPost';
 
 const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePrompt'> = {
   alignment: 'left',
@@ -43,7 +44,7 @@ export const useProcessText = () => {
   // Detecta se o texto já está no formato estruturado "Texto N ..." (com ou sem traço)
   const isStructuredRoteiro = (text: string) => /^texto\s+\d+/im.test(text);
 
-  const processText = useCallback(async (rawText: string) => {
+  const processText = useCallback(async (rawText: string, mode: 'feed' | 'x' = 'feed') => {
     if (isProcessing) return;
     if (!rawText.trim()) return;
     setIsProcessing(true);
@@ -51,7 +52,27 @@ export const useProcessText = () => {
     let finalSections: Section[] = [];
 
     try {
-      if (isStructuredRoteiro(rawText)) {
+      if (mode === 'x') {
+        // Thread do X: um post por parágrafo, no tema claro, fonte padrão do post
+        const stamp = Date.now();
+        finalSections = splitThread(rawText).map((post, idx) => ({
+          ...DEFAULT_SECTION_BASE,
+          ...xThemeStyle(X_THEMES[0]),
+          id: `x-${idx + 1}-${stamp}`,
+          title: post.title,
+          content: post.content,
+          layoutType: 'social-post' as const,
+          alignment: 'left' as const,
+          titleFont: 'sans',
+          bodyFont: 'sans',
+          titleSize: 26,
+          bodySize: 24,
+          textPosY: 85,
+          imagePosY: 50,
+          showSocialImage: false,
+          postTitleBold: false, // thread de verdade: tudo no mesmo peso
+        }));
+      } else if (isStructuredRoteiro(rawText)) {
         // Parse structured roteiro format (com ou sem traço)
         const lines = rawText.split(/\n+/);
         const dataMap: Record<number, string> = {};

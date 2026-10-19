@@ -6,7 +6,7 @@ import { Menu } from '../../ui';
 import { useStore } from '../../store';
 import { STARTER_TEMPLATES } from '../../constants/starterTemplates';
 import { Button, Dialog, Segmented, cx } from '../../ui';
-import { ImportRoteiroDialog } from '../editor/ImportRoteiroDialog';
+import { ImportRoteiroDialog, type RoteiroMode } from '../editor/ImportRoteiroDialog';
 import { ProjectCard } from './ProjectCard';
 import { BrandDialog } from '../brand/BrandDialog';
 import { useProjects, type Project } from './useProjects';
@@ -20,7 +20,7 @@ interface HomeScreenProps {
   isProcessing: boolean;
   onOpenProject: (p: Project) => void;
   onNewBlank: () => void;
-  onNewFromRoteiro: (text: string) => void;
+  onNewFromRoteiro: (text: string, mode: RoteiroMode) => void;
   onNewFromTemplate: (templateId: string) => void;
   onOpenAnalytics: () => void;
   onLogout: () => void;
@@ -182,7 +182,7 @@ export function HomeScreen(props: HomeScreenProps) {
       </main>
 
       <ImportRoteiroDialog open={roteiroOpen} busy={isProcessing} onClose={() => setRoteiroOpen(false)}
-        onConfirm={text => { setRoteiroOpen(false); props.onNewFromRoteiro(text); }} />
+        onConfirm={(text, mode) => { setRoteiroOpen(false); props.onNewFromRoteiro(text, mode); }} />
 
       <Dialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} title="Modelos prontos"
         description="Escolha um ponto de partida. Dá para mudar tudo depois." className="max-w-2xl">

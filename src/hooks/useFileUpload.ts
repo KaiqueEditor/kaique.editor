@@ -24,7 +24,7 @@ export const useFileUpload = () => {
     reader.onloadend = async () => {
       try {
         const imageUrl = reader.result as string;
-        updateSection(id, { imageUrl, videoUrl: undefined, videoTrimStart: undefined });
+        updateSection(id, { imageUrl, videoUrl: undefined, videoTrimStart: undefined, showSocialImage: true });
       } catch (error) {
         console.error('File processing failed:', error);
         toast.error('Falha ao processar arquivo enviado.');
@@ -53,6 +53,7 @@ export const useFileUpload = () => {
       videoMimeType: file.type || 'video/mp4',
       imageUrl: undefined,
       videoTrimStart: clipStart,
+      showSocialImage: true,
     });
   }, [updateSection, removeGeneratingId]);
 

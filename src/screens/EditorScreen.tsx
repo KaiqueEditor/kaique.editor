@@ -1,3 +1,4 @@
+import type { RoteiroMode } from '../features/editor/ImportRoteiroDialog';
 import { plainText } from '../utils/formatters';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -101,9 +102,9 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     const t = STARTER_TEMPLATES.find(x => x.id === id);
     if (t) startNewProject(buildTemplateSections(t, useStore.getState().userEmail));
   };
-  const handleNewFromRoteiro = (text: string) => {
+  const handleNewFromRoteiro = (text: string, mode: RoteiroMode) => {
     setCurrentProjectId(null);
-    processText(text);
+    processText(text, mode);
     openEditor();
   };
 
@@ -199,7 +200,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     onOpenAssets: () => setIsAssetsOpen(true),
     onOpenSettings: () => setIsSettingsOpen(true),
     onLogout,
-    onProcessRoteiro: (text: string) => { setCurrentProjectId(null); processText(text); setActiveSlide(0); },
+    onProcessRoteiro: (text: string, mode: RoteiroMode) => { setCurrentProjectId(null); processText(text, mode); setActiveSlide(0); },
     onAvatarClick: () => avatarInputRef.current?.click(),
     onImageUpload: handleImageUpload,
     onVideoUpload: handleVideoUploadRequest,

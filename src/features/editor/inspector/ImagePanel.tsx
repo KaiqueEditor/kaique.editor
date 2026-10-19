@@ -142,7 +142,7 @@ export function ImagePanel({ onImageUpload, onVideoUpload, onDownloadSlide }: Im
       <ImageGallery
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
-        onSelect={url => { update({ imageUrl: url, videoUrl: undefined }); setGalleryOpen(false); }}
+        onSelect={url => { update({ imageUrl: url, videoUrl: undefined, showSocialImage: true }); setGalleryOpen(false); }}
       />
     </div>
   );

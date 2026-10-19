@@ -74,7 +74,7 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
     if (!file) return;
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = () => { if (typeof reader.result === 'string') updateSection(section.id, { imageUrl: reader.result, videoUrl: undefined }); };
+      reader.onload = () => { if (typeof reader.result === 'string') updateSection(section.id, { imageUrl: reader.result, videoUrl: undefined, showSocialImage: true }); };
       reader.readAsDataURL(file);
     } else if (file.type.startsWith('video/')) {
       onVideoUpload(section.id, file);

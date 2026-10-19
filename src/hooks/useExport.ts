@@ -24,6 +24,8 @@ type CompositeOpts = {
   bgColor: string;
   trimStart: number;
   duration: number;
+  /** Post X: o vídeo fica dentro de uma moldura arredondada, por cima do fundo. */
+  box?: { x: number; y: number; w: number; h: number; r: number };
 };
 
 let exportDepsPromise: Promise<ExportDeps> | null = null;
@@ -52,7 +54,7 @@ const compositeWithCanvas = async (opts: CompositeOpts): Promise<Blob> => {
     videoUrl, overlayData,
     drawW, drawH, cropX, cropY,
     videoH, isStorytelling, bgColor,
-    trimStart, duration,
+    trimStart, duration, box,
   } = opts;
 
   const W = 1080;
@@ -159,6 +161,18 @@ const compositeWithCanvas = async (opts: CompositeOpts): Promise<Blob> => {
     // Preenche background
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, W, H);
+
+    if (box) {
+      // Post X: fundo e textos primeiro, vídeo recortado na moldura por cima
+      ctx.drawImage(overlayBitmap, 0, 0, W, H);
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(box.x, box.y, box.w, box.h, box.r);
+      ctx.clip();
+      ctx.drawImage(video, box.x - cropX, box.y - cropY, drawW, drawH);
+      ctx.restore();
+      return;
+    }
 
     // Desenha vídeo com crop (usando coordenadas de destino com offset negativo pra simular object-cover)
     ctx.save();
@@ -470,12 +484,28 @@ export const useExport = () => {
       );
     }
 
+    // Post X: mede a moldura do vídeo no slide (em pixels de 1080×1440)
+    let box: CompositeOpts['box'];
+    const frame = section.layoutType === 'social-post' ? node.querySelector('video')?.parentElement : null;
+    if (frame) {
+      const nr = node.getBoundingClientRect();
+      const fr = frame.getBoundingClientRect();
+      const k = 1080 / nr.width;
+      box = {
+        x: Math.round((fr.left - nr.left) * k), y: Math.round((fr.top - nr.top) * k),
+        w: Math.round(fr.width * k), h: Math.round(fr.height * k),
+        r: Math.round((parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0) * k),
+      };
+    }
+    const areaW = box?.w ?? 1080;
+    const areaH = box?.h ?? videoH;
+
     // Calcula box de recorte object-cover (idêntico ao comportamento CSS)
-    const coverScale = Math.max(1080 / vW, videoH / vH) * userScale;
+    const coverScale = Math.max(areaW / vW, areaH / vH) * userScale;
     const drawW = Math.round(Math.round(vW * coverScale) / 2) * 2;
     const drawH = Math.round(Math.round(vH * coverScale) / 2) * 2;
-    const cropX = Math.round(Math.max(0, drawW - 1080) * posX / 100);
-    const cropY = Math.round(Math.max(0, drawH - videoH) * posY / 100);
+    const cropX = Math.round(Math.max(0, drawW - areaW) * posX / 100);
+    const cropY = Math.round(Math.max(0, drawH - areaH) * posY / 100);
 
     const duration = Math.min(15, Math.max(0.5, Math.min(trimStart + 15, dur || 15) - trimStart));
 
@@ -491,7 +521,7 @@ export const useExport = () => {
         overlayData,
         drawW, drawH, cropX, cropY,
         videoH, isStorytelling, bgColor,
-        trimStart, duration,
+        trimStart, duration, box,
       }),
       180000,
       'compondo vídeo'

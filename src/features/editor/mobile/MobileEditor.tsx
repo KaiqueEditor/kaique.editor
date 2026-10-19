@@ -12,7 +12,7 @@ import { SlideThumb, useFormat } from '../shared';
 import { TextPanel } from '../inspector/TextPanel';
 import { ImagePanel } from '../inspector/ImagePanel';
 import { StylePanel } from '../inspector/StylePanel';
-import { ImportRoteiroDialog } from '../ImportRoteiroDialog';
+import { ImportRoteiroDialog, type RoteiroMode } from '../ImportRoteiroDialog';
 import { SlidePanel } from './SlidePanel';
 import type { SaveStatus } from '../TopBar';
 
@@ -37,7 +37,7 @@ export interface MobileEditorProps {
   onOpenAssets: () => void;
   onOpenSettings: () => void;
   onLogout: () => void;
-  onProcessRoteiro: (text: string) => void;
+  onProcessRoteiro: (text: string, mode: RoteiroMode) => void;
   onAvatarClick: () => void;
   onImageUpload: (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   onVideoUpload: (sectionId: string, file: File) => void;
@@ -207,7 +207,7 @@ export function MobileEditor(props: MobileEditorProps) {
       </section>
 
       <ImportRoteiroDialog open={importOpen} busy={props.isProcessing} onClose={() => setImportOpen(false)}
-        onConfirm={text => { setImportOpen(false); props.onProcessRoteiro(text); }} />
+        onConfirm={(text, mode) => { setImportOpen(false); props.onProcessRoteiro(text, mode); }} />
     </div>
   );
 }
