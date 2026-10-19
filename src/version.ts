@@ -7,7 +7,7 @@
  *  - MINOR: features novas
  *  - PATCH: bugfixes e ajustes
  */
-export const APP_VERSION = '2.3.7';
+export const APP_VERSION = '2.3.8';
 
 export const VERSION_NOTES: { version: string; date: string; changes: string[] }[] = [
   {

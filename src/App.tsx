@@ -162,6 +162,7 @@ function SidebarContent({
       showSocialImage: slide.showSocialImage ?? false,
     } as any));
     setSections(newSections);
+    useStore.getState().setCurrentProjectId(null);
     setTemplatesOpen(false);
     toast.success(`Template "${template.name}" aplicado!`);
   };
@@ -854,6 +855,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
             if (latest.sections && latest.sections.length > 0) {
               useStore.getState().setSections(latest.sections);
               if (latest.config) useStore.getState().updateConfig(latest.config);
+              useStore.getState().setCurrentProjectId(latest.id);
               return; // cloud restored
             }
           }
@@ -916,19 +918,21 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         }
       }
 
-      const name = sections[0]?.title || 'Sem título';
-      const idToSave = currentProjectId || (Date.now().toString() + Math.random().toString(36).slice(2, 6));
+      const name = sections[0]?.title?.trim() || 'Sem título';
+      let savedId = currentProjectId;
 
-      await projectStorage.saveProject(idToSave, name, sections, config, thumbnailDataUrl);
-      if (!currentProjectId) setCurrentProjectId(idToSave);
-
-      // Cloud save (Supabase)
+      // Nuvem primeiro: atualiza o projeto aberto ou cria um novo e adota o id dele.
       try {
         const userId = session?.user?.id;
         if (userId) {
-          await cloudStorage.saveCarousel(userId, name, sections, config, thumbnailDataUrl);
+          const row = await cloudStorage.saveCarousel(userId, name, sections, config, thumbnailDataUrl, currentProjectId);
+          if (row) savedId = row.id;
         }
-      } catch { /* cloud save is best-effort */ }
+      } catch { /* nuvem é best-effort; a cópia local garante o trabalho */ }
+
+      if (!savedId) savedId = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+      await projectStorage.saveProject(savedId, name, sections, config, thumbnailDataUrl);
+      setCurrentProjectId(savedId);
 
       toast.success('Projeto salvo com sucesso!');
     } catch (err) {
@@ -936,7 +940,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     } finally {
       setSavingProject(false);
     }
-  }, [currentProjectId, setCurrentProjectId, sections, config, exportRefs]);
+  }, [currentProjectId, setCurrentProjectId, sections, config, exportRefs, session]);
 
   // Exportar PDF: renderiza cada slide como PNG e compila
   const handleExportPDF = useCallback(async () => {
@@ -991,6 +995,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
   const handleNewCarousel = () => {
     if (sections.length > 0 && !confirm('Criar um novo carrossel? O atual será salvo automaticamente.')) return;
     setSections([]);
+    setCurrentProjectId(null);
     setTextInput('');
     setCaption('');
     toast.success('Pronto! Comece um novo carrossel.');
@@ -1004,6 +1009,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       toast.error('Cole um texto ou roteiro primeiro!');
       return;
     }
+    useStore.getState().setCurrentProjectId(null);
     processText(textInput);
   };
 
@@ -1937,6 +1943,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
               <button
                 onClick={() => {
                   useStore.getState().setSections([]);
+                  useStore.getState().setCurrentProjectId(null);
                   setActiveSlide(0);
                   setTextInput('');
                   setShowNewConfirm(false);
