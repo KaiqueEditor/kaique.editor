@@ -84,7 +84,7 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(o.value)}
             className={cx(
-              'flex-1 h-7 px-2 inline-flex items-center justify-center gap-1.5 rounded-ui-sm text-footnote transition-[background-color,color] duration-200 ease-out',
+              'flex-1 h-7 px-2 inline-flex items-center justify-center gap-1.5 rounded-[8px] text-footnote transition-[background-color,color] duration-200 ease-out',
               selected ? 'bg-raised text-fg font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.18)]' : 'text-muted hover:text-fg',
             )}
           >

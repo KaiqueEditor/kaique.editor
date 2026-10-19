@@ -13,10 +13,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   block?: boolean;
 }
 
-// Botões retos: a ação principal é sólida (preto no claro, branco no escuro)
-// com a barra do gradiente do Instagram na borda; as demais são contornadas.
+// Botões em pílula: a ação principal é sólida (preto no claro, branco no escuro)
+// com contorno fino no gradiente do Instagram; as demais são contornadas.
 const VARIANTS: Record<Variant, string> = {
-  primary: 'ig-edge !pl-[20px] bg-accent text-on-accent hover:bg-accent-hover font-medium',
+  primary: 'ig-ring text-on-accent font-medium shadow-[0_4px_16px_rgba(214,41,118,0.18)]',
   secondary: 'bg-transparent text-fg border border-fg/25 hover:border-fg/60 hover:bg-fg/[0.04] font-normal',
   ghost: 'bg-transparent text-fg underline-offset-4 hover:underline font-normal',
   danger: 'bg-transparent text-danger border border-danger/40 hover:bg-danger/10 font-normal',

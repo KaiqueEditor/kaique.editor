@@ -28,11 +28,14 @@
   --c-danger: 237 73 86;       /* #ED4956 */
   --c-success: 88 195 34;      /* #58C322 */
 
-  --glass-tint: 10 10 10;
-  --glass-alpha: 0.72;
-  --glass-edge: rgba(255, 255, 255, 0.12);
-  --glass-highlight: rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --glass-tint: 24 24 24;
+  --glass-alpha: 0.5;
+  --glass-strong-alpha: 0.94;
+  --glass-sheen: rgba(255, 255, 255, 0.10);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.30);
+  --glass-lowlight: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme='light'] {
@@ -56,10 +59,13 @@
   --c-success: 61 138 22;      /* #3D8A16 */
 
   --glass-tint: 255 255 255;
-  --glass-alpha: 0.82;
-  --glass-edge: rgba(26, 26, 26, 0.14);
-  --glass-highlight: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  --glass-alpha: 0.55;
+  --glass-strong-alpha: 0.97;
+  --glass-sheen: rgba(255, 255, 255, 0.65);
+  --glass-edge: rgba(0, 0, 0, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 1);
+  --glass-lowlight: rgba(0, 0, 0, 0.04);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 /* Gradientes da marca Instagram */
@@ -72,14 +78,17 @@
 
 .bg-brand { background-image: var(--brand-gradient); }
 
-/* Barra do gradiente do Instagram na borda esquerda (botão principal) */
-.ig-edge { position: relative; overflow: hidden; }
-.ig-edge::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background-image: var(--story-gradient);
+/* Contorno fino no gradiente do Instagram (botão principal) */
+.ig-ring {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(rgb(var(--c-accent)), rgb(var(--c-accent))) padding-box,
+    var(--story-gradient) border-box;
+}
+.ig-ring:hover {
+  background:
+    linear-gradient(rgb(var(--c-accent-hover)), rgb(var(--c-accent-hover))) padding-box,
+    var(--story-gradient) border-box;
 }
 .bg-story { background-image: var(--story-gradient); }
 .text-brand {
@@ -95,12 +104,12 @@
   --font-display: 'Lexend Zetta', 'Lexend', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Geist Mono', monospace;
 
-  /* Cantos retos: só um arredondado mínimo para não serrilhar */
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-  --radius-pill: 3px;
+  /* Cantos — escala 1.4x, botões em pílula */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
 
   /* Alturas de controle — alvo de toque 44px */
   --control-h: 36px;
@@ -109,24 +118,33 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Material "liquid glass": translúcido, desfoca o que está atrás,
-   borda fina e brilho na aresta superior. */
-.glass {
-  background: rgb(var(--glass-tint) / var(--glass-alpha));
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  backdrop-filter: blur(28px) saturate(180%);
+/* Material "liquid glass": translúcido, desfoca e satura o que está atrás,
+   reflexo suave no topo, borda fina e brilho especular nas arestas. */
+.glass,
+.glass-strong {
+  -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
+  backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
   border: 1px solid var(--glass-edge);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 var(--glass-lowlight),
+    inset 0 0 20px rgba(255, 255, 255, 0.03),
+    var(--glass-shadow);
+}
+.glass {
+  background:
+    linear-gradient(180deg, var(--glass-sheen) 0%, transparent 42%),
+    rgb(var(--glass-tint) / var(--glass-alpha));
 }
 
 /* Vidro mais denso para menus e janelas: continua legível mesmo quando
    aberto dentro de outro painel de vidro (onde o desfoque não se repete). */
 .glass-strong {
-  background: rgb(var(--glass-tint) / 0.92);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--glass-edge);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 16px 48px rgba(0, 0, 0, 0.35);
+  background:
+    linear-gradient(180deg, var(--glass-sheen) 0%, transparent 42%),
+    rgb(var(--glass-tint) / var(--glass-strong-alpha));
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(40px) saturate(200%);
 }
 
 @media (prefers-reduced-transparency: reduce) {

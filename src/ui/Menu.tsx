@@ -74,7 +74,7 @@ export function Menu({ items, trigger, align = 'start', side = 'bottom', classNa
                 disabled={item.disabled}
                 onClick={() => { setOpen(false); item.onSelect(); }}
                 className={cx(
-                  'w-full h-9 px-2.5 flex items-center gap-2.5 rounded-ui-sm text-subhead text-left',
+                  'w-full h-9 px-2.5 flex items-center gap-2.5 rounded-[9px] text-subhead text-left',
                   'transition-colors duration-150 disabled:opacity-40',
                   'hover:bg-fg/[0.08] focus:bg-fg/[0.08] focus:outline-none',
                   item.danger ? 'text-danger' : 'text-fg',
