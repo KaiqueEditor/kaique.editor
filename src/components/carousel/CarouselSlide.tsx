@@ -4,7 +4,7 @@ import { SlideFooter } from './SlideFooter';
 import { VerifiedBadge } from '../icons/VerifiedBadge';
 import { getFontFamily } from '../../constants/fonts';
 import { renderFormattedText } from '../../utils/formatters';
-import { ImageIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface CarouselSlideProps {
   section: Section;

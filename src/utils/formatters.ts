@@ -126,3 +126,14 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
     return part;
   });
 };
+
+/** Tira as marcações de formatação (=1=…=1=, ==…==, *…*, _…_ etc.) para exibir só o texto. */
+export const plainText = (text: string): string =>
+  (text || '')
+    .replace(/=\d=/g, '')
+    .replace(/==/g, '')
+    .replace(/\*\*|\*|~|\^|\{|\}/g, '')
+    .replace(/(^|\s)_(\S)/g, '$1$2')
+    .replace(/(\S)_(\s|$)/g, '$1$2')
+    .replace(/\s+/g, ' ')
+    .trim();

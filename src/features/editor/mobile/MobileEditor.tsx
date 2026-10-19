@@ -1,7 +1,8 @@
+import { plainText } from '../../../utils/formatters';
 import { useLayoutEffect, useRef, useState } from 'react';
 import {
   ChevronLeft, Download, Eye, FileText, Image as ImageIcon, Layers, LayoutList, LogOut, Moon,
-  MoreHorizontal, Palette, Plus, Redo2, Save, Settings, Sun, Type, Undo2,
+  MoreHorizontal, Palette, Plus, Redo2, Save, UserRound, Sun, Type, Undo2,
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { createDefaultSection } from '../../../lib/sections';
@@ -86,7 +87,7 @@ export function MobileEditor(props: MobileEditorProps) {
   const stageH = Math.max(120, size.h - TOP - STRIP - sheetH - 12);
   const scale = Math.max(0.1, Math.min((size.w - 32) / fmt.width, stageH / fmt.height));
   const section = sections[activeSlide];
-  const title = sections[0]?.title?.trim() || 'Sem título';
+  const title = plainText(sections[0]?.title ?? '') || 'Sem título';
 
   const go = (i: number) => setActiveSlide(Math.max(0, Math.min(sections.length - 1, i)));
 
@@ -133,8 +134,8 @@ export function MobileEditor(props: MobileEditorProps) {
             { label: 'Refazer', icon: <Redo2 size={15} />, onSelect: redo, disabled: !canRedo },
             { label: 'Importar roteiro', icon: <FileText size={15} />, onSelect: () => setImportOpen(true), separated: true },
             { label: 'Temas', icon: <Palette size={15} />, onSelect: props.onOpenThemes },
-            { label: 'Galeria de assets', icon: <Layers size={15} />, onSelect: props.onOpenAssets },
-            { label: 'Configurações', icon: <Settings size={15} />, onSelect: props.onOpenSettings },
+            { label: 'Paletas', icon: <Layers size={15} />, onSelect: props.onOpenAssets },
+            { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: props.onOpenSettings },
             { label: theme === 'dark' ? 'Modo claro' : 'Modo escuro', icon: theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />, onSelect: toggleTheme, separated: true },
             { label: 'Sair', icon: <LogOut size={15} />, onSelect: props.onLogout, danger: true },
           ]}

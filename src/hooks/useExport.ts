@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Section, EXPORT_FORMATS } from '../types';
 import { useStore } from '../store';

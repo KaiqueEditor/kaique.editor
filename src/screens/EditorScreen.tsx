@@ -1,6 +1,7 @@
+import { plainText } from '../utils/formatters';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { AnalyticsPage } from '../components/analytics/AnalyticsPage';
+import { AdminPage } from '../features/admin/AdminPage';
 import { useAdmin } from '../hooks/useAdmin';
 import { CarouselSlide } from '../components/carousel/CarouselSlide';
 import { useStore } from '../store';
@@ -12,7 +13,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useHistory } from '../hooks/useHistory';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { VideoTrimModal } from '../components/editor/VideoTrimModal';
-import { SettingsModal } from '../components/settings/SettingsModal';
+import { BrandDialog } from '../features/brand/BrandDialog';
 import { Onboarding } from '../components/onboarding/Onboarding';
 import { CustomThemes } from '../components/themes/CustomThemes';
 import { AssetGalleryModal } from '../components/gallery/AssetGalleryModal';
@@ -126,7 +127,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         }
       }
 
-      const name = sections[0]?.title?.trim() || 'Sem título';
+      const name = plainText(sections[0]?.title ?? '') || 'Sem título';
       let savedId = currentProjectId;
       try {
         const userId = session?.user?.id;
@@ -179,7 +180,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     if (node && s) await downloadSlide(node, s, `slide-${idx + 1}`);
   };
 
-  if (showAnalytics) return <AnalyticsPage onBack={() => setShowAnalytics(false)} />;
+  if (showAnalytics && isAdmin) return <AdminPage onBack={() => setShowAnalytics(false)} />;
 
   const T = getTheme(theme);
   const fmt = EXPORT_FORMATS.find(f => f.key === exportFormat) ?? EXPORT_FORMATS[0];
@@ -281,7 +282,6 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       <VideoTrimModal
         isOpen={!!pendingVideo}
         file={pendingVideo?.file ?? null}
-        T={T}
         onCancel={() => setPendingVideo(null)}
         onConfirm={async (trimStart) => {
           if (!pendingVideo) return;
@@ -293,10 +293,10 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         }}
       />
 
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <BrandDialog open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <AssetGalleryModal isOpen={isAssetsOpen} onClose={() => setIsAssetsOpen(false)} />
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
-      {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} T={T} />}
+      {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} />}
 
       <Dialog
         open={showNewConfirm}

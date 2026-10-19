@@ -5,9 +5,10 @@ import {
 import { Menu } from '../../ui';
 import { useStore } from '../../store';
 import { STARTER_TEMPLATES } from '../../constants/starterTemplates';
-import { Button, Dialog, Field, Input, Segmented, cx } from '../../ui';
+import { Button, Dialog, Segmented, cx } from '../../ui';
 import { ImportRoteiroDialog } from '../editor/ImportRoteiroDialog';
 import { ProjectCard } from './ProjectCard';
+import { BrandDialog } from '../brand/BrandDialog';
 import { useProjects, type Project } from './useProjects';
 
 type Filter = 'all' | 'cloud' | 'local';
@@ -56,7 +57,6 @@ export function HomeScreen(props: HomeScreenProps) {
   const theme = useStore(s => s.theme);
   const toggleTheme = useStore(s => s.toggleTheme);
   const config = useStore(s => s.config);
-  const updateConfig = useStore(s => s.updateConfig);
   const { projects, loading, remove, duplicate } = useProjects(userId);
 
   const [query, setQuery] = useState('');
@@ -200,17 +200,7 @@ export function HomeScreen(props: HomeScreenProps) {
         </ul>
       </Dialog>
 
-      <Dialog open={brandOpen} onClose={() => setBrandOpen(false)} title="Minha marca"
-        description="Usada nos slides novos e no layout de post."
-        footer={<Button variant="primary" onClick={() => setBrandOpen(false)}>Pronto</Button>}>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Nome">{id => <Input id={id} value={config.branding} onChange={e => updateConfig({ branding: e.target.value })} placeholder="Seu nome" />}</Field>
-          <Field label="@ usuário">{id => <Input id={id} value={config.handle} onChange={e => updateConfig({ handle: e.target.value })} placeholder="@perfil" />}</Field>
-        </div>
-        <Field label="Marca d'água" hint="Aparece discreta no rodapé de todos os slides.">
-          {id => <Input id={id} value={config.watermark} onChange={e => updateConfig({ watermark: e.target.value })} placeholder="@seuperfil" />}
-        </Field>
-      </Dialog>
+      <BrandDialog open={brandOpen} onClose={() => setBrandOpen(false)} />
 
       <Dialog open={!!toDelete} onClose={() => setToDelete(null)} title="Apagar projeto?"
         description={toDelete ? `“${toDelete.name}” será apagado${toDelete.source === 'cloud' ? ' da nuvem' : ' deste aparelho'}. Não dá para desfazer.` : undefined}

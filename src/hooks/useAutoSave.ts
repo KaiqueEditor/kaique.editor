@@ -19,8 +19,6 @@ interface UseAutoSaveOptions {
 export function useAutoSave({
     sections,
     config,
-    currentProjectId,
-    userId,
     exportRefs,
     enabled = true,
 }: UseAutoSaveOptions) {

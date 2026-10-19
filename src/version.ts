@@ -7,9 +7,20 @@
  *  - MINOR: features novas
  *  - PATCH: bugfixes e ajustes
  */
-export const APP_VERSION = '2.3.8';
+export const APP_VERSION = '3.0.0';
 
 export const VERSION_NOTES: { version: string; date: string; changes: string[] }[] = [
+  {
+    version: '3.0.0',
+    date: '2026-10-19',
+    changes: [
+      'Redesign completo: visual monocromático com vidro e detalhes do Instagram',
+      'Tela inicial com projetos, editor novo no desktop e no celular',
+      'Exportação com escolha de slides e qualidade; Visualizar como post do Instagram',
+      'Painel admin novo com métricas calculadas no banco e auditoria de papéis',
+      'Removida toda a IA da plataforma',
+    ],
+  },
   {
     version: '2.3.0',
     date: '2026-03-25',

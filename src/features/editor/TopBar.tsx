@@ -1,6 +1,7 @@
+import { plainText } from '../../utils/formatters';
 import {
   BarChart3, ChevronDown, Download, Eye, FileText, FolderOpen, Layers, LogOut,
-  Moon, Palette, Plus, Redo2, Save, Settings, Sun, Undo2,
+  Moon, Palette, Plus, Redo2, Save, UserRound, Sun, Undo2,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button, IconButton, Menu, StatusDot, type MenuItem } from '../../ui';
@@ -42,15 +43,15 @@ export function TopBar(props: TopBarProps) {
   const theme = useStore(s => s.theme);
   const toggleTheme = useStore(s => s.toggleTheme);
 
-  const title = sections[0]?.title?.trim() || 'Sem título';
+  const title = plainText(sections[0]?.title ?? '') || 'Sem título';
 
   const projectMenu: MenuItem[] = [
     { label: 'Meus projetos', icon: <FolderOpen size={15} />, onSelect: props.onOpenProjects },
     { label: 'Novo carrossel', icon: <Plus size={15} />, onSelect: props.onNewCarousel },
     { label: 'Importar roteiro', icon: <FileText size={15} />, onSelect: props.onImportRoteiro },
     { label: 'Temas', icon: <Palette size={15} />, onSelect: props.onOpenThemes, separated: true },
-    { label: 'Galeria de assets', icon: <Layers size={15} />, onSelect: props.onOpenAssets },
-    { label: 'Configurações', icon: <Settings size={15} />, onSelect: props.onOpenSettings },
+    { label: 'Paletas', icon: <Layers size={15} />, onSelect: props.onOpenAssets },
+    { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: props.onOpenSettings },
     ...(isAdmin ? [{ label: 'Analytics', icon: <BarChart3 size={15} />, onSelect: props.onOpenAnalytics }] : []),
     {
       label: theme === 'dark' ? 'Modo claro' : 'Modo escuro',

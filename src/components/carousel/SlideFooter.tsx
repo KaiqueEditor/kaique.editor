@@ -28,7 +28,6 @@ export const SlideFooter: React.FC<SlideFooterProps> = ({
   total,
   isExport,
   signature,
-  isSocial = false,
   formatHeight = 1440,
   bgColor = '#000000',
 }) => {

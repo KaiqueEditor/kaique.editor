@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { clearAdminCache } from './hooks/useAdmin';
+import { clearAdminCache, fetchRole } from './hooks/useAdmin';
 import { Toaster } from 'react-hot-toast';
 import { LoginPage } from './components/auth/LoginPage';
 import { supabase } from './lib/supabase';
@@ -59,9 +59,11 @@ export default function App() {
   useEffect(() => {
     if (session?.user) {
       const email = session.user.email ?? '';
-      // Set admin flag based on email so font dropdowns show PRO fonts immediately
-      const adminEmails = ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'];
-      useStore.getState().setAdmin(adminEmails.includes(email.toLowerCase()));
+      // store.isAdmin só libera as fontes PRO na interface: admins do banco + contas
+      // com acesso PRO. O painel admin usa useAdmin (papel no banco + RLS).
+      const proEmails = ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'];
+      useStore.getState().setAdmin(proEmails.includes(email.toLowerCase()));
+      fetchRole().then(r => { if (r === 'admin') useStore.getState().setAdmin(true); }).catch(() => {});
       useStore.getState().setUserEmail(email || null);
 
       // Registra o login uma vez por carregamento (o Supabase reemite eventos de sessão
@@ -86,8 +88,9 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center" style={{ background: '#000' }}>
-        <Loader2 className="animate-spin text-[#00E5C3]" size={32} />
+      <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-bg text-fg" role="status" aria-label="Carregando">
+        <span className="text-title3 font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</span>
+        <Loader2 className="animate-spin text-muted" size={20} aria-hidden="true" />
       </div>
     );
   }

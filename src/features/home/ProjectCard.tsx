@@ -2,6 +2,7 @@ import { Cloud, Copy, HardDrive, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Menu, cx } from '../../ui';
 import { SlideThumb } from '../editor/shared';
 import { relativeTime, type Project } from './useProjects';
+import { plainText } from '../../utils/formatters';
 
 const CARD_W = 208;
 
@@ -20,7 +21,7 @@ export function ProjectCard({ project: p, onOpen, onDuplicate, onDelete }: Proje
         <button
           type="button"
           onClick={onOpen}
-          aria-label={`Abrir ${p.name}`}
+          aria-label={`Abrir ${plainText(p.name)}`}
           className={cx(
             'block w-full aspect-[3/4] rounded-ui-lg overflow-hidden bg-surface',
             'ring-1 ring-fg/[0.06] transition-[transform,box-shadow] duration-300 ease-out',
@@ -60,7 +61,7 @@ export function ProjectCard({ project: p, onOpen, onDuplicate, onDelete }: Proje
       </div>
 
       <div className="flex flex-col gap-0.5 px-0.5 min-w-0">
-        <span className="text-subhead font-medium truncate" title={p.name}>{p.name}</span>
+        <span className="text-subhead font-medium truncate" title={plainText(p.name)}>{plainText(p.name) || 'Sem título'}</span>
         <span className="flex items-center gap-1.5 text-footnote text-faint">
           {p.source === 'cloud'
             ? <Cloud size={12} aria-label="Na nuvem" />
