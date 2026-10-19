@@ -1,7 +1,7 @@
 /*
- * Design tokens — Carrossel.Pro 3.0 · "Glass"
- * Linguagem inspirada no Apple HIG: cinzas neutros em escala, um azul de
- * ação, tipografia do sistema (SF no Mac/iPhone) e materiais translúcidos.
+ * Design tokens — Carrossel.Pro 3.0 · "Glass" · paleta Índigo Noturno
+ * Linguagem inspirada no Apple HIG: cinzas frios levemente arroxeados em
+ * escala, um violeta de ação, tipografia do sistema e materiais translúcidos.
  * Cores em "r g b" para o Tailwind aplicar opacidade (bg-surface/60).
  * Espelhado em src/constants/theme.ts (estilos inline legados).
  */
@@ -9,59 +9,59 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
   /* Cinzas — do fundo para a frente */
-  --c-bg: 11 11 13;            /* #0B0B0D  base */
-  --c-canvas: 17 17 19;        /* #111113  atrás do slide */
-  --c-surface: 28 28 30;       /* #1C1C1E  elevado 1 */
-  --c-surface-2: 44 44 46;     /* #2C2C2E  elevado 2 / hover */
-  --c-raised: 72 72 74;        /* #48484A  item selecionado em controles */
-  --c-line: 44 44 46;          /* #2C2C2E  separadores */
-  --c-line-strong: 58 58 60;   /* #3A3A3C  bordas de campo */
+  --c-bg: 12 12 20;            /* #0C0C14  base */
+  --c-canvas: 16 16 26;        /* #10101A  atrás do slide */
+  --c-surface: 23 23 36;       /* #171724  elevado 1 */
+  --c-surface-2: 35 35 54;     /* #232336  elevado 2 / hover */
+  --c-raised: 52 52 79;        /* #34344F  item selecionado em controles */
+  --c-line: 35 35 54;          /* #232336  separadores */
+  --c-line-strong: 46 46 70;   /* #2E2E46  bordas de campo */
   /* Texto */
-  --c-text: 245 245 247;       /* #F5F5F7  primário */
-  --c-text-2: 199 199 204;     /* #C7C7CC  rótulos */
-  --c-muted: 152 152 159;      /* #98989F  secundário */
-  --c-faint: 142 142 147;      /* #8E8E93  terciário (6:1 no fundo) */
+  --c-text: 244 243 255;       /* #F4F3FF  primário */
+  --c-text-2: 207 205 232;     /* #CFCDE8  rótulos */
+  --c-muted: 160 159 191;      /* #A09FBF  secundário */
+  --c-faint: 142 141 176;      /* #8E8DB0  terciário (6:1 no fundo) */
   /* Ação */
-  --c-accent: 0 113 227;       /* #0071E3  preenchimento (5:1 com branco) */
-  --c-accent-hover: 0 119 237; /* #0077ED */
-  --c-accent-text: 41 151 255; /* #2997FF  links e seleção sobre escuro */
+  --c-accent: 109 93 252;      /* #6D5DFC  preenchimento (5:1 com branco) */
+  --c-accent-hover: 123 108 255; /* #7B6CFF */
+  --c-accent-text: 167 156 255;  /* #A79CFF  links e seleção sobre escuro */
   --c-on-accent: 255 255 255;
-  --c-danger: 255 69 58;       /* #FF453A */
-  --c-success: 48 209 88;      /* #30D158 */
+  --c-danger: 255 99 99;       /* #FF6363 */
+  --c-success: 52 211 153;     /* #34D399 */
 
   /* Material de vidro */
-  --glass-tint: 30 30 32;
+  --glass-tint: 28 28 44;
   --glass-alpha: 0.62;
   --glass-edge: rgba(255, 255, 255, 0.10);
   --glass-highlight: rgba(255, 255, 255, 0.14);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --glass-shadow: 0 10px 40px rgba(4, 4, 12, 0.5), 0 1px 2px rgba(4, 4, 12, 0.3);
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --c-bg: 245 245 247;         /* #F5F5F7 */
-  --c-canvas: 232 232 237;     /* #E8E8ED */
+  --c-bg: 246 246 251;         /* #F6F6FB */
+  --c-canvas: 234 234 243;     /* #EAEAF3 */
   --c-surface: 255 255 255;
-  --c-surface-2: 242 242 247;  /* #F2F2F7 */
+  --c-surface-2: 238 238 246;  /* #EEEEF6 */
   --c-raised: 255 255 255;
-  --c-line: 229 229 234;       /* #E5E5EA */
-  --c-line-strong: 209 209 214;/* #D1D1D6 */
-  --c-text: 29 29 31;          /* #1D1D1F */
-  --c-text-2: 58 58 60;        /* #3A3A3C */
-  --c-muted: 110 110 115;      /* #6E6E73 */
-  --c-faint: 110 110 115;      /* #6E6E73  (4.9:1 no fundo) */
-  --c-accent: 0 113 227;       /* #0071E3 */
-  --c-accent-hover: 0 119 237;
-  --c-accent-text: 0 102 204;  /* #0066CC */
+  --c-line: 228 228 239;       /* #E4E4EF */
+  --c-line-strong: 210 210 226;/* #D2D2E2 */
+  --c-text: 22 21 42;          /* #16152A */
+  --c-text-2: 58 57 86;        /* #3A3956 */
+  --c-muted: 102 101 138;      /* #66658A */
+  --c-faint: 102 101 138;      /* #66658A  (5.3:1 no fundo) */
+  --c-accent: 91 75 234;       /* #5B4BEA  (5.6:1 com branco) */
+  --c-accent-hover: 79 63 224; /* #4F3FE0 */
+  --c-accent-text: 76 61 219;  /* #4C3DDB */
   --c-on-accent: 255 255 255;
-  --c-danger: 215 0 21;        /* #D70015 */
-  --c-success: 36 138 61;      /* #248A3D */
+  --c-danger: 215 38 61;       /* #D7263D */
+  --c-success: 4 120 87;       /* #047857 */
 
   --glass-tint: 255 255 255;
-  --glass-alpha: 0.68;
-  --glass-edge: rgba(0, 0, 0, 0.06);
+  --glass-alpha: 0.7;
+  --glass-edge: rgba(22, 21, 42, 0.06);
   --glass-highlight: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 10px 40px rgba(22, 21, 42, 0.08), 0 1px 2px rgba(22, 21, 42, 0.06);
 }
 
 :root {

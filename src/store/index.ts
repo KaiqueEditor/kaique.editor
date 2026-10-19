@@ -37,3 +37,6 @@ export const useStore = create<StoreState>()(
     { name: 'CarrosselPro' }
   )
 );
+
+// Depuração: acesso à store pelo console em desenvolvimento (window.__store.getState()).
+if (import.meta.env.DEV) (window as unknown as { __store: typeof useStore }).__store = useStore;

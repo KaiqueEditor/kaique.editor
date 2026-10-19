@@ -50,7 +50,7 @@ export function UIKit() {
           <div className="flex flex-col gap-2">
             <p className="text-footnote font-semibold text-accent-text">Fase 1 · Fundação</p>
             <h1 className="text-large font-bold">Limpo, leve e translúcido.</h1>
-            <p className="text-body text-muted max-w-xl">Cinzas em escala, um azul de ação, a fonte do sistema e painéis de vidro sobre o seu conteúdo.</p>
+            <p className="text-body text-muted max-w-xl">Cinzas em escala, um violeta de ação, a fonte do sistema e painéis de vidro sobre o seu conteúdo.</p>
           </div>
           <Button onClick={toggleTheme}>Tema {theme === 'dark' ? 'escuro' : 'claro'}</Button>
         </div>
@@ -145,7 +145,7 @@ export function UIKit() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-footnote font-medium text-fg-2 flex-1">Cor do título</span>
-              {[['#FFFFFF', 'Branco'], ['#C7C7CC', 'Cinza'], ['#2997FF', 'Azul'], ['#FFD60A', 'Amarelo']].map(([c, n]) => (
+              {[['#FFFFFF', 'Branco'], ['#C7C7CC', 'Cinza'], ['#A79CFF', 'Violeta'], ['#FFD60A', 'Amarelo']].map(([c, n]) => (
                 <Swatch key={c} color={c} label={n} selected={color === c} onClick={() => setColor(c)} />
               ))}
             </div>
