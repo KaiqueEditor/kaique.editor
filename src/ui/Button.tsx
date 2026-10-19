@@ -13,10 +13,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   block?: boolean;
 }
 
-// Botões em pílula, preenchidos como no iOS: azul para a ação principal,
+// Botões em pílula: gradiente do Instagram na ação principal,
 // cinza translúcido para as demais.
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-accent text-on-accent hover:bg-accent-hover font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.2)]',
+  primary: 'bg-brand text-white hover:brightness-110 font-semibold shadow-[0_2px_10px_rgba(193,53,132,0.35)]',
   secondary: 'bg-fg/10 text-fg hover:bg-fg/[0.15] font-medium',
   ghost: 'bg-transparent text-accent-text hover:bg-fg/[0.06] font-medium',
   danger: 'bg-danger/[0.14] text-danger hover:bg-danger/20 font-medium',
@@ -39,7 +39,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
       disabled={disabled || loading}
       className={cx(
         'inline-flex items-center justify-center rounded-pill whitespace-nowrap select-none',
-        'transition-[background-color,transform] duration-200 ease-out active:scale-[0.97]',
+        'transition-[background-color,transform,filter] duration-200 ease-out active:scale-[0.97]',
         'disabled:opacity-40 disabled:pointer-events-none',
         VARIANTS[variant],
         SIZES[size],

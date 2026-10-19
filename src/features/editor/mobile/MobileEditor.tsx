@@ -161,8 +161,12 @@ export function MobileEditor(props: MobileEditorProps) {
           {sections.map((s, i) => (
             <li key={s.id} className="flex-shrink-0">
               <button type="button" onClick={() => go(i)} aria-label={`Slide ${i + 1}`} aria-current={i === activeSlide ? 'true' : undefined}
-                className={cx('block rounded-[10px] overflow-hidden', i === activeSlide ? 'ring-2 ring-accent-text' : 'ring-1 ring-fg/10')}>
-                <SlideThumb section={s} index={i} total={sections.length} width={48} />
+                className={cx('block rounded-[12px] p-[2px]', i === activeSlide ? 'bg-story' : 'bg-transparent')}>
+                <span className={cx('block rounded-[10px] p-[1.5px]', i === activeSlide ? 'bg-canvas' : 'ring-1 ring-fg/10')}>
+                  <span className="block rounded-[8px] overflow-hidden">
+                    <SlideThumb section={s} index={i} total={sections.length} width={44} />
+                  </span>
+                </span>
               </button>
             </li>
           ))}

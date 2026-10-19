@@ -74,7 +74,7 @@ export function TopBar(props: TopBarProps) {
           trigger={p => (
             <button {...p} type="button"
               className="h-10 pl-3 pr-2.5 rounded-pill flex items-center gap-1.5 bg-fg/[0.08] hover:bg-fg/[0.12] transition-colors">
-              <span className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-accent-text">.</span>Pro</span>
+              <span className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</span>
               <ChevronDown size={14} className="text-muted" aria-hidden="true" />
               <span className="sr-only">Menu do projeto</span>
             </button>

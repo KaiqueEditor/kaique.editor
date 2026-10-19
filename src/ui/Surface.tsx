@@ -37,7 +37,7 @@ export function Swatch({ color, label, selected = false, className, ...props }: 
       className={cx(
         'w-7 h-7 rounded-full transition-transform duration-200 ease-out hover:scale-110',
         'shadow-[inset_0_0_0_1px_rgba(128,128,128,0.35)]',
-        selected && 'ring-2 ring-accent-text ring-offset-2 ring-offset-bg',
+        selected && 'ring-2 ring-accent ring-offset-2 ring-offset-bg',
         className,
       )}
       style={{ background: color }}

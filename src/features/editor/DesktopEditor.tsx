@@ -52,7 +52,7 @@ export function DesktopEditor(props: DesktopEditorProps) {
           <p className="text-body text-muted max-w-md">Cole um roteiro, abra um projeto salvo ou use um modelo pronto pelo menu Carrossel.Pro.</p>
           <div className="flex gap-2">
             <button type="button" onClick={() => setImportOpen(true)}
-              className="h-11 px-5 rounded-pill bg-accent text-on-accent font-semibold text-body hover:bg-accent-hover transition-colors">
+              className="h-11 px-5 rounded-pill bg-brand text-white font-semibold text-body hover:brightness-110 transition-[filter]">
               Importar roteiro
             </button>
             <button type="button" onClick={bar.onOpenProjects}

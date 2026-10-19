@@ -78,7 +78,7 @@ export function HomeScreen(props: HomeScreenProps) {
     <div className="fixed inset-0 bg-bg text-fg font-sans flex flex-col lg:flex-row">
       {/* Celular: cabeçalho com menu no lugar da barra lateral */}
       <header className="lg:hidden flex-shrink-0 h-14 px-4 flex items-center justify-between border-b border-fg/[0.06]">
-        <span className="text-title3 font-semibold tracking-tight">Carrossel<span className="text-accent-text">.</span>Pro</span>
+        <span className="text-title3 font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</span>
         <Menu
           align="end"
           items={[
@@ -92,14 +92,14 @@ export function HomeScreen(props: HomeScreenProps) {
             <button {...t} type="button" aria-label="Conta e opções" className="w-9 h-9 rounded-full overflow-hidden">
               {config.avatarUrl
                 ? <img src={config.avatarUrl} alt="" className="w-full h-full object-cover" />
-                : <span className="w-full h-full bg-accent text-on-accent flex items-center justify-center text-subhead font-semibold">{handle.replace('@', '').charAt(0).toUpperCase()}</span>}
+                : <span className="w-full h-full bg-brand text-white flex items-center justify-center text-subhead font-semibold">{handle.replace('@', '').charAt(0).toUpperCase()}</span>}
             </button>
           )}
         />
       </header>
 
       <nav aria-label="Navegação principal" className="hidden lg:flex w-[248px] flex-shrink-0 border-r border-fg/[0.06] p-4 flex-col gap-6">
-        <div className="px-3 pt-2 text-title3 font-semibold tracking-tight">Carrossel<span className="text-accent-text">.</span>Pro</div>
+        <div className="px-3 pt-2 text-title3 font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</div>
         <div className="flex flex-col gap-1">
           <NavItem icon={<LayoutGrid size={18} />} label="Projetos" active onClick={() => searchRef.current?.focus()} />
           <NavItem icon={<LayoutTemplate size={18} />} label="Modelos prontos" onClick={() => setTemplatesOpen(true)} />
@@ -112,7 +112,7 @@ export function HomeScreen(props: HomeScreenProps) {
           <div className="flex items-center gap-3 p-3 rounded-ui-lg bg-surface">
             {config.avatarUrl
               ? <img src={config.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover" />
-              : <span className="w-9 h-9 rounded-full bg-accent text-on-accent flex items-center justify-center text-subhead font-semibold" aria-hidden="true">{handle.replace('@', '').charAt(0).toUpperCase()}</span>}
+              : <span className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center text-subhead font-semibold" aria-hidden="true">{handle.replace('@', '').charAt(0).toUpperCase()}</span>}
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-subhead font-medium truncate">{handle}</span>
               <span className="text-caption text-faint tabular-nums">{projects.length} carrosséis</span>

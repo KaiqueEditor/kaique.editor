@@ -71,11 +71,19 @@ export function SlideRail({ onDownloadSlide }: { onDownloadSlide: (index: number
                 aria-label={`Slide ${i + 1}${i === 0 ? ' (capa)' : ''}: ${s.title || 'sem título'}`}
                 aria-current={active ? 'true' : undefined}
                 className={cx(
-                  'block rounded-[12px] overflow-hidden transition-[box-shadow,transform] duration-200 ease-out active:scale-[0.97]',
-                  active ? 'ring-2 ring-accent-text ring-offset-2 ring-offset-transparent' : 'ring-1 ring-fg/10 hover:ring-fg/25',
+                  'block rounded-[15px] p-[2.5px] transition-transform duration-200 ease-out active:scale-[0.97]',
+                  active ? 'bg-story' : 'bg-transparent',
                 )}
               >
-                <SlideThumb section={s} index={i} total={sections.length} width={THUMB_W} />
+                {/* Anel de Stories: gradiente, uma fresta e a miniatura */}
+                <span className={cx(
+                  'block rounded-[12px] p-[2px]',
+                  active ? 'bg-[rgb(var(--glass-tint))]' : 'ring-1 ring-fg/10 hover:ring-fg/25',
+                )}>
+                  <span className="block rounded-[10px] overflow-hidden">
+                    <SlideThumb section={s} index={i} total={sections.length} width={THUMB_W - 9} />
+                  </span>
+                </span>
               </button>
               <span className={cx(
                 'absolute left-1.5 bottom-1.5 min-w-[20px] h-5 px-1.5 rounded-pill text-caption2 font-semibold tabular-nums',

@@ -32,7 +32,7 @@ export function UIKit() {
     <div className="min-h-screen bg-bg text-fg font-sans">
       <header className="glass sticky top-0 z-20 h-14 flex items-center justify-between px-4 gap-4 rounded-none border-x-0 border-t-0">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-accent-text">.</span>Pro</span>
+          <span className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</span>
           <span className="w-px h-5 bg-line-strong" aria-hidden="true" />
           <span className="text-subhead text-fg-2 truncate">Componentes base</span>
           <StatusDot>Salvo</StatusDot>
@@ -50,7 +50,7 @@ export function UIKit() {
           <div className="flex flex-col gap-2">
             <p className="text-footnote font-semibold text-accent-text">Fase 1 · Fundação</p>
             <h1 className="text-large font-bold">Limpo, leve e translúcido.</h1>
-            <p className="text-body text-muted max-w-xl">Cinzas em escala, um violeta de ação, a fonte do sistema e painéis de vidro sobre o seu conteúdo.</p>
+            <p className="text-body text-muted max-w-xl">Cinzas em escala, o azul e o gradiente do Instagram, a fonte do sistema e painéis de vidro sobre o seu conteúdo.</p>
           </div>
           <Button onClick={toggleTheme}>Tema {theme === 'dark' ? 'escuro' : 'claro'}</Button>
         </div>
@@ -104,7 +104,7 @@ export function UIKit() {
               ))}
             </div>
             <div className="flex gap-1.5">
-              {['bg-accent', 'bg-accent-text', 'bg-success', 'bg-danger'].map(c => (
+              {['bg-brand', 'bg-story', 'bg-accent', 'bg-danger'].map(c => (
                 <div key={c} className={`flex-1 h-10 rounded-ui-sm ${c}`} />
               ))}
             </div>
@@ -145,7 +145,7 @@ export function UIKit() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-footnote font-medium text-fg-2 flex-1">Cor do título</span>
-              {[['#FFFFFF', 'Branco'], ['#C7C7CC', 'Cinza'], ['#A79CFF', 'Violeta'], ['#FFD60A', 'Amarelo']].map(([c, n]) => (
+              {[['#FFFFFF', 'Branco'], ['#C7C7CC', 'Cinza'], ['#0095F6', 'Azul'], ['#FFD60A', 'Amarelo']].map(([c, n]) => (
                 <Swatch key={c} color={c} label={n} selected={color === c} onClick={() => setColor(c)} />
               ))}
             </div>
