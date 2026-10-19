@@ -28,14 +28,15 @@
   --c-danger: 237 73 86;       /* #ED4956 */
   --c-success: 88 195 34;      /* #58C322 */
 
-  --glass-tint: 24 24 24;
-  --glass-alpha: 0.5;
+  /* Vidro: luz vindo de cima/esquerda */
+  --glass-tint: 18 18 18;
+  --glass-alpha: 0.38;
   --glass-strong-alpha: 0.94;
-  --glass-sheen: rgba(255, 255, 255, 0.10);
-  --glass-edge: rgba(255, 255, 255, 0.16);
-  --glass-highlight: rgba(255, 255, 255, 0.30);
-  --glass-lowlight: rgba(255, 255, 255, 0.05);
-  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --glass-rim-hi: rgba(255, 255, 255, 0.42);   /* aresta acesa (topo/esquerda) */
+  --glass-rim-lo: rgba(255, 255, 255, 0.07);   /* aresta na sombra (base/direita) */
+  --glass-sheen: rgba(255, 255, 255, 0.16);    /* reflexo fino junto à aresta de cima */
+  --glass-glow: rgba(255, 255, 255, 0.05);     /* brilho interno = espessura */
+  --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 :root[data-theme='light'] {
@@ -59,13 +60,13 @@
   --c-success: 61 138 22;      /* #3D8A16 */
 
   --glass-tint: 255 255 255;
-  --glass-alpha: 0.55;
+  --glass-alpha: 0.42;
   --glass-strong-alpha: 0.97;
-  --glass-sheen: rgba(255, 255, 255, 0.65);
-  --glass-edge: rgba(0, 0, 0, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 1);
-  --glass-lowlight: rgba(0, 0, 0, 0.04);
-  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --glass-rim-hi: rgba(255, 255, 255, 0.95);
+  --glass-rim-lo: rgba(0, 0, 0, 0.10);
+  --glass-sheen: rgba(255, 255, 255, 0.7);
+  --glass-glow: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Gradientes da marca Instagram */
@@ -118,33 +119,33 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Material "liquid glass": translúcido, desfoca e satura o que está atrás,
-   reflexo suave no topo, borda fina e brilho especular nas arestas. */
+/* Material "liquid glass".
+   - centro quase limpo: pouca tinta, desfoque moderado e mais saturação;
+   - aresta acesa no topo/esquerda e apagada na base/direita (luz direcional);
+   - reflexo fino colado à aresta de cima, não uma faixa;
+   - brilho interno nas bordas dá espessura; sombra externa difusa. */
 .glass,
 .glass-strong {
-  -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
-  backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
-  border: 1px solid var(--glass-edge);
+  border: 0;
   box-shadow:
-    inset 0 1px 0 var(--glass-highlight),
-    inset 0 -1px 0 var(--glass-lowlight),
-    inset 0 0 20px rgba(255, 255, 255, 0.03),
+    inset 1px 1px 0 var(--glass-rim-hi),
+    inset -1px -1px 0 var(--glass-rim-lo),
+    inset 0 10px 14px -12px var(--glass-sheen),
+    inset 0 0 18px var(--glass-glow),
     var(--glass-shadow);
 }
 .glass {
-  background:
-    linear-gradient(180deg, var(--glass-sheen) 0%, transparent 42%),
-    rgb(var(--glass-tint) / var(--glass-alpha));
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  -webkit-backdrop-filter: blur(14px) saturate(190%);
+  backdrop-filter: blur(14px) saturate(190%);
 }
 
 /* Vidro mais denso para menus e janelas: continua legível mesmo quando
    aberto dentro de outro painel de vidro (onde o desfoque não se repete). */
 .glass-strong {
-  background:
-    linear-gradient(180deg, var(--glass-sheen) 0%, transparent 42%),
-    rgb(var(--glass-tint) / var(--glass-strong-alpha));
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  backdrop-filter: blur(40px) saturate(200%);
+  background: rgb(var(--glass-tint) / var(--glass-strong-alpha));
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  backdrop-filter: blur(30px) saturate(190%);
 }
 
 @media (prefers-reduced-transparency: reduce) {
