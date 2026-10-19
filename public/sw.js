@@ -1,5 +1,5 @@
 // CarrosselPro Service Worker — cache-first for static assets, network-first for API
-const CACHE_NAME = 'carrosselpro-v1';
+const CACHE_NAME = 'carrosselpro-v2';
 const STATIC_ASSETS = [
     '/',
     '/manifest.json',
@@ -32,6 +32,10 @@ self.addEventListener('fetch', (event) => {
 
     // Supabase / API calls: network-only
     if (url.hostname.includes('supabase') || url.pathname.startsWith('/api')) return;
+
+    // FFmpeg / WASM: NUNCA interceptar — arquivos grandes demais pro Cache API
+    // e o COEP header corrompe a resposta quando cache.put() falha
+    if (url.pathname.includes('/ffmpeg') || url.pathname.endsWith('.wasm')) return;
 
     // Google Fonts: cache-first
     if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {

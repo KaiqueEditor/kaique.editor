@@ -111,10 +111,10 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
             style={{
               fontSize: finalTitleSize,
               color: finalTitleColor,
-              fontFamily: getFontFamily(section.titleFont || 'open-sans'),
+              fontFamily: getFontFamily(section.titleFont || 'sans'),
               textAlign: textAlign as any,
               overflow: 'hidden',
-              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : 700,
+              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : section.titleFont?.startsWith('gilroy') ? 400 : 700,
               lineHeight: section.titleFont === 'wide' ? 1.15 : 1.35,
               textTransform: section.titleFont === 'wide' ? 'uppercase' : undefined,
               letterSpacing: section.titleFont === 'wide' ? '-0.01em' : undefined,
@@ -131,7 +131,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                 fontFamily: getFontFamily(section.bodyFont || 'sans'),
                 textAlign: textAlign as any,
                 overflow: 'hidden',
-                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : 400,
+                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : section.bodyFont?.startsWith('gilroy') ? 400 : 400,
                 lineHeight: 1.65,
               }}
             >
@@ -264,7 +264,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
               fontSize: finalTitleSize,
               color: finalTitleColor,
               textShadow: '0 4px 30px rgba(0,0,0,0.8)',
-              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : 700,
+              fontWeight: section.titleFont === 'filson-pro-bold' ? 800 : section.titleFont === 'wide' ? 900 : section.titleFont?.startsWith('gilroy') ? 400 : 700,
               lineHeight: section.titleFont === 'wide' ? 1.15 : 1.1,
               textTransform: section.titleFont === 'wide' ? 'uppercase' : undefined,
               letterSpacing: section.titleFont === 'wide' ? '-0.01em' : undefined,
@@ -282,7 +282,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
                 color: finalBodyColor,
                 maxWidth: isFullBg ? '95%' : '100%',
                 textShadow: '0 2px 12px rgba(0,0,0,0.6)',
-                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : 400,
+                fontWeight: section.bodyFont === 'filson-pro-bold' ? 800 : section.bodyFont?.startsWith('gilroy') ? 400 : 400,
                 opacity: 0.9
               }}
             >

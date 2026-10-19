@@ -7,9 +7,17 @@
  *  - MINOR: features novas
  *  - PATCH: bugfixes e ajustes
  */
-export const APP_VERSION = '2.2.0';
+export const APP_VERSION = '2.3.7';
 
 export const VERSION_NOTES: { version: string; date: string; changes: string[] }[] = [
+  {
+    version: '2.3.0',
+    date: '2026-03-25',
+    changes: [
+      'Fix: Export MP4 agora usa Canvas + MediaRecorder (sem FFmpeg WASM)',
+      'Fix: Botão "Sair" agora funciona corretamente com reload',
+    ],
+  },
   {
     version: '2.2.0',
     date: '2026-03-22',

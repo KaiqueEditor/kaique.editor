@@ -147,7 +147,7 @@ function SidebarContent({
       alignment: slide.alignment || 'left',
       layoutType: slide.layoutType || 'storytelling',
       titleFont: isTimePrimo ? 'filson-pro-bold' : (slide.titleFont || 'bebas-neue'),
-      bodyFont: isTimePrimo ? 'open-sans' : (slide.bodyFont || 'montserrat'),
+      bodyFont: isTimePrimo ? 'open-sans' : (slide.bodyFont || 'sans'),
       titleSize: slide.titleSize || 40,
       bodySize: slide.bodySize || 18,
       bgColor: slide.bgColor || '#000000',
@@ -2069,5 +2069,14 @@ export default function App() {
     );
   }
 
-  return <CarrosselApp session={session} onLogout={() => { clearAdminCache(); supabase.auth.signOut(); }} />;
+  return <CarrosselApp session={session} onLogout={async () => {
+    clearAdminCache();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('[Auth] signOut falhou, forçando reload:', e);
+    }
+    // Força reload para limpar qualquer estado residual
+    window.location.reload();
+  }} />;
 }

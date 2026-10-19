@@ -35,6 +35,20 @@ export const FONT_OPTIONS: FontOption[] = [
     exclusiveTo: ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'],
   },
   {
+    id: 'gilroy-bold',
+    name: 'Gilroy Bold',
+    stack: "'Gilroy-Bold', sans-serif",
+    category: 'favorita',
+    label: 'Títulos Modernos',
+  },
+  {
+    id: 'gilroy-regular',
+    name: 'Gilroy Regular',
+    stack: "'Gilroy-Regular', sans-serif",
+    category: 'favorita',
+    label: 'Corpo Moderno',
+  },
+  {
     id: 'outfit',
     name: 'Outfit',
     stack: "'Outfit', sans-serif",
