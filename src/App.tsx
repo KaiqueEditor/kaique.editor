@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { clearAdminCache, fetchRole } from './hooks/useAdmin';
 import { Toaster } from 'react-hot-toast';
 import { LoginPage } from './components/auth/LoginPage';
+import { LandingPage } from './features/landing/LandingPage';
 import { supabase } from './lib/supabase';
 import { useStore } from './store';
 import { cloudStorage } from './services/storage/cloudStorage';
@@ -14,6 +15,26 @@ import { isOldHost, newHostReady } from './lib/domainMove';
 // ── Aplicação Autenticada ───────────────────────────────────────────────────────
 
 let loggedLoginFor: string | null = null;
+
+/** Já usou o app neste aparelho? Então vai direto para o login, como antes. */
+const isReturningVisitor = () => {
+  try {
+    if (new URLSearchParams(window.location.search).has('entrar')) return true;
+    return ['carrosselpro-has-account', 'carrosselpro-onboarding-done'].some(k => localStorage.getItem(k) !== null)
+      || Object.keys(localStorage).some(k => k.startsWith('sb-'));
+  } catch {
+    return false;
+  }
+};
+
+/** Visitante sem sessão: página inicial ou login. */
+function PublicSite({ onLogin }: { onLogin: (user: any) => void }) {
+  const [view, setView] = useState<'landing' | 'login' | 'signup'>(() => (isReturningVisitor() ? 'login' : 'landing'));
+  if (view === 'landing') {
+    return <LandingPage onSignUp={() => setView('signup')} onLogin={() => setView('login')} />;
+  }
+  return <LoginPage key={view} initialSignUp={view === 'signup'} onLogin={onLogin} onBack={() => setView('landing')} />;
+}
 
 export default function App() {
   const theme = useStore(state => state.theme);
@@ -72,6 +93,7 @@ export default function App() {
       useStore.getState().setAdmin(proEmails.includes(email.toLowerCase()));
       fetchRole().then(r => { if (r === 'admin') useStore.getState().setAdmin(true); }).catch(() => {});
       useStore.getState().setUserEmail(email || null);
+      try { localStorage.setItem('carrosselpro-has-account', '1'); } catch { /* sem armazenamento */ }
 
       // Registra o login uma vez por carregamento (o Supabase reemite eventos de sessão
       // ao renovar o token e ao voltar para a aba).
@@ -87,6 +109,10 @@ export default function App() {
 
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('kit')) {
     return <UIKit />;
+  }
+  // Pré-visualização da página inicial sem sair da conta (só em dev): /?landing
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('landing')) {
+    return <LandingPage onSignUp={() => window.location.assign('/?login')} onLogin={() => window.location.assign('/?login')} />;
   }
   // Pré-visualização da tela de login sem sair da conta (só em dev): /?login
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('login')) {
@@ -112,7 +138,7 @@ export default function App() {
             style: { background: undefined, color: 'rgb(var(--c-text))', borderRadius: '999px', padding: '8px 16px', fontWeight: 500, fontSize: '15px' },
           }}
         />
-        <LoginPage onLogin={(user) => setSession({ user })} />
+        <PublicSite onLogin={(user) => setSession({ user })} />
       </>
     );
   }

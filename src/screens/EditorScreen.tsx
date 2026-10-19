@@ -15,7 +15,6 @@ import { useHistory } from '../hooks/useHistory';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { VideoTrimModal } from '../components/editor/VideoTrimModal';
 import { BrandDialog } from '../features/brand/BrandDialog';
-import { Onboarding } from '../components/onboarding/Onboarding';
 import { CustomThemes } from '../components/themes/CustomThemes';
 import { AssetGalleryModal } from '../components/gallery/AssetGalleryModal';
 import { projectStorage } from '../services/storage/projectStorage';
@@ -65,7 +64,12 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   const [showNewConfirm, setShowNewConfirm] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('carrosselpro-onboarding-done'));
+  // Primeiro acesso: a home abre a criação rápida (no lugar do antigo tour)
+  const [firstRun, setFirstRun] = useState(() => { try { return !localStorage.getItem('carrosselpro-onboarding-done'); } catch { return false; } });
+  const finishFirstRun = useCallback(() => {
+    try { localStorage.setItem('carrosselpro-onboarding-done', '1'); } catch { /* sem armazenamento */ }
+    setFirstRun(false);
+  }, []);
   const [savingProject, setSavingProject] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -249,6 +253,8 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
           onNewFromTemplate={handleNewFromTemplate}
           onOpenAnalytics={() => setShowAnalytics(true)}
           onLogout={onLogout}
+          firstRun={firstRun}
+          onFirstRunDone={finishFirstRun}
         />
       ) : (
         <>
@@ -296,7 +302,6 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
 
       <BrandDialog open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <AssetGalleryModal isOpen={isAssetsOpen} onClose={() => setIsAssetsOpen(false)} />
-      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} />}
 
       <Dialog

@@ -29,13 +29,13 @@ function SlideFan() {
     );
 }
 
-export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
+export const LoginPage = ({ onLogin, initialSignUp = false, onBack }: { onLogin: (user: any) => void; initialSignUp?: boolean; onBack?: () => void }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [nickname, setNickname] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isSignUp, setIsSignUp] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(initialSignUp);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -124,7 +124,14 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
     return (
         <div className="fixed inset-0 bg-bg text-fg font-sans flex overflow-y-auto">
             <main className="flex-1 flex flex-col px-6 sm:px-12 lg:px-20 py-8 min-h-full">
-                <div className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</div>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</div>
+                    {onBack && (
+                        <button type="button" onClick={onBack} className="text-footnote text-muted hover:text-fg underline-offset-4 hover:underline">
+                            Conhecer a plataforma
+                        </button>
+                    )}
+                </div>
 
                 <div className="my-auto w-full max-w-[400px] py-10 flex flex-col gap-8">
                     <div className="flex flex-col gap-3">

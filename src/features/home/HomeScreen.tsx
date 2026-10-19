@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BarChart3, FileText, LayoutGrid, LayoutTemplate, LogOut, Moon, Plus, Search, Sparkles, Sun, UserRound,
 } from 'lucide-react';
@@ -6,7 +6,8 @@ import { Menu } from '../../ui';
 import { useStore } from '../../store';
 import { STARTER_TEMPLATES } from '../../constants/starterTemplates';
 import { Button, Dialog, Segmented, cx } from '../../ui';
-import { ImportRoteiroDialog, type RoteiroMode } from '../editor/ImportRoteiroDialog';
+import type { RoteiroMode } from '../editor/ImportRoteiroDialog';
+import { NewCarouselDialog } from './NewCarouselDialog';
 import { ProjectCard } from './ProjectCard';
 import { BrandDialog } from '../brand/BrandDialog';
 import { useProjects, type Project } from './useProjects';
@@ -24,6 +25,9 @@ interface HomeScreenProps {
   onNewFromTemplate: (templateId: string) => void;
   onOpenAnalytics: () => void;
   onLogout: () => void;
+  /** Primeiro acesso neste aparelho: abre a criação rápida se ainda não houver projetos. */
+  firstRun?: boolean;
+  onFirstRunDone?: () => void;
 }
 
 function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active?: boolean; onClick: () => void }) {
@@ -61,7 +65,8 @@ export function HomeScreen(props: HomeScreenProps) {
 
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const [roteiroOpen, setRoteiroOpen] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const [firstOpen, setFirstOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [brandOpen, setBrandOpen] = useState(false);
   const [toDelete, setToDelete] = useState<Project | null>(null);
@@ -71,6 +76,15 @@ export function HomeScreen(props: HomeScreenProps) {
     const q = query.trim().toLowerCase();
     return projects.filter(p => (filter === 'all' || p.source === filter) && (!q || p.name.toLowerCase().includes(q)));
   }, [projects, query, filter]);
+
+  const { firstRun, onFirstRunDone } = props;
+  useEffect(() => {
+    if (!firstRun || loading) return;
+    if (projects.length === 0) { setFirstOpen(true); setNewOpen(true); }
+    onFirstRunDone?.();
+  }, [firstRun, loading, projects.length, onFirstRunDone]);
+
+  const closeNew = () => { setNewOpen(false); setFirstOpen(false); };
 
   const handle = config.handle || config.watermark || userEmail?.split('@')[0] || 'Você';
 
@@ -136,12 +150,12 @@ export function HomeScreen(props: HomeScreenProps) {
                   placeholder="Buscar projeto" aria-label="Buscar projeto"
                   className="flex-1 min-w-0 bg-transparent outline-none text-subhead text-fg placeholder:text-faint" />
               </label>
-              <Button variant="primary" size="lg" icon={<Plus size={18} />} onClick={props.onNewBlank} className="hidden lg:inline-flex">Novo carrossel</Button>
+              <Button variant="primary" size="lg" icon={<Plus size={18} />} onClick={() => setNewOpen(true)} className="hidden lg:inline-flex">Novo carrossel</Button>
             </div>
           </header>
 
           <section aria-label="Criar" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <QuickAction icon={<FileText size={20} />} title="Colar roteiro" text="“texto 1”, “texto 2”… vira slides" onClick={() => setRoteiroOpen(true)} />
+            <QuickAction icon={<FileText size={20} />} title="Do texto ao carrossel" text="Cole o texto, escolha Feed ou Post do X" onClick={() => setNewOpen(true)} />
             <QuickAction icon={<Plus size={20} />} title="Em branco" text="3 slides com a sua marca" onClick={props.onNewBlank} />
             <QuickAction icon={<Sparkles size={20} />} title="A partir de um modelo" text={`${STARTER_TEMPLATES.length} modelos prontos`} onClick={() => setTemplatesOpen(true)} />
           </section>
@@ -181,8 +195,10 @@ export function HomeScreen(props: HomeScreenProps) {
         </div>
       </main>
 
-      <ImportRoteiroDialog open={roteiroOpen} busy={isProcessing} onClose={() => setRoteiroOpen(false)}
-        onConfirm={(text, mode) => { setRoteiroOpen(false); props.onNewFromRoteiro(text, mode); }} />
+      <NewCarouselDialog open={newOpen} first={firstOpen} busy={isProcessing} onClose={closeNew}
+        onCreate={(text, mode) => { closeNew(); props.onNewFromRoteiro(text, mode); }}
+        onBlank={() => { closeNew(); props.onNewBlank(); }}
+        onTemplates={() => { closeNew(); setTemplatesOpen(true); }} />
 
       <Dialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} title="Modelos prontos"
         description="Escolha um ponto de partida. Dá para mudar tudo depois." className="max-w-2xl">
