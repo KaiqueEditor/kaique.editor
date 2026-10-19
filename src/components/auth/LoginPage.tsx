@@ -42,8 +42,9 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                     setLoading(false);
                     return;
                 }
-                if (password.length < 6) {
-                    toast.error('A senha deve ter pelo menos 6 caracteres.');
+                // Mesma regra configurada no Supabase Auth (8+ caracteres, letras e números)
+                if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
+                    toast.error('A senha deve ter pelo menos 8 caracteres, com letras e números.');
                     setLoading(false);
                     return;
                 }
@@ -208,7 +209,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
                                         <input
                                             type="password"
                                             required
-                                            minLength={6}
+                                            minLength={8}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
