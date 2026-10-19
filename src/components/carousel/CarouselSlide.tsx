@@ -147,7 +147,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
               {isGenerating ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
                   <Loader2 className="animate-spin" size={32 * scaleFactor} />
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">IA Criando...</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Carregando...</span>
                 </div>
               ) : section.videoUrl ? (
                 <video

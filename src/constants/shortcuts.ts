@@ -6,5 +6,4 @@ export const KEYBOARD_SHORTCUTS = {
   NEXT_SLIDE: { key: 'ArrowRight', description: 'Próximo slide' },
   PREV_SLIDE: { key: 'ArrowLeft', description: 'Slide anterior' },
   DELETE_SLIDE: { key: 'Backspace', meta: true, description: 'Deletar slide' },
-  OPEN_AGENT: { key: 'k', meta: true, description: 'Abrir Agente IA' },
 };

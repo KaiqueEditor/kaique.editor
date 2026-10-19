@@ -1,9 +1,7 @@
 import { useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { geminiService } from '../services/api/geminiService';
 import { Section } from '../types';
 import { useStore } from '../store';
-import { useImageGeneration } from './useImageGeneration';
 
 const DEFAULT_SECTION_BASE: Omit<Section, 'id' | 'title' | 'content' | 'imagePrompt'> = {
   alignment: 'left',
@@ -28,10 +26,6 @@ export const useProcessText = () => {
   const setSections = useStore(state => state.setSections);
   const isProcessing = useStore(state => state.isProcessing);
   const setIsProcessing = useStore(state => state.setIsProcessing);
-  const numSlides = useStore(state => state.config.numSlides);
-  const setGeneratingIds = useStore(state => state.setGeneratingIds);
-  const useAI = useStore(state => state.useAI);
-  const { generateAll } = useImageGeneration();
 
   const isTimePrimo = () => {
     const email = useStore.getState().userEmail?.toLowerCase();
@@ -57,7 +51,7 @@ export const useProcessText = () => {
     let finalSections: Section[] = [];
 
     try {
-      if (!useAI || isStructuredRoteiro(rawText)) {
+      if (isStructuredRoteiro(rawText)) {
         // Parse structured roteiro format (com ou sem traço)
         const lines = rawText.split(/\n+/);
         const dataMap: Record<number, string> = {};
@@ -101,31 +95,34 @@ export const useProcessText = () => {
           }
         }
       } else {
-        const result = await geminiService.splitTextIntoSections(rawText, numSlides);
-        finalSections = result.map((s, idx) => ({
-          ...DEFAULT_SECTION_BASE,
-          ...s,
-          alignment: idx === 0 ? 'center' as const : 'left' as const,
-          titleFont: getTitleFont(),
-          bodyFont: getBodyFont(),
-          titleSize: 30,
-          ...(idx === 0 ? { bodySize: 10 } : {}),
-        }));
+        // Texto livre: cada parágrafo vira um slide (1ª linha = título, resto = corpo)
+        const blocks = rawText.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+        finalSections = blocks.map((block, idx) => {
+          const [first, ...rest] = block.split('\n');
+          return {
+            ...DEFAULT_SECTION_BASE,
+            id: `s-${idx + 1}-${Date.now()}`,
+            title: first.trim(),
+            content: rest.join(' ').trim(),
+            imagePrompt: first.trim(),
+            alignment: idx === 0 ? 'center' as const : 'left' as const,
+            titleFont: getTitleFont(),
+            bodyFont: getBodyFont(),
+            titleSize: 30,
+            ...(idx === 0 ? { bodySize: 10 } : {}),
+          };
+        });
       }
     } catch (error) {
       console.error("Text processing error:", error);
-      toast.error('Falha ao processar o texto. Verifique sua API key.');
+      toast.error('Falha ao processar o texto.');
       setIsProcessing(false);
       return;
     }
 
     setSections(finalSections);
     setIsProcessing(false);
-
-    // Start generating images sequentially
-    setGeneratingIds(finalSections.map(s => s.id));
-    generateAll(finalSections);
-  }, [setSections, setIsProcessing, numSlides, generateAll, setGeneratingIds, isProcessing, useAI]);
+  }, [setSections, setIsProcessing, isProcessing]);
 
   return {
     processText,

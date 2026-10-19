@@ -1,7 +1,6 @@
 import React from 'react';
 import { useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { applySynthidBypass } from '../services/processors/synthidBypass';
 import { validateImageFile, validateVideoFile } from '../utils/validation';
 import { useStore } from '../store';
 
@@ -24,9 +23,8 @@ export const useFileUpload = () => {
     const reader = new FileReader();
     reader.onloadend = async () => {
       try {
-        const rawData = reader.result as string;
-        const finalData = await applySynthidBypass(rawData);
-        updateSection(id, { imageUrl: finalData, videoUrl: undefined, videoTrimStart: undefined });
+        const imageUrl = reader.result as string;
+        updateSection(id, { imageUrl, videoUrl: undefined, videoTrimStart: undefined });
       } catch (error) {
         console.error('File processing failed:', error);
         toast.error('Falha ao processar arquivo enviado.');

@@ -2,10 +2,10 @@
 
 # 🎠 Carrossel.Pro
 
-### Editor de Carrossel Profissional com IA
+### Editor de Carrossel Profissional
 
 **Crie carrosséis de alta performance em minutos.**
-Editor visual completo, agentes de IA integrados e exportação em alta qualidade — tudo no navegador.
+Editor visual completo e exportação em alta qualidade — tudo no navegador.
 
 [![Deploy](https://img.shields.io/badge/▶%20ACESSAR-kaique--editor.vercel.app-00E5C3?style=for-the-badge&logo=vercel&logoColor=white)](https://kaique-editor.vercel.app)
 [![Stack](https://img.shields.io/badge/React_19-TypeScript-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
@@ -69,14 +69,6 @@ Editor visual completo, agentes de IA integrados e exportação em alta qualidad
 - **Área da imagem** — Controle quanto da tela a imagem ocupa
 - **Suporte a vídeo** — Upload de MP4/MOV com trimming integrado
 
-### 🤖 Agentes de IA Integrados
-
-| Agente | O que faz |
-| ------ | --------- |
-| **Agente de Texto** | GPT especializado que gera roteiros virais para carrosséis |
-| **Agente de Imagem** | GPT que gera imagens otimizadas para slides |
-| **Processamento auto** | Cole o roteiro → o editor distribui automaticamente nos slides |
-| **Variações de título** | Gere novas versões de headlines com IA (Gemini) |
 
 ### 📱 Mobile First
 
@@ -84,7 +76,7 @@ Editor visual completo, agentes de IA integrados e exportação em alta qualidad
 - **Canvas fullscreen** no celular — preview idêntico ao Instagram
 - **Mini preview** inline dentro do editor de cada slide
 - **Tema claro/escuro** — Alternância instantânea com animação suave
-- **Criação sem IA** — Adicione e edite slides manualmente no celular
+- **Criação manual** — Adicione e edite slides manualmente no celular
 
 ### 📦 Exportação Profissional
 
@@ -122,8 +114,6 @@ Editor visual completo, agentes de IA integrados e exportação em alta qualidad
 | ------ | ---- |
 | `←` `→` | Navegar entre slides |
 | `⌘Z` / `⌘⇧Z` | Undo / Redo |
-| `⌘K` | Abrir Agente de Texto |
-| `⌘⇧K` | Abrir Agente de Imagem |
 
 ---
 
@@ -138,7 +128,7 @@ Editor visual completo, agentes de IA integrados e exportação em alta qualidad
 │ React 19 │ Zustand          │ Supabase Auth (OAuth)     │
 │ TypeScrip│ carouselSlice    │ Supabase Database (RLS)   │
 │ Tailwind │ editorSlice      │ Supabase Storage          │
-│ Vite 5   │ useHistory (undo)│ Gemini API (IA)           │
+│ Vite 5   │ useHistory (undo)│ Supabase (auth + dados)   │
 │          │                  │ Unsplash API (imagens)    │
 ├──────────┴──────────────────┴───────────────────────────┤
 │                    Rendering Pipeline                    │
@@ -199,7 +189,6 @@ Acesse **http://localhost:3001**
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_GEMINI_API_KEY=your_gemini_api_key
 VITE_UNSPLASH_ACCESS_KEY=your_unsplash_key
 ```
 
@@ -234,7 +223,7 @@ src/
 │   ├── useKeyboardShortcuts.ts
 │   └── useProcessText.ts # Parser de roteiro → slides
 ├── services/
-│   ├── api/             # GeminiService + UnsplashService
+│   ├── api/             # UnsplashService
 │   ├── processors/      # Image processing
 │   └── storage/         # projectStorage (IndexedDB) + cloudStorage (Supabase)
 ├── store/               # Zustand store
@@ -285,7 +274,7 @@ src/
 
 <div align="center">
 
-**Carrossel.Pro** — Transforme texto em carrosséis profissionais com IA ✨
+**Carrossel.Pro** — Transforme texto em carrosséis profissionais ✨
 
 [![Acessar Plataforma](https://img.shields.io/badge/Acessar_Plataforma-00E5C3?style=for-the-badge&logo=vercel&logoColor=black)](https://kaique-editor.vercel.app)
 

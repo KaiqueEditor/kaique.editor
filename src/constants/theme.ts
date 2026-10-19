@@ -33,7 +33,7 @@ export interface ThemeTokens {
   shadowStrong: string;
 }
 
-// Fundo padrão escuro + destaque cyan MyHub.ai
+// Fundo padrão escuro + destaque cyan
 export const DARK: ThemeTokens = {
   bg: '#000000',              // Fundo puro preto — padrão
   bgCanvas: '#000000',
@@ -44,7 +44,7 @@ export const DARK: ThemeTokens = {
   glassMd: 'rgba(255,255,255,0.06)',
   border: 'rgba(255,255,255,0.12)',
   borderStrong: 'rgba(255,255,255,0.20)',
-  accent: '#00E5C3',          // Cyan MyHub.ai — destaque
+  accent: '#00E5C3',          // Cyan — destaque
   accentText: '#000000',
   accentHover: '#00CEB0',
   accentGlow: 'rgba(0,229,195,0.20)',

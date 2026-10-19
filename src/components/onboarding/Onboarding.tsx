@@ -13,9 +13,9 @@ const STEPS = [
         gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     },
     {
-        emoji: '🤖',
-        title: 'Comece com o Agente IA',
-        description: 'Cole seu texto no campo "Texto base" e clique em Gerar. O agente IA vai criar os slides automaticamente com títulos e conteúdo otimizados.',
+        emoji: '✍️',
+        title: 'Cole seu roteiro',
+        description: 'Escreva no formato "texto 1", "texto 2"… e clique em Gerar Carrossel. Cada bloco vira um slide pronto para editar.',
         gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
     },
     {
@@ -26,8 +26,8 @@ const STEPS = [
     },
     {
         emoji: '📸',
-        title: 'Imagens com IA',
-        description: 'No painel de cada slide, descreva a imagem que quer e clique no botão IA para gerar imagens únicas automaticamente.',
+        title: 'Suas imagens',
+        description: 'Em cada slide, envie sua foto ou vídeo, ou busque na galeria. Ajuste posição, zoom e degradê direto no editor.',
         gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
     },
     {

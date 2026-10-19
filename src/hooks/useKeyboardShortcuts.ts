@@ -44,12 +44,6 @@ export const useKeyboardShortcuts = (opts?: ShortcutOptions) => {
         e.preventDefault();
         setActiveSlide(activeSlide - 1);
       }
-
-      // Open Agente de Texto: Cmd+K
-      if (isMeta && e.key === 'k') {
-        e.preventDefault();
-        window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank');
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);

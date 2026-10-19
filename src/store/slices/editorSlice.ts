@@ -8,12 +8,10 @@ export interface EditorSlice {
   exportStep: string | null;
   isProcessing: boolean;
   generatingIds: string[];
-  useAI: boolean;
 
   // Theme
   theme: Theme;
 
-// Image Agent (Removed)
 
   // Track the current project ID
   currentProjectId: string | null;
@@ -37,7 +35,6 @@ export interface EditorSlice {
   setGeneratingIds: (ids: string[]) => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
-  setUseAI: (v: boolean) => void;
 
   // Export format
   exportFormat: ExportFormatKey;
@@ -59,7 +56,6 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
   exportStep: null,
   isProcessing: false,
   generatingIds: [],
-  useAI: true,
   theme: 'dark',
   currentProjectId: null,
   isAdmin: false,
@@ -91,7 +87,6 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
     localStorage.setItem('myhub-theme', next);
     return { theme: next };
   }),
-  setUseAI: (v: boolean) => set({ useAI: v }),
 
   setCurrentProjectId: (id: string | null) => set({ currentProjectId: id }),
 

@@ -32,7 +32,6 @@ import { CustomThemes } from './components/themes/CustomThemes';
 import { AssetGalleryModal } from './components/gallery/AssetGalleryModal';
 import { projectStorage } from './services/storage/projectStorage';
 import { cloudStorage } from './services/storage/cloudStorage';
-import { geminiService } from './services/api/geminiService';
 import { getTheme } from './constants/theme';
 import { STARTER_TEMPLATES } from './constants/starterTemplates';
 import type { ThemeTokens } from './constants/theme';
@@ -102,7 +101,7 @@ interface SidebarContentProps {
   onNewCarrossel: () => void;
 }
 
-// Conta slides a partir do formato "texto N" do agente
+// Conta slides a partir do formato "texto N" do roteiro
 const countSlidesFromText = (text: string): number => {
   const matches = text.match(/^texto\s+\d+/gim);
   if (!matches || matches.length === 0) return 0;
@@ -190,36 +189,6 @@ function SidebarContent({
 
           {/* Ações do header */}
           <div className="flex items-center gap-1.5">
-            <div
-              className="flex items-center gap-1 p-1 rounded-xl"
-              style={{ background: T.glass, border: `1px solid ${T.border}` }}
-            >
-              <button
-                onClick={() => window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank')}
-                title="Abrir agente de texto"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-white/5"
-                style={{ background: 'transparent', color: T.textSub }}
-              >
-                <FileText size={12} />
-                <span className="flex flex-col items-start leading-none gap-[2px]">
-                  <span className="text-[7px] font-bold uppercase tracking-widest" style={{ opacity: 0.5 }}>Agente</span>
-                  <span className="text-[9px] font-black uppercase tracking-wide">Texto</span>
-                </span>
-              </button>
-
-              <button
-                onClick={() => window.open('https://chatgpt.com/g/g-699063520f4c81919e57262f9e84dc3e-kaique-editor-image-generator', '_blank')}
-                title="Abrir agente de imagem"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-white/5"
-                style={{ background: 'transparent', color: T.textSub }}
-              >
-                <Palette size={12} />
-                <span className="flex flex-col items-start leading-none gap-[2px]">
-                  <span className="text-[7px] font-bold uppercase tracking-widest" style={{ opacity: 0.5 }}>Agente</span>
-                  <span className="text-[9px] font-black uppercase tracking-wide">Imagem</span>
-                </span>
-              </button>
-            </div>
 
             <button
               onClick={toggleTheme}
@@ -390,7 +359,7 @@ function SidebarContent({
               )}
             </div>
             <textarea
-              placeholder={"Cole aqui o roteiro do Agente de Texto...\n\ntexto 1\nTítulo da Capa\n\ntexto 2\nSubtítulo · Conteúdo do slide 2"}
+              placeholder={"Cole aqui o seu roteiro...\n\ntexto 1\nTítulo da Capa\n\ntexto 2\nSubtítulo · Conteúdo do slide 2"}
               className="w-full h-32 lg:h-44 px-4 py-3 text-sm rounded-2xl outline-none resize-none transition-all"
               value={textInput}
               onChange={e => setTextInput(e.target.value)}
@@ -959,40 +928,12 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
     }
   }, [sections, exportRefs, exportPDF, exportFormat, captureSlideAsPng]);
 
-  // Caption AI
-  const [caption, setCaption] = useState('');
-  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
-  const [captionCopied, setCaptionCopied] = useState(false);
-
-  const handleGenerateCaption = useCallback(async () => {
-    if (sections.length === 0) return;
-    setIsGeneratingCaption(true);
-    try {
-      const text = await geminiService.generateCaption(
-        sections.map(s => ({ title: s.title, content: s.content }))
-      );
-      setCaption(text);
-    } catch {
-      toast.error('Erro ao gerar legenda');
-    } finally {
-      setIsGeneratingCaption(false);
-    }
-  }, [sections]);
-
-  const handleCopyCaption = () => {
-    navigator.clipboard.writeText(caption);
-    setCaptionCopied(true);
-    toast.success('Legenda copiada!');
-    setTimeout(() => setCaptionCopied(false), 2000);
-  };
-
   // Novo Carrossel
   const setSections = useStore(state => state.setSections);
   const handleNewCarousel = () => {
     if (sections.length > 0 && !confirm('Criar um novo carrossel? O atual será salvo automaticamente.')) return;
     setSections([]);
     setTextInput('');
-    setCaption('');
     toast.success('Pronto! Comece um novo carrossel.');
   };
 
@@ -1005,12 +946,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
       return;
     }
     processText(textInput);
-  };
-
-  const handleAgentApply = (text: string) => {
-    setTextInput(text);
-    processText(text);
-    toast.success('Roteiro aplicado! Gerando carrossel...');
   };
 
   const handleVideoUploadRequest = (sectionId: string, file: File) => {
@@ -1133,7 +1068,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
         </div>
       )}
 
-      {/* Tab: Criar — criar manual + agentes */}
+      {/* Tab: Criar — criar manual */}
       {mobileActiveTab === 'create' && (
         <div className="lg:hidden fixed inset-0 z-[80] overflow-y-auto pb-24" style={{ background: T.bgCanvas }}>
           <div className="p-5 pt-6 space-y-5">
@@ -1143,7 +1078,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
             <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
               <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: T.textFaint }}>Modo Manual</p>
               <p className="text-xs font-semibold mb-4" style={{ color: T.textSub }}>
-                Crie slides um a um, sem usar inteligência artificial
+                Crie slides um a um, do seu jeito
               </p>
               <button
                 onClick={() => {
@@ -1187,39 +1122,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
               <FileText size={14} /> Novo Carrossel Vazio
             </button>
 
-            {/* Agentes IA (redirect ChatGPT) */}
-            <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.border}` }}>
-              <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: T.textFaint }}>Agentes IA</p>
-              <p className="text-xs font-semibold mb-4" style={{ color: T.textSub }}>
-                Use GPTs especializados para gerar conteúdo no ChatGPT
-              </p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank')}
-                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all active:scale-95"
-                  style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}30` }}
-                >
-                  <MessageSquareText size={16} style={{ color: T.accent }} />
-                  <div className="text-left flex-1">
-                    <div className="text-xs font-bold" style={{ color: T.textPrimary }}>Agente de Texto</div>
-                    <div className="text-[9px] font-medium" style={{ color: T.textFaint }}>Gera roteiros de carrossel no ChatGPT</div>
-                  </div>
-                  <ExternalLink size={12} style={{ color: T.textFaint }} />
-                </button>
-                <button
-                  onClick={() => window.open('https://chatgpt.com/g/g-699063520f4c81919e57262f9e84dc3e-kaique-editor-image-generator', '_blank')}
-                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all active:scale-95"
-                  style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}30` }}
-                >
-                  <Sparkles size={16} style={{ color: T.accent }} />
-                  <div className="text-left flex-1">
-                    <div className="text-xs font-bold" style={{ color: T.textPrimary }}>Agente de Imagem</div>
-                    <div className="text-[9px] font-medium" style={{ color: T.textFaint }}>Gera imagens para slides no ChatGPT</div>
-                  </div>
-                  <ExternalLink size={12} style={{ color: T.textFaint }} />
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -1286,38 +1188,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                 <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>Meus Projetos</span>
                 <ChevronRight size={14} style={{ color: T.textFaint }} />
               </button>
-            </div>
-
-            {/* Legenda IA */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.border}` }}>
-              <p className="text-[9px] font-black uppercase tracking-widest px-4 pt-4 pb-2" style={{ color: T.textFaint }}>Legenda IA</p>
-              <button
-                onClick={handleGenerateCaption}
-                disabled={isGeneratingCaption || sections.length === 0}
-                className="flex items-center gap-3 w-full py-3 px-4 transition-all active:bg-white/5"
-                style={{ borderBottom: caption ? `1px solid ${T.border}` : undefined }}
-              >
-                {isGeneratingCaption
-                  ? <Loader2 className="animate-spin" size={16} style={{ color: T.accent }} />
-                  : <MessageSquareText size={16} style={{ color: T.accent }} />
-                }
-                <span className="text-xs font-bold flex-1 text-left" style={{ color: T.textPrimary }}>
-                  {isGeneratingCaption ? 'Gerando...' : 'Gerar Legenda'}
-                </span>
-                <ChevronRight size={14} style={{ color: T.textFaint }} />
-              </button>
-              {caption && (
-                <div className="px-4 py-3 space-y-2">
-                  <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: T.textSub }}>{caption}</p>
-                  <button
-                    onClick={handleCopyCaption}
-                    className="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95"
-                    style={{ background: T.accent, color: T.accentText }}
-                  >
-                    {captionCopied ? '✓ Copiada!' : 'Copiar Legenda'}
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Analytics (admin only) */}
@@ -1732,15 +1602,8 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                     </span>
                   </div>
                   <p className="text-[13px] font-semibold leading-snug text-left" style={{ color: T.textPrimary }}>
-                    Gere seu roteiro com o Agente de Texto
+                    Escreva o roteiro: "texto 1", "texto 2"…
                   </p>
-                  <button
-                    onClick={() => window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank')}
-                    className="mt-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide transition-all hover:opacity-70"
-                    style={{ color: T.accent }}
-                  >
-                    <ExternalLink size={11} /> Abrir agente
-                  </button>
                 </div>
 
                 <div className="hidden lg:flex items-center flex-shrink-0" style={{ color: T.border }}>
@@ -1801,7 +1664,7 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
 
               </div>
 
-              {/* Agentes — atalhos */}
+              {/* Atalhos */}
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={() => setHistoryOpen(true)}
@@ -1809,20 +1672,6 @@ function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => voi
                   style={{ background: T.accent, color: T.accentText, boxShadow: `0 4px 16px ${T.accentGlow}` }}
                 >
                   <FolderOpen size={13} /> Meus Carrosséis
-                </button>
-                <button
-                  onClick={() => window.open('https://chatgpt.com/g/g-69a18873bd248191aba9b10316dfd5f3-kaique-editor-text-generator', '_blank')}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all hover:opacity-80 active:scale-95"
-                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textSub }}
-                >
-                  <FileText size={12} /> Agente de Texto <ExternalLink size={10} />
-                </button>
-                <button
-                  onClick={() => window.open('https://chatgpt.com/g/g-699063520f4c81919e57262f9e84dc3e-kaique-editor-image-generator', '_blank')}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all hover:opacity-80 active:scale-95"
-                  style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textSub }}
-                >
-                  <Palette size={12} /> Agente de Imagem <ExternalLink size={10} />
                 </button>
               </div>
 

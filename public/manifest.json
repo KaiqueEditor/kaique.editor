@@ -1,7 +1,7 @@
 {
   "name": "CarrosselPro",
   "short_name": "CarrosselPro",
-  "description": "Automação de Carrossel para Instagram — Editor profissional com IA",
+  "description": "Automação de Carrossel para Instagram — Editor profissional",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

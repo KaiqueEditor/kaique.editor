@@ -8,8 +8,6 @@ import {
 import { Section } from '../../types';
 import { FONT_OPTIONS, FONT_CATEGORIES, getFontsByCategory } from '../../constants/fonts';
 import { useStore } from '../../store';
-import { useImageGeneration } from '../../hooks/useImageGeneration';
-import { geminiService } from '../../services/api/geminiService';
 import { ImageGallery } from '../gallery/ImageGallery';
 import { Theme, ThemeTokens, DARK_FALLBACK } from '../../constants/theme';
 import { CarouselSlide } from '../carousel/CarouselSlide';
@@ -167,12 +165,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const reorderSections = useStore(state => state.reorderSections);
   const config = useStore(state => state.config);
   const updateConfig = useStore(state => state.updateConfig);
-  const { generate, isGenerating } = useImageGeneration();
   const isAdmin = useStore(state => state.isAdmin);
   const userEmail = useStore(state => state.userEmail);
 
   const s = section;
-  const generating = isGenerating(s.id);
   const update = (updates: Partial<Section>) => updateSection(s.id, updates);
   const label = index === 0 ? 'CAPA' : index === sections.length - 1 ? 'FINAL' : `SLIDE ${index + 1}`;
   const hasImage = !!(s.imageUrl || s.videoUrl);
@@ -213,12 +209,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [titleVariations, setTitleVariations] = useState<string[]>([]);
-  const [variationIndex, setVariationIndex] = useState(0);
-  const [isLoadingVariations, setIsLoadingVariations] = useState(false);
   const [savingPreset, setSavingPreset] = useState(false);
   const [presetName, setPresetName] = useState('');
-  const originalTitleRef = useRef(s.title);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -244,34 +236,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     const t = setTimeout(() => setConfirmDelete(false), 3000);
     return () => clearTimeout(t);
   }, [confirmDelete]);
-
-  const handleCycleTitle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isLoadingVariations) return;
-
-    // Se já temos variações, apenas cicla
-    if (titleVariations.length > 0) {
-      const next = (variationIndex + 1) % (titleVariations.length + 1);
-      setVariationIndex(next);
-      // índice igual ao total = volta ao original
-      update({ title: next === titleVariations.length ? originalTitleRef.current : titleVariations[next] });
-      return;
-    }
-
-    // Primeira chamada: gera variações
-    originalTitleRef.current = s.title;
-    setIsLoadingVariations(true);
-    try {
-      const variations = await geminiService.generateTitleVariations(s.title, s.content);
-      setTitleVariations(variations);
-      setVariationIndex(0);
-      if (variations.length > 0) update({ title: variations[0] });
-    } catch {
-      // silently fail
-    } finally {
-      setIsLoadingVariations(false);
-    }
-  };
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -551,14 +515,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <p className="text-[8px] font-bold uppercase" style={{ color: T.textFaint }}>Título</p>
-                      <button
-                        onClick={handleCycleTitle}
-                        title={titleVariations.length > 0 ? `Variação ${variationIndex + 1}/${titleVariations.length} — clique para próxima` : 'Gerar variações de headline'}
-                        className="p-1 rounded-lg transition-all duration-300 hover:scale-110 active:scale-90 hover:bg-white/10"
-                        style={{ color: isLoadingVariations ? T.accent : T.textFaint, background: 'transparent' }}
-                      >
-                        <RefreshCw size={11} className={isLoadingVariations ? 'animate-spin' : ''} />
-                      </button>
                     </div>
                     <textarea
                       value={s.title}
@@ -1024,7 +980,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                           </div>
                         )}
 
-                        {/* Upload + Buscar + Gerar IA */}
+                        {/* Upload + Buscar */}
                         <div className="flex gap-2">
                           <label
                             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wide cursor-pointer transition-all active:scale-95 active:opacity-70"
@@ -1052,20 +1008,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                             style={{ background: T.glass, border: `1px solid ${T.border}`, color: T.textDim }}
                           >
                             <Search size={13} /> Buscar
-                          </button>
-                          <button
-                            disabled={generating}
-                            onClick={e => { e.stopPropagation(); generate(s.id, s.imagePrompt || s.title, s.content); }}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wide transition-all"
-                            style={{
-                              background: generating ? T.glassMd : T.accent,
-                              color: generating ? T.textDim : T.accentText,
-                              boxShadow: generating ? 'none' : `0 2px 12px ${T.accentGlow}`,
-                              border: generating ? `1px solid ${T.border}` : '1px solid transparent',
-                            }}
-                          >
-                            {generating ? <Loader2 className="animate-spin animate-pulse-subtle" size={13} /> : <Sparkles size={13} />}
-                            {generating ? 'Gerando...' : 'Gerar IA'}
                           </button>
                         </div>
                       </>
