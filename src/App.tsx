@@ -79,6 +79,10 @@ export default function App() {
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('kit')) {
     return <UIKit />;
   }
+  // Pré-visualização da tela de login sem sair da conta (só em dev): /?login
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('login')) {
+    return <LoginPage onLogin={() => window.location.assign('/')} />;
+  }
 
   if (authLoading) {
     return (
@@ -92,18 +96,10 @@ export default function App() {
     return (
       <>
         <Toaster
-          position="top-center"
+          position="bottom-center"
           toastOptions={{
-            style: {
-              background: 'rgba(255,255,255,0.03)',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)',
-              fontSize: '11px',
-              fontFamily: 'Inter',
-              fontWeight: 600,
-              letterSpacing: '0.05em',
-            },
+            className: 'glass-strong',
+            style: { background: undefined, color: 'rgb(var(--c-text))', borderRadius: '999px', padding: '8px 16px', fontWeight: 500, fontSize: '15px' },
           }}
         />
         <LoginPage onLogin={(user) => setSession({ user })} />

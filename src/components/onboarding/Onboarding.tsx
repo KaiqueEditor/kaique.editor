@@ -1,167 +1,87 @@
 import React, { useState } from 'react';
-import { ChevronRight, X } from 'lucide-react';
+import { Cloud, Download, Eye, FileText, LayoutGrid, SlidersHorizontal } from 'lucide-react';
+import { Button, Dialog, cx } from '../../ui';
 
 interface OnboardingProps {
     onComplete: () => void;
 }
 
-const STEPS = [
+const STEPS: Array<{ icon: React.ReactNode; title: string; text: string }> = [
     {
-        emoji: '👋',
-        title: 'Bem-vindo ao CarrosselPro',
-        description: 'A ferramenta que cria carrosséis profissionais para Instagram em poucos minutos.',
-        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        icon: <LayoutGrid size={26} />,
+        title: 'Bem-vindo ao Carrossel.Pro',
+        text: 'Carrosséis para o Instagram em minutos: você escreve, ajusta cada slide e exporta pronto para postar.',
     },
     {
-        emoji: '✍️',
-        title: 'Cole seu roteiro',
-        description: 'Escreva no formato "texto 1", "texto 2"… e clique em Gerar Carrossel. Cada bloco vira um slide pronto para editar.',
-        gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        icon: <FileText size={26} />,
+        title: 'Comece pelo roteiro',
+        text: 'Em “Colar roteiro”, escreva no formato “texto 1”, “texto 2”… ou em parágrafos. Cada bloco vira um slide.',
     },
     {
-        emoji: '🎨',
-        title: 'Estilize com Templates',
-        description: 'Use os Templates prontos ou personalize cores, fontes e layout em cada slide. Salve seus temas favoritos para reutilizar.',
-        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        icon: <SlidersHorizontal size={26} />,
+        title: 'Ajuste cada slide',
+        text: 'Escolha o slide na faixa da esquerda e use o painel da direita: Texto, Imagem (com o ponto de foco) e Estilo.',
     },
     {
-        emoji: '📸',
-        title: 'Suas imagens',
-        description: 'Em cada slide, envie sua foto ou vídeo, ou busque na galeria. Ajuste posição, zoom e degradê direto no editor.',
-        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        icon: <Eye size={26} />,
+        title: 'Veja como vai ficar no feed',
+        text: '“Visualizar” mostra o carrossel como um post do Instagram, com o perfil, o deslizar e os pontinhos.',
     },
     {
-        emoji: '📦',
-        title: 'Exporte e Publique',
-        description: 'Clique em Exportar ZIP para baixar os slides prontos para o Instagram. Também exporta PDF para apresentações.',
-        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        icon: <Download size={26} />,
+        title: 'Exporte só o que precisa',
+        text: 'Escolha os slides, o formato (imagens ou PDF) e a qualidade. Slides com vídeo saem como MP4.',
     },
     {
-        emoji: '☁️',
-        title: 'Salve na Nuvem',
-        description: 'Seus projetos ficam salvos automaticamente. Clique em Salvar para guardar na nuvem e acessar de qualquer dispositivo.',
-        gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+        icon: <Cloud size={26} />,
+        title: 'Tudo salvo na nuvem',
+        text: 'Salve com ⌘S ou pelo ícone. O status no topo avisa quando há alterações que ainda não foram salvas.',
     },
 ];
+
+const DONE_KEY = 'carrosselpro-onboarding-done';
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     const [step, setStep] = useState(0);
     const isLast = step === STEPS.length - 1;
     const current = STEPS[step];
 
-    const handleNext = () => {
-        if (isLast) {
-            localStorage.setItem('carrosselpro-onboarding-done', 'true');
-            onComplete();
-        } else {
-            setStep(s => s + 1);
-        }
-    };
-
-    const handleSkip = () => {
-        localStorage.setItem('carrosselpro-onboarding-done', 'true');
+    const finish = () => {
+        try { localStorage.setItem(DONE_KEY, 'true'); } catch { /* armazenamento indisponível */ }
         onComplete();
     };
 
     return (
-        <div
-            className="fixed inset-0 z-[200] flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)' }}
-        >
-            <div
-                className="w-full max-w-md mx-4 rounded-3xl overflow-hidden relative"
-                style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-                {/* Gradient top accent */}
-                <div
-                    className="h-2 w-full"
-                    style={{ background: current.gradient }}
-                />
-
-                {/* Skip button */}
-                <button
-                    onClick={handleSkip}
-                    className="absolute top-6 right-5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
-                    style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }}
-                >
-                    Pular
-                </button>
-
-                {/* Content */}
-                <div className="px-8 pt-10 pb-8 text-center">
-                    {/* Emoji with glow */}
-                    <div className="relative inline-block mb-6">
-                        <div
-                            className="absolute inset-0 blur-2xl opacity-30 rounded-full"
-                            style={{ background: current.gradient, transform: 'scale(2)' }}
-                        />
-                        <span className="text-6xl relative z-10 block">{current.emoji}</span>
+        <Dialog
+            open
+            onClose={finish}
+            title={current.title}
+            className="max-w-md"
+            footer={
+                <div className="w-full flex items-center justify-between gap-3">
+                    <div className="flex gap-1.5" aria-label={`Passo ${step + 1} de ${STEPS.length}`}>
+                        {STEPS.map((_, i) => (
+                            <span key={i} aria-hidden="true"
+                                className={cx('h-1.5 rounded-full transition-all duration-300', i === step ? 'w-5 bg-fg' : 'w-1.5 bg-fg/20')} />
+                        ))}
                     </div>
-
-                    <h2
-                        className="text-xl font-black tracking-tight mb-4"
-                        style={{ color: '#ffffff' }}
-                    >
-                        {current.title}
-                    </h2>
-
-                    <p
-                        className="text-sm font-medium leading-relaxed mb-8 max-w-xs mx-auto"
-                        style={{ color: 'rgba(255,255,255,0.6)' }}
-                    >
-                        {current.description}
-                    </p>
-
-                    {/* Step counter */}
-                    <div
-                        className="text-[10px] font-black uppercase tracking-widest mb-4"
-                        style={{ color: 'rgba(255,255,255,0.2)' }}
-                    >
-                        {step + 1} / {STEPS.length}
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="w-full h-1 rounded-full mb-6 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div
-                            className="h-full rounded-full transition-all duration-500 ease-out"
-                            style={{
-                                width: `${((step + 1) / STEPS.length) * 100}%`,
-                                background: current.gradient,
-                            }}
-                        />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3">
-                        {step > 0 && (
-                            <button
-                                onClick={() => setStep(s => s - 1)}
-                                className="flex-1 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95"
-                                style={{
-                                    background: 'rgba(255,255,255,0.04)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    color: 'rgba(255,255,255,0.5)',
-                                }}
-                            >
-                                Voltar
-                            </button>
-                        )}
-
-                        <button
-                            onClick={handleNext}
-                            className="flex-1 py-3.5 rounded-xl text-sm font-black tracking-wide transition-all active:scale-95 hover:scale-[1.02] flex items-center justify-center gap-2"
-                            style={{
-                                background: current.gradient,
-                                color: '#000000',
-                                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                            }}
-                        >
-                            {isLast ? '🚀 Começar!' : 'Próximo'}
-                            {!isLast && <ChevronRight size={16} />}
-                        </button>
+                    <div className="flex gap-2">
+                        {step > 0
+                            ? <Button variant="ghost" onClick={() => setStep(s => s - 1)}>Voltar</Button>
+                            : <Button variant="ghost" onClick={finish}>Pular</Button>}
+                        <Button variant="primary" data-autofocus onClick={() => (isLast ? finish() : setStep(s => s + 1))}>
+                            {isLast ? 'Começar' : 'Próximo'}
+                        </Button>
                     </div>
                 </div>
+            }
+        >
+            <div className="flex flex-col gap-5 -mt-1">
+                <div className="w-16 h-16 rounded-ui-lg bg-fg/[0.07] flex items-center justify-center text-fg" aria-hidden="true">
+                    {current.icon}
+                </div>
+                <p className="text-body text-fg-2 leading-relaxed">{current.text}</p>
             </div>
-        </div>
+        </Dialog>
     );
 };

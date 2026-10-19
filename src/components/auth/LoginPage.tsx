@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Mail, Lock, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { APP_VERSION } from '../../version';
+import { Button, Field, Input } from '../../ui';
 
-// Reusing editor design tokens for consistency
-const T = {
-    bg: '#000000',
-    card: 'rgba(255,255,255,0.03)',
-    glass: 'rgba(255,255,255,0.05)',
-    glassMd: 'rgba(255,255,255,0.08)',
-    glassHover: 'rgba(255,255,255,0.12)',
-    border: 'rgba(255,255,255,0.1)',
-    borderLight: 'rgba(255,255,255,0.2)',
-    text: '#FFFFFF',
-    textSub: 'rgba(255,255,255,0.6)',
-    textDim: 'rgba(255,255,255,0.4)',
-    textFaint: 'rgba(255,255,255,0.2)',
-    accent: '#00E5C3',
-    accentHover: '#00F2CE',
-    accentGlow: 'rgba(0, 229, 195, 0.4)',
-};
+/** Três slides em leque, só tipografia: a vitrine da tela de login. */
+function SlideFan() {
+    const slides = [
+        { text: 'A dona do ChatGPT cortou o preço em 80%', rot: -8, x: -105, y: 22, z: 1 },
+        { text: 'O Instagram mudou o algoritmo de novo', rot: 0, x: 0, y: 0, z: 3 },
+        { text: '84% do mundo nunca usou IA', rot: 8, x: 105, y: 22, z: 2 },
+    ];
+    return (
+        <div className="relative w-[300px] h-[400px]" aria-hidden="true">
+            {slides.map((s, i) => (
+                <div key={i}
+                    className="absolute inset-0 rounded-[6px] bg-[#111] overflow-hidden flex flex-col justify-end p-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
+                    style={{ transform: `translate(${s.x}px, ${s.y}px) rotate(${s.rot}deg) scale(${s.z === 3 ? 1 : 0.92})`, zIndex: s.z }}>
+                    <div className="absolute inset-x-0 top-0 h-[55%]"
+                        style={{ background: i === 1 ? 'var(--story-gradient)' : 'linear-gradient(160deg,#2a2a2a,#555 50%,#8a8a8a)', opacity: i === 1 ? 0.9 : 0.6 }} />
+                    <div className="absolute inset-x-0 top-[40%] h-[20%] bg-gradient-to-b from-transparent to-[#111]" />
+                    <p className="relative text-white text-center uppercase leading-[1.02] text-[26px]" style={{ fontFamily: "'Anton', sans-serif" }}>{s.text}</p>
+                    <p className="relative mt-3 text-center text-[8px] tracking-[0.3em] text-white/50 font-semibold">ARRASTA PRO LADO ›››</p>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
     const [email, setEmail] = useState('');
@@ -95,7 +101,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
 
     const handleOAuthLogin = async (provider: 'google' | 'github') => {
         try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
                     redirectTo: `${window.location.origin}`,
@@ -116,193 +122,66 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: any) => void }) => {
     };
 
     return (
-        <div className="fixed inset-0 w-full h-full flex items-center justify-center font-inter antialiased overflow-hidden" style={{ background: T.bg }}>
+        <div className="fixed inset-0 bg-bg text-fg font-sans flex overflow-y-auto">
+            <main className="flex-1 flex flex-col px-6 sm:px-12 lg:px-20 py-8 min-h-full">
+                <div className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</div>
 
-            {/* Background Ambience */}
-            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#00E5C3]/10 blur-[150px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#0070F3]/10 blur-[150px] rounded-full pointer-events-none" />
+                <div className="my-auto w-full max-w-[400px] py-10 flex flex-col gap-8">
+                    <div className="flex flex-col gap-3">
+                        <h1 className="font-display font-light text-title2 xl:text-title1 leading-[1.2]">
+                            {isSignUp ? 'Crie sua conta.' : 'Seus carrosséis, prontos para o feed.'}
+                        </h1>
+                        <p className="text-subhead text-muted">
+                            {isSignUp ? 'Leva menos de um minuto.' : 'Entre para continuar de onde parou.'}
+                        </p>
+                    </div>
 
-            {/* Content Wrapper */}
-            <div className="relative w-full max-w-[420px] px-6 py-12 flex flex-col items-center">
+                    <form onSubmit={handleAuth} className="flex flex-col gap-4">
+                        {isSignUp && (
+                            <Field label="Nome">
+                                {id => <Input id={id} type="text" autoComplete="nickname" value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Seu nome de criador" />}
+                            </Field>
+                        )}
+                        <Field label="E-mail">
+                            {id => <Input id={id} type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" className="h-control-lg" />}
+                        </Field>
+                        <Field label="Senha" hint={isSignUp ? 'Mínimo de 8 caracteres, com letras e números.' : undefined}>
+                            {id => <Input id={id} type="password" required minLength={6} autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} className="h-control-lg" />}
+                        </Field>
+                        {isSignUp && (
+                            <Field label="Confirme a senha">
+                                {id => <Input id={id} type="password" required minLength={8} autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="h-control-lg" />}
+                            </Field>
+                        )}
+                        <Button type="submit" variant="primary" size="lg" loading={loading} block className="mt-2">
+                            {isSignUp ? 'Criar conta' : 'Entrar'}
+                        </Button>
+                    </form>
 
-                {/* Brand */}
-                <div className="flex flex-col items-center mb-10 select-none">
-                    <h1 className="text-4xl font-black text-white tracking-tighter" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-                        Carrossel<span style={{ color: T.accent }}>.Pro</span>
-                    </h1>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.3em] mt-2 opacity-60">
-                        by Kaique.Editor
+                    <div className="flex items-center gap-3 text-caption text-faint">
+                        <span className="flex-1 h-px bg-fg/10" />ou<span className="flex-1 h-px bg-fg/10" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                        <Button size="lg" icon={<FaGoogle size={15} />} onClick={() => handleOAuthLogin('google')}>Google</Button>
+                        <Button size="lg" icon={<FaGithub size={16} />} onClick={() => handleOAuthLogin('github')}>GitHub</Button>
+                    </div>
+
+                    <p className="text-subhead text-muted">
+                        {isSignUp ? 'Já tem conta?' : 'Ainda não tem conta?'}{' '}
+                        <button type="button" onClick={() => setIsSignUp(v => !v)} className="text-fg font-medium underline underline-offset-4 hover:no-underline">
+                            {isSignUp ? 'Entrar' : 'Criar conta'}
+                        </button>
                     </p>
                 </div>
 
-                {/* Login Card */}
-                <div
-                    className="w-full rounded-3xl backdrop-blur-3xl shadow-2xl overflow-hidden p-[2px]"
-                    style={{
-                        background: `linear-gradient(180deg, ${T.borderLight} 0%, transparent 100%)`,
-                    }}
-                >
-                    <div
-                        className="w-full h-full rounded-[23px] p-8 flex flex-col gap-6"
-                        style={{ background: 'rgba(10,10,10,0.85)' }}
-                    >
-                        <div className="text-center">
-                            <h2 className="text-xl font-bold text-white tracking-tight">
-                                {isSignUp ? 'Criar sua conta' : 'Acesse seus projetos'}
-                            </h2>
-                            <p className="text-sm mt-2" style={{ color: T.textSub }}>
-                                {isSignUp
-                                    ? 'Junte-se à revolução dos carrosséis'
-                                    : 'Entre para continuar criando conteúdos incríveis'}
-                            </p>
-                        </div>
+                <p className="text-caption text-faint tabular-nums">v{APP_VERSION}</p>
+            </main>
 
-                        <form onSubmit={handleAuth} className="flex flex-col gap-4 mt-2">
-                            {isSignUp && (
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] font-semibold text-white/70 uppercase tracking-wide px-1">
-                                        Nickname
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Seu nome de criador"
-                                        value={nickname}
-                                        onChange={(e) => setNickname(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-semibold text-white/70 uppercase tracking-wide px-1">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-semibold text-white/70 uppercase tracking-wide px-1">
-                                    Senha
-                                </label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
-                                />
-                            </div>
-
-                            {isSignUp && (
-                                <>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] font-semibold text-white/70 uppercase tracking-wide px-1">
-                                            Confirmação de senha
-                                        </label>
-                                        <input
-                                            type="password"
-                                            required
-                                            minLength={8}
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-[#00E5C3]/50 focus:bg-white/10 transition-all"
-                                        />
-                                    </div>
-                                    <label className="flex items-start gap-3 mt-1 cursor-pointer">
-                                        <div className="relative flex items-center justify-center mt-0.5">
-                                            <input type="checkbox" className="peer w-4 h-4 appearance-none border border-white/20 rounded-sm bg-black/50 checked:bg-[#00E5C3] checked:border-[#00E5C3] transition-colors cursor-pointer" />
-                                            <svg className="absolute w-2.5 h-2.5 text-black opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                        <span className="text-[13px] text-white/70 leading-snug select-none">
-                                            Quero receber novidades do Carrossel.Pro por email
-                                        </span>
-                                    </label>
-                                </>
-                            )}
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full group mt-4 py-3.5 rounded-xl text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
-                                style={{
-                                    background: isSignUp ? T.glassHover : T.accent,
-                                    border: isSignUp ? `1px solid ${T.borderLight}` : 'none',
-                                    color: isSignUp ? T.text : T.bg,
-                                    boxShadow: isSignUp ? 'none' : `0 8px 30px -10px ${T.accent}`,
-                                }}
-                            >
-                                {loading ? (
-                                    <Loader2 className="animate-spin" size={16} />
-                                ) : (
-                                    isSignUp ? 'Efetuar cadastro' : 'Entrar na Plataforma'
-                                )}
-                            </button>
-                        </form>
-
-                        {/* OAuth habilitado */}
-                        <div className="flex items-center w-full my-1">
-                            <div className="flex-1 h-px bg-white/10" />
-                            <span className="px-3 text-[10px] uppercase font-bold text-white/30 tracking-widest">
-                                ou entre com
-                            </span>
-                            <div className="flex-1 h-px bg-white/10" />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <button
-                                type="button"
-                                onClick={() => handleOAuthLogin('google')}
-                                className="w-full relative group py-3 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white/10 active:scale-95 border border-white/10"
-                                style={{ background: T.glass }}
-                            >
-                                {/* @ts-ignore */}
-                                <FaGoogle size={14} className="text-white group-hover:text-red-400 transition-colors" />
-                                Google
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleOAuthLogin('github')}
-                                className="w-full relative group py-3 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white/10 active:scale-95 border border-white/10"
-                                style={{ background: T.glass }}
-                            >
-                                {/* @ts-ignore */}
-                                <FaGithub size={15} className="text-white group-hover:text-gray-400 transition-colors" />
-                                GitHub
-                            </button>
-                        </div>
-
-                        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
-
-                        <div className="text-center">
-                            <button
-                                type="button"
-                                onClick={() => setIsSignUp(!isSignUp)}
-                                className="text-[12px] font-semibold text-white/50 hover:text-white transition-colors"
-                            >
-                                {isSignUp
-                                    ? 'Já tem uma conta? Fazer login'
-                                    : 'Ainda não tem acesso? Criar conta'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-8 flex items-center gap-2 text-white/30 text-[10px] font-medium tracking-wider uppercase">
-                    <Sparkles size={12} /> Desbloqueie o poder infinito
-                </div>
-                <span className="mt-2 text-[9px] font-medium tracking-wider" style={{ color: 'rgba(255,255,255,0.15)' }}>
-                    v{APP_VERSION}
-                </span>
-            </div>
+            <aside className="hidden lg:flex w-[46%] max-w-[720px] bg-[#0A0A0A] items-center justify-center relative overflow-hidden" aria-hidden="true">
+                <SlideFan />
+                <p className="absolute bottom-8 inset-x-0 text-center text-footnote text-white/50">Cole o roteiro. Ajuste. Poste.</p>
+            </aside>
         </div>
     );
 };

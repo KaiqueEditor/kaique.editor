@@ -1,5 +1,5 @@
 import {
-  BarChart3, ChevronDown, Download, Eye, FileOutput, FileText, FolderOpen, Image as ImageIcon, Layers, LogOut,
+  BarChart3, ChevronDown, Download, Eye, FileText, FolderOpen, Layers, LogOut,
   Moon, Palette, Plus, Redo2, Save, Settings, Sun, Undo2,
 } from 'lucide-react';
 import { useStore } from '../../store';
@@ -10,8 +10,7 @@ export type SaveStatus = 'saved' | 'dirty' | 'saving';
 export interface TopBarActions {
   onSave: () => void;
   onPreview: () => void;
-  onExportZip: () => void;
-  onExportPDF: () => void;
+  onExport: () => void;
   onOpenProjects: () => void;
   onNewCarousel: () => void;
   onImportRoteiro: () => void;
@@ -61,10 +60,6 @@ export function TopBar(props: TopBarProps) {
     { label: 'Sair', icon: <LogOut size={15} />, onSelect: props.onLogout, danger: true, hint: userEmail ?? undefined },
   ];
 
-  const exportMenu: MenuItem[] = [
-    { label: 'Imagens (ZIP)', icon: <ImageIcon size={15} />, onSelect: props.onExportZip, hint: 'PNG · MP4' },
-    { label: 'PDF', icon: <FileOutput size={15} />, onSelect: props.onExportPDF, disabled: exportingPDF },
-  ];
 
   return (
     <header className="glass absolute top-3.5 left-3.5 right-3.5 z-30 h-14 rounded-pill flex items-center justify-between gap-4 pl-2 pr-2.5">
@@ -90,16 +85,9 @@ export function TopBar(props: TopBarProps) {
         <IconButton label="Salvar (⌘S)" onClick={props.onSave} disabled={saveStatus === 'saving'}><Save size={17} /></IconButton>
         <span className="w-px h-5 bg-fg/10 mx-1" aria-hidden="true" />
         <Button icon={<Eye size={16} />} onClick={props.onPreview}>Visualizar</Button>
-        <Menu
-          align="end"
-          items={exportMenu}
-          trigger={p => (
-            <Button {...p} variant="primary" loading={exporting} icon={<Download size={16} />}>
-              {exporting ? (exportStep || 'Exportando') : 'Exportar'}
-              {!exporting && <ChevronDown size={14} className="-mr-1 opacity-80" aria-hidden="true" />}
-            </Button>
-          )}
-        />
+        <Button variant="primary" loading={exporting || exportingPDF} icon={<Download size={16} />} onClick={props.onExport}>
+          {exporting ? (exportStep || 'Exportando') : exportingPDF ? 'Gerando PDF' : 'Exportar'}
+        </Button>
       </div>
     </header>
   );

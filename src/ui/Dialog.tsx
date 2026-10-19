@@ -24,7 +24,9 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
     const previous = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
-    const first = panelRef.current?.querySelector<HTMLElement>('textarea, input, select, button:not([data-dialog-close])');
+    const panel = panelRef.current;
+    const first = panel?.querySelector<HTMLElement>('[data-autofocus]')
+      ?? panel?.querySelector<HTMLElement>('textarea, input, select, button:not([data-dialog-close])');
     first?.focus();
     return () => { document.removeEventListener('keydown', onKey); previous?.focus?.(); };
   }, [open, onClose]);

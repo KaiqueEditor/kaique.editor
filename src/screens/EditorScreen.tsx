@@ -1,4 +1,4 @@
-import { lazy, useRef, Suspense, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { AnalyticsPage } from '../components/analytics/AnalyticsPage';
 import { useAdmin } from '../hooks/useAdmin';
@@ -29,8 +29,9 @@ import type { SaveStatus } from '../features/editor/TopBar';
 import { HomeScreen } from '../features/home/HomeScreen';
 import type { Project } from '../features/home/useProjects';
 import { Button, Dialog } from '../ui';
+import { ExportDialog, type ExportKind, type ExportQuality } from '../features/export/ExportDialog';
+import { InstagramPreview } from '../features/export/InstagramPreview';
 
-const ExportPreview = lazy(() => import('../components/export/ExportPreview').then(mod => ({ default: mod.ExportPreview })));
 
 // ── App autenticado: tela inicial (projetos) ↔ editor ─────────────────────────
 export function CarrosselApp({ session, onLogout }: { session: any; onLogout: () => void }) {
@@ -64,6 +65,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('carrosselpro-onboarding-done'));
   const [savingProject, setSavingProject] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useAutoSave({ sections, config, currentProjectId, userId: session?.user?.id, exportRefs });
@@ -148,18 +150,24 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     }
   }, [currentProjectId, setCurrentProjectId, sections, config, exportRefs, session]);
 
-  // ── Exportar PDF: captura cada slide como PNG e compila
-  const handleExportPDF = useCallback(async () => {
+  // ── Exportar PDF: captura os slides escolhidos como PNG e compila
+  const handleExportPDF = useCallback(async (indices: number[], pixelRatio: number) => {
     const fmt = EXPORT_FORMATS.find(f => f.key === exportFormat) ?? EXPORT_FORMATS[0];
     const images: string[] = [];
-    for (let i = 0; i < sections.length; i++) {
+    for (const i of indices) {
       const node = exportRefs.current[i];
       if (!node) continue;
-      try { images.push(await captureSlideAsPng(node)); }
+      try { images.push(await captureSlideAsPng(node, pixelRatio)); }
       catch (err) { console.warn(`PDF: falha ao capturar slide ${i + 1}:`, err); }
     }
     if (images.length > 0) await exportPDF(images, sections[0]?.title || 'Carrossel', fmt.width, fmt.height);
   }, [sections, exportRefs, exportPDF, exportFormat, captureSlideAsPng]);
+
+  const handleExport = async ({ kind, indices, pixelRatio }: { kind: ExportKind; indices: number[]; pixelRatio: ExportQuality }) => {
+    if (kind === 'pdf') await handleExportPDF(indices, pixelRatio);
+    else await exportAll(sections, { indices, pixelRatio });
+    setExportOpen(false);
+  };
 
   const handleVideoUploadRequest = (sectionId: string, file: File) => {
     if (!validateVideoUpload(file)) return;
@@ -185,8 +193,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     isProcessing,
     onSave: handleManualSave,
     onPreview: () => setShowExportPreview(true),
-    onExportZip: () => exportAll(sections),
-    onExportPDF: handleExportPDF,
+    onExport: () => setExportOpen(true),
     onOpenThemes: () => setShowCustomThemes(true),
     onOpenAssets: () => setIsAssetsOpen(true),
     onOpenSettings: () => setIsSettingsOpen(true),
@@ -258,19 +265,18 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden"
         onChange={e => { handleAvatarUpload(e, url => updateConfig({ avatarUrl: url })); e.target.value = ''; }} />
 
-      <Suspense fallback={null}>
-        {showExportPreview && (
-          <ExportPreview
-            sections={sections}
-            config={config}
-            generatingIds={generatingIds}
-            isExporting={isExporting}
-            exportStep={exportStep}
-            onClose={() => { if (!isExporting) setShowExportPreview(false); }}
-            onExport={() => exportAll(sections)}
-          />
-        )}
-      </Suspense>
+      <InstagramPreview
+        open={showExportPreview}
+        onClose={() => setShowExportPreview(false)}
+        onExport={() => { setShowExportPreview(false); setExportOpen(true); }}
+      />
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        busy={isExporting || isExportingPDF}
+        step={isExportingPDF ? 'Gerando PDF' : exportStep}
+        onExport={handleExport}
+      />
 
       <VideoTrimModal
         isOpen={!!pendingVideo}

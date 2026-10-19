@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import {
-  ChevronLeft, Download, Eye, FileOutput, FileText, Image as ImageIcon, Layers, LayoutList, LogOut, Moon,
+  ChevronLeft, Download, Eye, FileText, Image as ImageIcon, Layers, LayoutList, LogOut, Moon,
   MoreHorizontal, Palette, Plus, Redo2, Save, Settings, Sun, Type, Undo2,
 } from 'lucide-react';
 import { useStore } from '../../../store';
@@ -31,8 +31,7 @@ export interface MobileEditorProps {
   onBack: () => void;
   onSave: () => void;
   onPreview: () => void;
-  onExportZip: () => void;
-  onExportPDF: () => void;
+  onExport: () => void;
   onOpenThemes: () => void;
   onOpenAssets: () => void;
   onOpenSettings: () => void;
@@ -141,18 +140,10 @@ export function MobileEditor(props: MobileEditorProps) {
           ]}
           trigger={t => <IconButton {...t} label="Mais opções" className="w-10 h-10"><MoreHorizontal size={20} /></IconButton>}
         />
-        <Menu
-          align="end"
-          items={[
-            { label: 'Imagens (ZIP)', icon: <ImageIcon size={15} />, onSelect: props.onExportZip, hint: 'PNG · MP4' },
-            { label: 'PDF', icon: <FileOutput size={15} />, onSelect: props.onExportPDF, disabled: props.exportingPDF },
-          ]}
-          trigger={t => (
-            <Button {...t} variant="primary" loading={props.exporting} icon={props.exporting ? undefined : <Download size={16} />} className="h-10 flex-shrink-0">
-              {props.exporting ? (props.exportStep || 'Exportando') : 'Exportar'}
-            </Button>
-          )}
-        />
+        <Button variant="primary" loading={props.exporting || props.exportingPDF} icon={<Download size={16} />}
+          className="h-10 flex-shrink-0" onClick={props.onExport}>
+          Exportar
+        </Button>
       </header>
 
       {/* Faixa de miniaturas */}

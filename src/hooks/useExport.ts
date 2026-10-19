@@ -521,21 +521,28 @@ export const useExport = () => {
     }
   }, [composeVideoAsMp4, captureSlideAsPng]);
 
-  const exportAll = useCallback(async (sections: Section[]) => {
+  /**
+   * Exporta os slides em um ZIP (PNG; slides com vídeo viram MP4).
+   * `indices` limita a quais slides entram; `pixelRatio` 2 = alta resolução.
+   */
+  const exportAll = useCallback(async (sections: Section[], opts: { indices?: number[]; pixelRatio?: number } = {}) => {
     if (sections.length === 0 || isExporting) return;
+    const indices = opts.indices ?? sections.map((_, i) => i);
+    if (indices.length === 0) return;
     setIsExporting(true);
 
     try {
-      setExportStep('carregando módulos');
+      setExportStep('preparando');
       const { JSZip, saveAs } = await loadExportDeps();
       const zip = new JSZip();
 
-      for (let i = 0; i < sections.length; i++) {
+      for (let n = 0; n < indices.length; n++) {
+        const i = indices[n];
         const node = exportRefs.current[i];
         if (!node) continue;
 
         if (sections[i].videoUrl) {
-          setExportStep(`renderizando vídeo ${i + 1} de ${sections.length}`);
+          setExportStep(`vídeo ${n + 1} de ${indices.length}`);
           const mp4 = await withTimeout(
             composeVideoAsMp4(node, sections[i]),
             180000,
@@ -543,22 +550,23 @@ export const useExport = () => {
           );
           zip.file(`slide-${i + 1}.mp4`, mp4);
         } else {
-          setExportStep(`renderizando slide ${i + 1} de ${sections.length}`);
-          const rawDataUrl = await captureSlideAsPng(node);
+          setExportStep(`slide ${n + 1} de ${indices.length}`);
+          const rawDataUrl = await captureSlideAsPng(node, opts.pixelRatio ?? 1);
           zip.file(`slide-${i + 1}.png`, rawDataUrl.split(',')[1], { base64: true });
         }
       }
 
-      setExportStep('finalizando zip');
+      setExportStep('compactando');
       const content = await zip.generateAsync({ type: 'blob' });
       saveAs(content, `carrossel-pro-${Date.now()}.zip`);
+      toast.success(`${indices.length} ${indices.length === 1 ? 'slide exportado' : 'slides exportados'}`);
 
       // Log export to Supabase (best-effort)
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const carouselName = sections[0]?.title || 'Sem título';
-          await cloudStorage.logExport(user.id, user.email || '', sections.length, carouselName, 'zip');
+          await cloudStorage.logExport(user.id, user.email || '', indices.length, carouselName, 'zip');
         }
       } catch { /* silent */ }
     } catch (e: any) {
