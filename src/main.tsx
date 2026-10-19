@@ -1,3 +1,5 @@
+// Precisa vir antes do App: aplica as preferências trazidas do endereço antigo.
+import './lib/domainMove';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

@@ -8,6 +8,8 @@ import { useStore } from './store';
 import { cloudStorage } from './services/storage/cloudStorage';
 import { CarrosselApp } from './screens/EditorScreen';
 import { UIKit } from './screens/UIKit';
+import { DomainMove } from './features/move/DomainMove';
+import { isOldHost } from './lib/domainMove';
 
 // ── Aplicação Autenticada ───────────────────────────────────────────────────────
 
@@ -109,6 +111,9 @@ export default function App() {
       </>
     );
   }
+
+  // Endereço antigo: leva projetos e sessão para procarrossel.com.br
+  if (isOldHost()) return <DomainMove userId={session.user.id} />;
 
   return <CarrosselApp session={session} onLogout={async () => {
     clearAdminCache();
