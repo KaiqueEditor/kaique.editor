@@ -17,6 +17,7 @@ import { VideoTrimModal } from '../components/editor/VideoTrimModal';
 import { BrandDialog } from '../features/brand/BrandDialog';
 import { CustomThemes } from '../components/themes/CustomThemes';
 import { AssetGalleryModal } from '../components/gallery/AssetGalleryModal';
+import { onOpenEditorDialog } from '../lib/editorEvents';
 import { projectStorage } from '../services/storage/projectStorage';
 import { cloudStorage } from '../services/storage/cloudStorage';
 import { getTheme } from '../constants/theme';
@@ -61,6 +62,8 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const [showCustomThemes, setShowCustomThemes] = useState(false);
+  // Painel Estilo pede para abrir Temas ou Paletas
+  useEffect(() => onOpenEditorDialog(d => (d === 'themes' ? setShowCustomThemes(true) : setIsAssetsOpen(true))), []);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);

@@ -1,7 +1,7 @@
 import { plainText } from '../../utils/formatters';
 import {
-  BarChart3, ChevronDown, Download, Eye, FileText, FolderOpen, Layers, LogOut,
-  Moon, Palette, Plus, Redo2, Save, UserRound, Sun, Undo2,
+  BarChart3, ChevronDown, Download, Eye, FileText, FolderOpen, LogOut,
+  Moon, Plus, Redo2, Save, UserRound, Sun, Undo2,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button, IconButton, Menu, StatusDot, type MenuItem } from '../../ui';
@@ -49,9 +49,7 @@ export function TopBar(props: TopBarProps) {
     { label: 'Meus projetos', icon: <FolderOpen size={15} />, onSelect: props.onOpenProjects },
     { label: 'Novo carrossel', icon: <Plus size={15} />, onSelect: props.onNewCarousel },
     { label: 'Importar roteiro', icon: <FileText size={15} />, onSelect: props.onImportRoteiro },
-    { label: 'Temas', icon: <Palette size={15} />, onSelect: props.onOpenThemes, separated: true },
-    { label: 'Paletas', icon: <Layers size={15} />, onSelect: props.onOpenAssets },
-    { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: props.onOpenSettings },
+    { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: props.onOpenSettings, separated: true },
     ...(isAdmin ? [{ label: 'Analytics', icon: <BarChart3 size={15} />, onSelect: props.onOpenAnalytics }] : []),
     {
       label: theme === 'dark' ? 'Modo claro' : 'Modo escuro',

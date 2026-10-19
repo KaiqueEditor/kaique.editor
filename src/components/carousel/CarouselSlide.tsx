@@ -165,6 +165,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
           }}
         >
           <h2
+              data-edit="title"
             style={{
               fontSize: finalTitleSize,
               color: finalTitleColor,
@@ -183,6 +184,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
 
           {section.content && (
             <p
+              data-edit="content"
               style={{
                 fontSize: finalBodySize,
                 color: finalBodyColor,
@@ -201,7 +203,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
 
         {/* Imagem — segue a proporção real dela */}
         {showImage && hasImage && (
-          <div data-post-media className="flex-shrink-0" style={{ paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${16 * scaleFactor}px` }}>
+          <div data-post-media data-edit="media" className="flex-shrink-0" style={{ paddingLeft: `${paddingX * 1.2}px`, paddingRight: `${paddingX * 1.2}px`, paddingBottom: `${16 * scaleFactor}px` }}>
             <div className="relative w-full rounded-[1rem] overflow-hidden" style={{ ...(mediaH ? { height: `${mediaH}px` } : { aspectRatio: `${mediaRatioRef.current}` }), background: 'rgba(0,0,0,0.06)', border: `1px solid rgba(0,0,0,0.08)` }}>
               {isGenerating ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 animate-pulse text-white/40 gap-2">
@@ -251,6 +253,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
       style={{ ...containerStyle, backgroundColor: section.bgColor || '#000000' }}
     >
       <div
+        data-edit="media"
         className={`absolute inset-0 overflow-hidden`}
         style={{ height: isFullBg ? '100%' : `${section.imageHeight ?? 55}%` }}
       >
@@ -320,6 +323,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
       >
         <div className={`w-full flex flex-col ${textAlign === 'center' ? 'items-center' : textAlign === 'right' ? 'items-end' : 'items-start'}`}>
           <h2
+              data-edit="title"
             className={`uppercase mb-6 leading-[1.1] whitespace-pre-wrap`}
             style={{
               fontFamily: getFontFamily(section.titleFont || 'anton'),
@@ -337,6 +341,7 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = React.memo(({
 
           {section.content && (
             <p
+              data-edit="content"
               className={`leading-relaxed whitespace-pre-wrap`}
               style={{
                 fontSize: finalBodySize,

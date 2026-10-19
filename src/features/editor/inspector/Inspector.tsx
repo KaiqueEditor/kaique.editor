@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { focusTextField, onEditRequest } from '../../../lib/editorEvents';
 import { Image as ImageIcon, Palette, Type } from 'lucide-react';
 import { Tabs } from '../../../ui';
 import { useActiveSection } from '../shared';
@@ -16,6 +17,10 @@ interface InspectorProps {
 
 export function Inspector(props: InspectorProps) {
   const [tab, setTab] = useState<Tab>('texto');
+  useEffect(() => onEditRequest(target => {
+    setTab(target === 'media' ? 'imagem' : 'texto');
+    if (target !== 'media') focusTextField(target);
+  }), []);
   const { index, sections } = useActiveSection();
   const label = index === 0 ? 'Capa' : index === sections.length - 1 ? 'Último slide' : `Slide ${index + 1}`;
 

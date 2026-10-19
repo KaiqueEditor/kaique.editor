@@ -5,6 +5,7 @@ import { EXPORT_FORMATS } from '../../types/carousel.types';
 import { CarouselSlide } from '../../components/carousel/CarouselSlide';
 import { IconButton, Segmented, cx } from '../../ui';
 import { useFormat } from './shared';
+import { handleSlideClick } from '../../lib/editorEvents';
 
 const TOP_RESERVE = 64;    // pílula de formato
 const BOTTOM_RESERVE = 76; // pílula de navegação
@@ -107,7 +108,7 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
           height: fmt.height * scale,
         }}
       >
-        <div style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <div className="editable-slide" onClick={handleSlideClick} style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
           <CarouselSlide
             section={section}
             config={config}

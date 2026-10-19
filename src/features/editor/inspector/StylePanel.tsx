@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { MessageSquareText, PanelsTopLeft, Plus, X } from 'lucide-react';
+import { Layers, MessageSquareText, Palette as PaletteIcon, PanelsTopLeft, Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useStore } from '../../../store';
-import { STARTER_TEMPLATES } from '../../../constants/starterTemplates';
-import { buildTemplateSections, pickSlideStyle } from '../../../lib/sections';
+import { pickSlideStyle } from '../../../lib/sections';
+import { openEditorDialog } from '../../../lib/editorEvents';
 import type { Section, StylePreset } from '../../../types/carousel.types';
-import { Button, Field, Input, Segmented, cx } from '../../../ui';
+import { Button, Input, Segmented } from '../../../ui';
 import { ColorField, Group, useActiveSection } from '../shared';
 
 type Palette = { name: string; bg: string; title: string; body: string; brand: string };
@@ -52,11 +52,6 @@ function PaletteChip({ bg, title, body, label, onClick, onRemove }: {
 export function StylePanel() {
   const { section: s, sections, update } = useActiveSection();
   const updateSection = useStore(st => st.updateSection);
-  const setSections = useStore(st => st.setSections);
-  const setActiveSlide = useStore(st => st.setActiveSlide);
-  const config = useStore(st => st.config);
-  const updateConfig = useStore(st => st.updateConfig);
-  const userEmail = useStore(st => st.userEmail);
   const presets = useStore(st => st.presets);
   const savePreset = useStore(st => st.savePreset);
   const deletePreset = useStore(st => st.deletePreset);
@@ -101,18 +96,9 @@ export function StylePanel() {
     setNaming(null);
   };
 
-  const applyStarter = (id: string) => {
-    const t = STARTER_TEMPLATES.find(x => x.id === id);
-    if (!t) return;
-    if (!confirm(`Aplicar o modelo “${t.name}”? Os slides atuais serão substituídos.`)) return;
-    setSections(buildTemplateSections(t, userEmail));
-    setActiveSlide(0);
-    toast.success(`Modelo “${t.name}” aplicado`);
-  };
-
   const nameInput = naming && (
     <div className="flex gap-2">
-      <Input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Nome do estilo"
+      <Input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder={naming === 'carousel' ? 'Nome do estilo do carrossel' : 'Nome do estilo do slide'}
         aria-label="Nome do estilo"
         onKeyDown={e => { if (e.key === 'Enter') confirmName(); if (e.key === 'Escape') setNaming(null); }} />
       <Button variant="primary" onClick={confirmName}>Salvar</Button>
@@ -146,20 +132,29 @@ export function StylePanel() {
           <ColorField label="Texto" value={s.bodyColor || '#ffffff'} onChange={v => update({ bodyColor: v })} />
           <ColorField label="Marca" value={s.brandingColor || '#ffffff'} onChange={v => update({ brandingColor: v })} />
         </div>
+
+        <div className="flex gap-4 px-1">
+          <button type="button" onClick={() => openEditorDialog('assets')} className="inline-flex items-center gap-1.5 text-footnote font-medium text-muted hover:text-fg">
+            <Layers size={14} aria-hidden="true" />Mais paletas
+          </button>
+          <button type="button" onClick={() => openEditorDialog('themes')} className="inline-flex items-center gap-1.5 text-footnote font-medium text-muted hover:text-fg">
+            <PaletteIcon size={14} aria-hidden="true" />Meus temas
+          </button>
+        </div>
       </Group>
 
       {sections.length > 1 && (
         <Button onClick={applyToAll}>Aplicar estilo a todos os slides</Button>
       )}
 
-      <Group
-        title="Meus estilos"
-        action={!naming && (
-          <Button size="sm" variant="ghost" icon={<Plus size={14} />} onClick={() => { setName(''); setNaming('preset'); }}>Salvar</Button>
+      <Group title="Estilos salvos">
+        {naming ? nameInput : (
+          <div className="grid grid-cols-2 gap-2">
+            <Button size="sm" icon={<Plus size={14} />} onClick={() => { setName(''); setNaming('preset'); }}>Deste slide</Button>
+            <Button size="sm" icon={<Plus size={14} />} onClick={() => { setName(''); setNaming('carousel'); }}>Do carrossel</Button>
+          </div>
         )}
-      >
-        {naming === 'preset' && nameInput}
-        {presets.length > 0 ? (
+        {presets.length > 0 && (
           <div className="grid grid-cols-4 gap-2.5">
             {presets.map(p => (
               <PaletteChip key={p.id} label={p.name} bg={p.bgColor} title={p.titleColor} body={p.bodyColor}
@@ -171,26 +166,16 @@ export function StylePanel() {
                 })} />
             ))}
           </div>
-        ) : naming !== 'preset' && (
-          <p className="text-footnote text-faint">Salve a combinação deste slide para reusar depois.</p>
         )}
-      </Group>
-
-      <Group
-        title="Estilos de carrossel"
-        action={!naming && (
-          <Button size="sm" variant="ghost" icon={<Plus size={14} />} onClick={() => { setName(''); setNaming('carousel'); }}>Salvar</Button>
-        )}
-      >
-        {naming === 'carousel' && nameInput}
-        {carouselTemplates.length > 0 ? (
+        {carouselTemplates.length > 0 && (
           <ul className="flex flex-col">
             {carouselTemplates.map(t => (
-              <li key={t.id} className="flex items-center gap-2 py-1.5">
+              <li key={t.id} className="flex items-center gap-2 py-1">
                 <button type="button" onClick={() => { applyCarouselTemplate(t.id); toast.success(`“${t.name}” aplicado`); }}
                   className="flex-1 flex items-center gap-2.5 min-w-0 h-9 px-2 -mx-2 rounded-ui-sm hover:bg-fg/[0.06] text-left">
                   <span className="w-6 h-6 rounded-full flex-shrink-0 shadow-[inset_0_0_0_1px_rgba(128,128,128,0.35)]" style={{ background: t.capaStyle.bgColor }} />
                   <span className="text-subhead truncate">{t.name}</span>
+                  <span className="ml-auto text-caption text-faint">carrossel</span>
                 </button>
                 <button type="button" onClick={() => deleteCarouselTemplate(t.id)} aria-label={`Apagar ${t.name}`}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-faint hover:text-danger hover:bg-danger/10">
@@ -199,27 +184,10 @@ export function StylePanel() {
               </li>
             ))}
           </ul>
-        ) : naming !== 'carousel' && (
-          <p className="text-footnote text-faint">Guarda o estilo da capa e dos slides para aplicar em outro carrossel.</p>
         )}
-      </Group>
-
-      <Group title="Modelos prontos">
-        <div className="grid grid-cols-2 gap-2">
-          {STARTER_TEMPLATES.map(t => (
-            <button key={t.id} type="button" onClick={() => applyStarter(t.id)}
-              className={cx('text-left p-3 rounded-ui-md bg-fg/[0.06] hover:bg-fg/[0.1] transition-colors flex flex-col gap-0.5')}>
-              <span className="text-footnote font-semibold truncate">{t.name}</span>
-              <span className="text-caption text-faint">{t.slideCount} slides</span>
-            </button>
-          ))}
-        </div>
-      </Group>
-
-      <Group title="Marca">
-        <Field label="Marca d'água" hint="Aparece discreta no rodapé de todos os slides.">
-          {id => <Input id={id} value={config.watermark} onChange={e => updateConfig({ watermark: e.target.value })} placeholder="@seuperfil" />}
-        </Field>
+        {!naming && presets.length === 0 && carouselTemplates.length === 0 && (
+          <p className="text-footnote text-faint">Guarde as cores e fontes deste slide, ou a capa e os slides do carrossel, para reusar depois.</p>
+        )}
       </Group>
     </div>
   );

@@ -156,3 +156,18 @@
     backdrop-filter: none;
   }
 }
+
+/* Editor: textos do slide são clicáveis (abre o campo no painel) */
+.editable-slide [data-edit="title"],
+.editable-slide [data-edit="content"] {
+  cursor: text;
+  border-radius: 8px;
+  outline: 4px dashed transparent;
+  outline-offset: 10px;
+  transition: outline-color 0.15s ease;
+}
+.editable-slide [data-edit="title"]:hover,
+.editable-slide [data-edit="content"]:hover {
+  outline-color: rgb(var(--c-accent) / 0.55);
+}
+.editable-slide [data-edit="media"] { cursor: pointer; }

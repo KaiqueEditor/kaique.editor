@@ -1,7 +1,7 @@
 import { plainText } from '../../../utils/formatters';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  ChevronLeft, Download, Eye, FileText, Image as ImageIcon, Layers, LayoutList, LogOut, Moon,
+  ChevronLeft, Download, Eye, FileText, Image as ImageIcon, LayoutList, LogOut, Moon,
   MoreHorizontal, Palette, Plus, Redo2, Save, UserRound, Sun, Type, Undo2,
 } from 'lucide-react';
 import { useStore } from '../../../store';
@@ -9,6 +9,7 @@ import { createDefaultSection } from '../../../lib/sections';
 import { CarouselSlide } from '../../../components/carousel/CarouselSlide';
 import { Button, IconButton, Menu, StatusDot, cx } from '../../../ui';
 import { SlideThumb, useFormat } from '../shared';
+import { focusTextField, handleSlideClick, onEditRequest } from '../../../lib/editorEvents';
 import { TextPanel } from '../inspector/TextPanel';
 import { ImagePanel } from '../inspector/ImagePanel';
 import { StylePanel } from '../inspector/StylePanel';
@@ -70,6 +71,10 @@ export function MobileEditor(props: MobileEditorProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 844 });
   const [tab, setTab] = useState<Tab | null>(null);
+  useEffect(() => onEditRequest(target => {
+    setTab(target === 'media' ? 'imagem' : 'texto');
+    if (target !== 'media') focusTextField(target);
+  }), []);
   const [importOpen, setImportOpen] = useState(false);
   const touchX = useRef<number | null>(null);
 
@@ -106,7 +111,7 @@ export function MobileEditor(props: MobileEditorProps) {
             touchX.current = null;
           }}
         >
-          <div style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <div className="editable-slide" onClick={handleSlideClick} style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
             <CarouselSlide section={section} config={config} index={activeSlide} total={sections.length} isExport
               onAvatarClick={props.onAvatarClick} formatWidth={fmt.width} formatHeight={fmt.height} />
           </div>
@@ -133,8 +138,6 @@ export function MobileEditor(props: MobileEditorProps) {
             { label: 'Desfazer', icon: <Undo2 size={15} />, onSelect: undo, disabled: !canUndo },
             { label: 'Refazer', icon: <Redo2 size={15} />, onSelect: redo, disabled: !canRedo },
             { label: 'Importar roteiro', icon: <FileText size={15} />, onSelect: () => setImportOpen(true), separated: true },
-            { label: 'Temas', icon: <Palette size={15} />, onSelect: props.onOpenThemes },
-            { label: 'Paletas', icon: <Layers size={15} />, onSelect: props.onOpenAssets },
             { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: props.onOpenSettings },
             { label: theme === 'dark' ? 'Modo claro' : 'Modo escuro', icon: theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />, onSelect: toggleTheme, separated: true },
             { label: 'Sair', icon: <LogOut size={15} />, onSelect: props.onLogout, danger: true },

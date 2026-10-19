@@ -23,10 +23,10 @@ export function TextPanel() {
     <div className="flex flex-col gap-6">
       <Group>
         <Field label="Título">
-          {id => <Textarea id={id} rows={3} value={s.title} onChange={e => update({ title: e.target.value })} placeholder="Uma frase que prende" />}
+          {id => <Textarea id={id} data-field="title" rows={3} value={s.title} onChange={e => update({ title: e.target.value })} placeholder="Uma frase que prende" />}
         </Field>
         <Field label="Texto de apoio" hint="Use *negrito*, _itálico_ e ==destaque==.">
-          {id => <Textarea id={id} rows={isSocial ? 5 : 3} value={s.content} onChange={e => update({ content: e.target.value })} placeholder="Contexto, fontes ou subtítulo" />}
+          {id => <Textarea id={id} data-field="content" rows={isSocial ? 5 : 3} value={s.content} onChange={e => update({ content: e.target.value })} placeholder="Contexto, fontes ou subtítulo" />}
         </Field>
         {isSocial && (
           <p className={cx('text-caption tabular-nums text-right -mt-1', length > TWEET_LIMIT ? 'text-danger' : 'text-faint')} aria-live="polite">
