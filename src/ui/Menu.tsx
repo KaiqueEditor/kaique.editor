@@ -60,7 +60,7 @@ export function Menu({ items, trigger, align = 'start', side = 'bottom', classNa
           role="menu"
           onKeyDown={onListKey}
           className={cx(
-            'glass-strong absolute z-50 min-w-[248px] p-1.5 rounded-ui-md animate-scale-in',
+            'glass-strong absolute z-50 min-w-[248px] max-w-[calc(100vw-24px)] p-1.5 rounded-ui-md animate-scale-in',
             side === 'bottom' ? 'top-full mt-2' : 'bottom-full mb-2',
             align === 'end' ? 'right-0' : 'left-0',
           )}

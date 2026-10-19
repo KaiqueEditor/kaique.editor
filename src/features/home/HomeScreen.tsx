@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import {
   BarChart3, FileText, LayoutGrid, LayoutTemplate, LogOut, Moon, Plus, Search, Sparkles, Sun, UserRound,
 } from 'lucide-react';
+import { Menu } from '../../ui';
 import { useStore } from '../../store';
 import { STARTER_TEMPLATES } from '../../constants/starterTemplates';
 import { Button, Dialog, Field, Input, Segmented, cx } from '../../ui';
@@ -74,8 +75,30 @@ export function HomeScreen(props: HomeScreenProps) {
   const handle = config.handle || config.watermark || userEmail?.split('@')[0] || 'Você';
 
   return (
-    <div className="hidden lg:flex fixed inset-0 bg-bg text-fg font-sans">
-      <nav aria-label="Navegação principal" className="w-[248px] flex-shrink-0 border-r border-fg/[0.06] p-4 flex flex-col gap-6">
+    <div className="fixed inset-0 bg-bg text-fg font-sans flex flex-col lg:flex-row">
+      {/* Celular: cabeçalho com menu no lugar da barra lateral */}
+      <header className="lg:hidden flex-shrink-0 h-14 px-4 flex items-center justify-between border-b border-fg/[0.06]">
+        <span className="text-title3 font-semibold tracking-tight">Carrossel<span className="text-accent-text">.</span>Pro</span>
+        <Menu
+          align="end"
+          items={[
+            { label: 'Modelos prontos', icon: <LayoutTemplate size={15} />, onSelect: () => setTemplatesOpen(true) },
+            { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: () => setBrandOpen(true) },
+            ...(isAdmin ? [{ label: 'Analytics', icon: <BarChart3 size={15} />, onSelect: props.onOpenAnalytics }] : []),
+            { label: theme === 'dark' ? 'Modo claro' : 'Modo escuro', icon: theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />, onSelect: toggleTheme, separated: true },
+            { label: 'Sair', icon: <LogOut size={15} />, onSelect: props.onLogout, danger: true, hint: handle },
+          ]}
+          trigger={t => (
+            <button {...t} type="button" aria-label="Conta e opções" className="w-9 h-9 rounded-full overflow-hidden">
+              {config.avatarUrl
+                ? <img src={config.avatarUrl} alt="" className="w-full h-full object-cover" />
+                : <span className="w-full h-full bg-accent text-on-accent flex items-center justify-center text-subhead font-semibold">{handle.replace('@', '').charAt(0).toUpperCase()}</span>}
+            </button>
+          )}
+        />
+      </header>
+
+      <nav aria-label="Navegação principal" className="hidden lg:flex w-[248px] flex-shrink-0 border-r border-fg/[0.06] p-4 flex-col gap-6">
         <div className="px-3 pt-2 text-title3 font-semibold tracking-tight">Carrossel<span className="text-accent-text">.</span>Pro</div>
         <div className="flex flex-col gap-1">
           <NavItem icon={<LayoutGrid size={18} />} label="Projetos" active onClick={() => searchRef.current?.focus()} />
@@ -103,36 +126,36 @@ export function HomeScreen(props: HomeScreenProps) {
       </nav>
 
       <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="max-w-[1180px] mx-auto px-10 py-10 flex flex-col gap-8">
-          <header className="flex items-center justify-between gap-6 flex-wrap">
-            <h1 className="text-large font-bold">Seus carrosséis</h1>
-            <div className="flex items-center gap-3">
-              <label className="h-10 w-[300px] px-3.5 rounded-pill bg-fg/[0.07] flex items-center gap-2.5 text-faint focus-within:ring-4 focus-within:ring-accent/30">
+        <div className="max-w-[1180px] mx-auto px-4 py-6 lg:px-10 lg:py-10 flex flex-col gap-6 lg:gap-8">
+          <header className="flex items-center justify-between gap-4 lg:gap-6 flex-wrap">
+            <h1 className="text-title1 lg:text-large font-bold">Seus carrosséis</h1>
+            <div className="flex items-center gap-3 w-full lg:w-auto">
+              <label className="h-10 flex-1 lg:flex-none lg:w-[300px] px-3.5 rounded-pill bg-fg/[0.07] flex items-center gap-2.5 text-faint focus-within:ring-4 focus-within:ring-accent/30">
                 <Search size={16} aria-hidden="true" />
                 <input ref={searchRef} type="search" value={query} onChange={e => setQuery(e.target.value)}
                   placeholder="Buscar projeto" aria-label="Buscar projeto"
                   className="flex-1 min-w-0 bg-transparent outline-none text-subhead text-fg placeholder:text-faint" />
               </label>
-              <Button variant="primary" size="lg" icon={<Plus size={18} />} onClick={props.onNewBlank}>Novo carrossel</Button>
+              <Button variant="primary" size="lg" icon={<Plus size={18} />} onClick={props.onNewBlank} className="hidden lg:inline-flex">Novo carrossel</Button>
             </div>
           </header>
 
-          <section aria-label="Criar" className="grid grid-cols-3 gap-3">
+          <section aria-label="Criar" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <QuickAction icon={<FileText size={20} />} title="Colar roteiro" text="“texto 1”, “texto 2”… vira slides" onClick={() => setRoteiroOpen(true)} />
             <QuickAction icon={<Plus size={20} />} title="Em branco" text="3 slides com a sua marca" onClick={props.onNewBlank} />
             <QuickAction icon={<Sparkles size={20} />} title="A partir de um modelo" text={`${STARTER_TEMPLATES.length} modelos prontos`} onClick={() => setTemplatesOpen(true)} />
           </section>
 
           <div className="flex items-center justify-between gap-4">
-            <Segmented<Filter> label="Filtrar projetos" value={filter} onChange={setFilter} className="w-[340px]"
-              options={[{ value: 'all', label: 'Todos' }, { value: 'cloud', label: 'Na nuvem' }, { value: 'local', label: 'Neste aparelho' }]} />
+            <Segmented<Filter> label="Filtrar projetos" value={filter} onChange={setFilter} className="flex-1 sm:flex-none sm:w-[340px]"
+              options={[{ value: 'all', label: 'Todos' }, { value: 'cloud', label: 'Nuvem', ariaLabel: 'Na nuvem' }, { value: 'local', label: 'Aparelho', ariaLabel: 'Só neste aparelho' }]} />
             <span className="text-footnote text-faint tabular-nums" aria-live="polite">
               {loading ? 'Carregando…' : `${visible.length} ${visible.length === 1 ? 'projeto' : 'projetos'}`}
             </span>
           </div>
 
           {loading ? (
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-5 gap-y-7" aria-hidden="true">
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-4 gap-y-6 lg:gap-x-5 lg:gap-y-7" aria-hidden="true">
               {Array.from({ length: 10 }).map((_, i) => (
                 <li key={i} className="flex flex-col gap-2.5">
                   <div className="aspect-[3/4] rounded-ui-lg bg-surface animate-pulse" />
@@ -141,7 +164,7 @@ export function HomeScreen(props: HomeScreenProps) {
               ))}
             </ul>
           ) : visible.length > 0 ? (
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-5 gap-y-7">
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-4 gap-y-6 lg:gap-x-5 lg:gap-y-7">
               {visible.map(p => (
                 <ProjectCard key={`${p.source}-${p.id}`} project={p}
                   onOpen={() => props.onOpenProject(p)}
