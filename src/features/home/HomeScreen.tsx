@@ -8,6 +8,7 @@ import { STARTER_TEMPLATES } from '../../constants/starterTemplates';
 import { Button, Dialog, Segmented, cx } from '../../ui';
 import type { RoteiroMode } from '../editor/ImportRoteiroDialog';
 import { NewCarouselDialog } from './NewCarouselDialog';
+import { TemplatesDialog } from './TemplatesDialog';
 import { ProjectCard } from './ProjectCard';
 import { BrandDialog } from '../brand/BrandDialog';
 import { useProjects, type Project } from './useProjects';
@@ -200,21 +201,7 @@ export function HomeScreen(props: HomeScreenProps) {
         onBlank={() => { closeNew(); props.onNewBlank(); }}
         onTemplates={() => { closeNew(); setTemplatesOpen(true); }} />
 
-      <Dialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} title="Modelos prontos"
-        description="Escolha um ponto de partida. Dá para mudar tudo depois." className="max-w-2xl">
-        <ul className="grid grid-cols-2 gap-2.5 max-h-[60vh] overflow-y-auto">
-          {STARTER_TEMPLATES.map(t => (
-            <li key={t.id}>
-              <button type="button" onClick={() => { setTemplatesOpen(false); props.onNewFromTemplate(t.id); }}
-                className="w-full text-left p-4 rounded-ui-md bg-fg/[0.06] hover:bg-fg/10 transition-colors flex flex-col gap-1">
-                <span className="text-subhead font-semibold">{t.name}</span>
-                <span className="text-footnote text-muted">{t.description}</span>
-                <span className="text-caption text-faint tabular-nums">{t.slideCount} slides</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Dialog>
+      <TemplatesDialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} onPick={props.onNewFromTemplate} />
 
       <BrandDialog open={brandOpen} onClose={() => setBrandOpen(false)} />
 

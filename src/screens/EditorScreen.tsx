@@ -31,6 +31,8 @@ import { DesktopEditor } from '../features/editor/DesktopEditor';
 import { MobileEditor } from '../features/editor/mobile/MobileEditor';
 import type { SaveStatus } from '../features/editor/TopBar';
 import { HomeScreen } from '../features/home/HomeScreen';
+import { NewCarouselDialog } from '../features/home/NewCarouselDialog';
+import { TemplatesDialog } from '../features/home/TemplatesDialog';
 import type { Project } from '../features/home/useProjects';
 import { Button, Dialog } from '../ui';
 import { ExportDialog, type ExportKind, type ExportQuality } from '../features/export/ExportDialog';
@@ -67,6 +69,9 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   // Painel Estilo pede para abrir Temas ou Paletas
   useEffect(() => onOpenEditorDialog(d => (d === 'themes' ? setShowCustomThemes(true) : setIsAssetsOpen(true))), []);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
+  // "Novo carrossel" no editor: mesma janela da home (formato + texto, em branco ou modelo)
+  const [newOpen, setNewOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ sectionId: string; file: File } | null>(null);
   // Primeiro acesso: a home abre a criação rápida (no lugar do antigo tour)
@@ -286,7 +291,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
             isAdmin={isAdmin}
             userEmail={session?.user?.email}
             onOpenProjects={goHome}
-            onNewCarousel={() => setShowNewConfirm(true)}
+            onNewCarousel={() => (dirty ? setShowNewConfirm(true) : setNewOpen(true))}
             onOpenAnalytics={() => setShowAnalytics(true)}
           />
           <MobileEditor {...editorProps} onBack={goHome} />
@@ -327,6 +332,12 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       <AssetGalleryModal isOpen={isAssetsOpen} onClose={() => setIsAssetsOpen(false)} />
       {showCustomThemes && <CustomThemes onClose={() => setShowCustomThemes(false)} />}
 
+      <NewCarouselDialog open={newOpen} busy={isProcessing} onClose={() => setNewOpen(false)}
+        onCreate={(text, mode, caption) => { setNewOpen(false); handleNewFromRoteiro(text, mode, caption); }}
+        onBlank={() => { setNewOpen(false); startNewProject(blankSlides()); }}
+        onTemplates={() => { setNewOpen(false); setTemplatesOpen(true); }} />
+      <TemplatesDialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} onPick={handleNewFromTemplate} />
+
       <Dialog
         open={showNewConfirm}
         onClose={() => setShowNewConfirm(false)}
@@ -335,8 +346,8 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowNewConfirm(false)}>Cancelar</Button>
-            <Button variant="primary" onClick={() => { setShowNewConfirm(false); startNewProject(blankSlides()); toast.success('Carrossel novo criado'); }}>
-              Criar novo
+            <Button variant="primary" onClick={() => { setShowNewConfirm(false); setNewOpen(true); }}>
+              Continuar
             </Button>
           </>
         }
