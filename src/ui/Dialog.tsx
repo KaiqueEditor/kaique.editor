@@ -34,7 +34,9 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+    // Altura/posição da área visível (sem o teclado no iPhone): ver lib/visualViewport
+    <div className="fixed inset-x-0 z-[300] flex items-center justify-center p-3 sm:p-4"
+      style={{ top: 'var(--vvt, 0px)', height: 'var(--vvh, 100dvh)' }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
@@ -42,7 +44,8 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
-        className={cx('glass-strong relative w-full max-w-lg rounded-ui-xl p-6 flex flex-col gap-5 animate-scale-in', className)}
+        className={cx('glass-strong relative w-full max-w-lg rounded-ui-xl p-5 sm:p-6 flex flex-col gap-5 animate-scale-in overflow-y-auto overscroll-contain', className)}
+        style={{ maxHeight: 'calc(var(--vvh, 100dvh) - 24px)' }}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">

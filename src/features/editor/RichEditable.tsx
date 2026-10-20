@@ -102,12 +102,12 @@ export function MarkToolbar({ editor }: { editor: React.RefObject<RichEditableHa
   // onMouseDown + preventDefault: o campo não perde o foco nem a seleção
   const keep = (e: React.MouseEvent) => e.preventDefault();
   return (
-    <div role="toolbar" aria-label="Formatar seleção" onMouseDown={keep}
-      className="glass-strong rounded-pill h-10 px-1.5 flex items-center gap-1 shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
+    <div role="toolbar" aria-label="Formatar seleção" onMouseDown={keep} onPointerDown={keep}
+      className="glass-strong rounded-pill h-10 px-1.5 flex items-center gap-1 shadow-[0_12px_32px_rgba(0,0,0,0.45)] max-w-[calc(100vw-24px)] overflow-x-auto no-scrollbar">
       {TEXT_COLORS.map(c => (
         <button key={c.code} type="button" title={c.name} aria-label={`Pintar de ${c.name.toLowerCase()}`}
-          onMouseDown={keep} onClick={() => editor.current?.paint(c.code)}
-          className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+          onMouseDown={keep} onPointerDown={keep} onClick={() => editor.current?.paint(c.code)}
+          className="w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
           <span className="w-5 h-5 rounded-full shadow-[inset_0_0_0_1.5px_rgba(128,128,128,0.55)]" style={{ background: c.hex }} />
         </button>
       ))}
@@ -117,11 +117,11 @@ export function MarkToolbar({ editor }: { editor: React.RefObject<RichEditableHa
         { mark: '_', label: 'Itálico', icon: <Italic size={16} /> },
         { mark: '~', label: 'Riscado', icon: <Strikethrough size={16} /> },
       ] as const).map(b => (
-        <button key={b.mark} type="button" title={b.label} aria-label={b.label} onMouseDown={keep} onClick={() => editor.current?.toggle(b.mark)}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10">{b.icon}</button>
+        <button key={b.mark} type="button" title={b.label} aria-label={b.label} onMouseDown={keep} onPointerDown={keep} onClick={() => editor.current?.toggle(b.mark)}
+          className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-fg hover:bg-fg/10">{b.icon}</button>
       ))}
-      <button type="button" title="Limpar formatação" aria-label="Limpar formatação" onMouseDown={keep} onClick={() => editor.current?.clear()}
-        className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Eraser size={16} /></button>
+      <button type="button" title="Limpar formatação" aria-label="Limpar formatação" onMouseDown={keep} onPointerDown={keep} onClick={() => editor.current?.clear()}
+        className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Eraser size={16} /></button>
     </div>
   );
 }

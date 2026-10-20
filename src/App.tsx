@@ -11,6 +11,7 @@ import { CarrosselApp } from './screens/EditorScreen';
 import { UIKit } from './screens/UIKit';
 import { DomainMove } from './features/move/DomainMove';
 import { isOldHost, newHostReady } from './lib/domainMove';
+import { clearBrandUser, syncBrandOnLogin } from './services/brandSync';
 
 // ── Aplicação Autenticada ───────────────────────────────────────────────────────
 
@@ -94,6 +95,8 @@ export default function App() {
       fetchRole().then(r => { if (r === 'admin') useStore.getState().setAdmin(true); }).catch(() => {});
       useStore.getState().setUserEmail(email || null);
       try { localStorage.setItem('carrosselpro-has-account', '1'); } catch { /* sem armazenamento */ }
+      // marca (nome, @, foto, marca d'água) igual em todos os aparelhos
+      void syncBrandOnLogin(session.user.id);
 
       // Registra o login uma vez por carregamento (o Supabase reemite eventos de sessão
       // ao renovar o token e ao voltar para a aba).
@@ -104,6 +107,7 @@ export default function App() {
     } else {
       useStore.getState().setAdmin(false);
       useStore.getState().setUserEmail(null);
+      clearBrandUser();
     }
   }, [session]);
 

@@ -7,6 +7,7 @@ import { MarkToolbar, RichEditable, type RichEditableHandle } from '../RichEdita
 import { FontSelect, Group, useActiveSection } from '../shared';
 import { useFileUpload } from '../../../hooks/useFileUpload';
 import { TWEET_LIMIT, tweetLength } from '../../../lib/xPost';
+import { scheduleBrandSave } from '../../../services/brandSync';
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -43,7 +44,9 @@ function RichField({ id, field, value, onChange, placeholder, minRows }: {
 export function TextPanel() {
   const { section: s, update } = useActiveSection();
   const config = useStore(st => st.config);
-  const updateConfig = useStore(st => st.updateConfig);
+  const updateConfigLocal = useStore(st => st.updateConfig);
+  // nome, @ e foto são da marca: salvam também na nuvem
+  const updateConfig: typeof updateConfigLocal = patch => { updateConfigLocal(patch); scheduleBrandSave(); };
   const { handleAvatarUpload } = useFileUpload();
   const avatarInput = useRef<HTMLInputElement>(null);
   if (!s) return null;

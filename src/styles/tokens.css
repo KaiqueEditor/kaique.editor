@@ -182,3 +182,9 @@
   color: rgb(var(--c-faint, 128 128 128));
   pointer-events: none;
 }
+
+/* iPhone: campos com menos de 16px fazem o Safari dar zoom ao tocar, e a tela
+   fica deslocada (os toques passam a cair no lugar errado). */
+@media (pointer: coarse) {
+  input, textarea, select, .rich-field { font-size: 16px !important; }
+}

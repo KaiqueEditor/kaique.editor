@@ -4,13 +4,16 @@ import { useStore } from '../../store';
 import { Button, Dialog, Field, Input } from '../../ui';
 import { ColorField, FontSelect } from '../editor/shared';
 import { accountFonts } from '../../lib/buildSections';
+import { scheduleBrandSave } from '../../services/brandSync';
 
 /** "Minha marca": nome, @, marca d'água e avatar usados nos slides. */
 export function BrandDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const config = useStore(s => s.config);
-  const updateConfig = useStore(s => s.updateConfig);
+  const updateConfigLocal = useStore(s => s.updateConfig);
+  const updateConfig: typeof updateConfigLocal = patch => { updateConfigLocal(patch); scheduleBrandSave(); };
   const brand = useStore(s => s.brandDefaults);
-  const setBrand = useStore(s => s.setBrandDefaults);
+  const setBrandLocal = useStore(s => s.setBrandDefaults);
+  const setBrand: typeof setBrandLocal = patch => { setBrandLocal(patch); scheduleBrandSave(); };
   const fallback = accountFonts(useStore(s => s.userEmail));
   const hasBrand = !!(brand.titleFont || brand.bodyFont || brand.titleColor);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -63,7 +66,7 @@ export function BrandDialog({ open, onClose }: { open: boolean; onClose: () => v
             <Button size="sm" variant="ghost" onClick={() => setBrand({ titleFont: undefined, bodyFont: undefined, titleColor: undefined })}>Usar padrão</Button>
           )}
         </div>
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end">
           <Field label="Fonte do título">{id => <FontSelect id={id} value={brand.titleFont ?? fallback.titleFont} onChange={v => setBrand({ titleFont: v })} />}</Field>
           <Field label="Fonte do texto">{id => <FontSelect id={id} value={brand.bodyFont ?? fallback.bodyFont} onChange={v => setBrand({ bodyFont: v })} />}</Field>
           <ColorField label="Título" value={brand.titleColor ?? '#ffffff'} onChange={v => setBrand({ titleColor: v })} />

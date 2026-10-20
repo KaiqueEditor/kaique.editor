@@ -10,6 +10,7 @@ import { CarouselSlide } from '../../../components/carousel/CarouselSlide';
 import { Button, IconButton, Menu, StatusDot, cx } from '../../../ui';
 import { SlideThumb, useFormat } from '../shared';
 import { focusTextField, handleSlideClick, onEditRequest } from '../../../lib/editorEvents';
+import { InlineTextEditor, measureInlineTarget, type InlineEditTarget } from '../InlineTextEditor';
 import { TextPanel } from '../inspector/TextPanel';
 import { ImagePanel } from '../inspector/ImagePanel';
 import { StylePanel } from '../inspector/StylePanel';
@@ -77,6 +78,11 @@ export function MobileEditor(props: MobileEditorProps) {
   }), []);
   const [importOpen, setImportOpen] = useState(false);
   const touchX = useRef<number | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const updateSection = useStore(s => s.updateSection);
+  const [inline, setInline] = useState<(InlineEditTarget & { toolbarAt: { left: number; top: number } }) | null>(null);
+  // trocou de slide ou abriu o painel: fecha a edição no slide
+  useEffect(() => { setInline(null); }, [activeSlide, tab]);
 
   useLayoutEffect(() => {
     const el = rootRef.current;
@@ -95,6 +101,20 @@ export function MobileEditor(props: MobileEditorProps) {
   const title = plainText(sections[0]?.title ?? '') || 'Sem título';
 
   const go = (i: number) => setActiveSlide(Math.max(0, Math.min(sections.length - 1, i)));
+  const slideTop = TOP + Math.max(0, (stageH - fmt.height * scale) / 2);
+
+  // Toque no título/texto com o painel fechado: edita direto no slide (sem caixas de texto)
+  const onSlideClick = (e: React.MouseEvent) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-edit]');
+    const field = el?.dataset.edit;
+    if (!tab && el && stageRef.current && (field === 'title' || field === 'content')) {
+      const t = measureInlineTarget(el, stageRef.current, scale, e.clientX, e.clientY);
+      // barra de cores logo abaixo do slide, ocupando a largura da tela
+      setInline({ ...t, toolbarAt: { left: 12, top: slideTop + fmt.height * scale + 56 } });
+      return;
+    }
+    handleSlideClick(e);
+  };
 
   return (
     <div ref={rootRef} className="lg:hidden fixed inset-0 bg-canvas text-fg font-sans overflow-hidden">
@@ -102,8 +122,8 @@ export function MobileEditor(props: MobileEditorProps) {
       {section && (
         <div
           className="absolute left-1/2 -translate-x-1/2 rounded-[4px] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.5)] transition-[top,width,height] duration-300 ease-out"
-          style={{ top: TOP + Math.max(0, (stageH - fmt.height * scale) / 2), width: fmt.width * scale, height: fmt.height * scale }}
-          onTouchStart={e => { touchX.current = e.touches[0].clientX; }}
+          style={{ top: slideTop, width: fmt.width * scale, height: fmt.height * scale }}
+          onTouchStart={e => { touchX.current = inline ? null : e.touches[0].clientX; }}
           onTouchEnd={e => {
             if (touchX.current === null) return;
             const dx = touchX.current - e.changedTouches[0].clientX;
@@ -111,9 +131,20 @@ export function MobileEditor(props: MobileEditorProps) {
             touchX.current = null;
           }}
         >
-          <div className="editable-slide" onClick={handleSlideClick} style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <div ref={stageRef} className={cx('editable-slide relative', inline && `editing-${inline.field}`)} onClick={onSlideClick}
+            style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
             <CarouselSlide section={section} config={config} index={activeSlide} total={sections.length} isExport
               onAvatarClick={props.onAvatarClick} formatWidth={fmt.width} formatHeight={fmt.height} />
+            {inline && (
+              <InlineTextEditor
+                target={inline}
+                value={section[inline.field] ?? ''}
+                onChange={v => updateSection(section.id, { [inline.field]: v })}
+                onDone={() => setInline(null)}
+                toolbarHost={rootRef.current}
+                toolbarAt={inline.toolbarAt}
+              />
+            )}
           </div>
         </div>
       )}

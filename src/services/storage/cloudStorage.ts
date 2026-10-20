@@ -53,6 +53,11 @@ class CloudStorage {
      * Upload a data: URL image to Supabase Storage and return the public URL.
      * Returns the original URL if it's already a remote URL.
      */
+    /** Sobe a foto de perfil (data URL) e devolve a URL pública; URLs já remotas voltam iguais. */
+    async uploadAvatar(userId: string, dataUrl: string): Promise<string | undefined> {
+        return this.uploadImageToStorage(userId, dataUrl, 'avatar');
+    }
+
     private async uploadImageToStorage(
         userId: string,
         dataUrl: string,

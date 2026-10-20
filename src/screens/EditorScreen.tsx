@@ -19,6 +19,7 @@ import { BrandDialog } from '../features/brand/BrandDialog';
 import { CustomThemes } from '../components/themes/CustomThemes';
 import { AssetGalleryModal } from '../components/gallery/AssetGalleryModal';
 import { onOpenEditorDialog } from '../lib/editorEvents';
+import { scheduleBrandSave } from '../services/brandSync';
 import { projectStorage } from '../services/storage/projectStorage';
 import { cloudStorage } from '../services/storage/cloudStorage';
 import { getTheme } from '../constants/theme';
@@ -293,7 +294,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
       )}
 
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden"
-        onChange={e => { handleAvatarUpload(e, url => updateConfig({ avatarUrl: url })); e.target.value = ''; }} />
+        onChange={e => { handleAvatarUpload(e, url => { updateConfig({ avatarUrl: url }); scheduleBrandSave(); }); e.target.value = ''; }} />
 
       <InstagramPreview
         open={showExportPreview}
