@@ -1,7 +1,9 @@
 import { useDeferredValue, useMemo, useState } from 'react';
-import { LayoutTemplate, MessageSquareText, PanelsTopLeft, Plus } from 'lucide-react';
+import { LayoutTemplate, MessageSquareText, PanelsTopLeft, Plus, Wand2, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { autoOrganize, autoOrganizeAvailable, type Organized } from '../../lib/autoOrganize';
 import { useStore } from '../../store';
-import { buildSectionsFromText, type TextMode } from '../../lib/buildSections';
+import { buildSectionsFromText, isStructuredRoteiro, type TextMode } from '../../lib/buildSections';
 import { Button, Dialog, cx } from '../../ui';
 import { SlideThumb } from '../editor/shared';
 
@@ -11,7 +13,7 @@ interface NewCarouselDialogProps {
   first?: boolean;
   busy?: boolean;
   onClose: () => void;
-  onCreate: (text: string, mode: TextMode) => void;
+  onCreate: (text: string, mode: TextMode, caption?: string) => void;
   onBlank: () => void;
   onTemplates: () => void;
 }
@@ -55,12 +57,33 @@ export function NewCarouselDialog({ open, first, busy, onClose, onCreate, onBlan
   const email = useStore(s => s.userEmail);
   const brand = useStore(s => s.brandDefaults);
   const deferred = useDeferredValue(text);
-  const slides = useMemo(() => buildSectionsFromText(deferred, mode, email, brand), [deferred, mode, email, brand]);
+  // Teste local: resultado da organização automática (some se o texto ou o formato mudar)
+  const [organized, setOrganized] = useState<(Organized & { for: string; mode: TextMode }) | null>(null);
+  const [organizing, setOrganizing] = useState(false);
+  const active = organized && organized.for === text && organized.mode === mode ? organized : null;
+  const source = active ? active.roteiro : deferred;
+  const slides = useMemo(() => buildSectionsFromText(source, mode, email, brand), [source, mode, email, brand]);
+  const canOrganize = autoOrganizeAvailable && text.trim().length > 40 && !isStructuredRoteiro(text);
+
+  const organize = async () => {
+    setOrganizing(true);
+    try {
+      const result = await autoOrganize(text, mode);
+      setOrganized({ ...result, for: text, mode });
+      toast.success('Texto organizado');
+    } catch (e) {
+      // sem chave, sem cota ou resposta ruim: fica a divisão por regras
+      toast.error(`Não deu para organizar: ${e instanceof Error ? e.message : 'erro'}. Usando a divisão automática.`);
+    } finally {
+      setOrganizing(false);
+    }
+  };
 
   const create = () => {
     if (!slides.length) return;
-    onCreate(text, mode);
+    onCreate(active ? active.roteiro : text, mode, active?.caption);
     setText('');
+    setOrganized(null);
   };
 
   return (
@@ -120,6 +143,25 @@ export function NewCarouselDialog({ open, first, busy, onClose, onCreate, onBlan
             className="w-full rounded-ui-md bg-fg/[0.06] px-3.5 py-3 text-subhead leading-relaxed outline-none focus:ring-4 focus:ring-accent/30 resize-y"
           />
         </div>
+
+        {(canOrganize || active) && (
+          <div className="flex items-center justify-between gap-3 p-3 rounded-ui-md border border-dashed border-fg/20">
+            {active ? (
+              <>
+                <span className="text-footnote text-muted min-w-0">
+                  <span className="text-fg font-medium">Organizado automaticamente</span> · {active.model}
+                  {active.caption && ' · legenda e hashtags incluídas'}
+                </span>
+                <Button size="sm" variant="ghost" icon={<X size={14} />} onClick={() => setOrganized(null)}>Desfazer</Button>
+              </>
+            ) : (
+              <>
+                <span className="text-footnote text-muted">Teste local: reorganiza o texto em capa, slides, legenda e hashtags.</span>
+                <Button size="sm" variant="secondary" icon={<Wand2 size={14} />} loading={organizing} onClick={organize}>Organizar</Button>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col gap-2" aria-live="polite">
           <span className="text-footnote text-muted tabular-nums">

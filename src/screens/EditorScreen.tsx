@@ -120,9 +120,10 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     const t = STARTER_TEMPLATES.find(x => x.id === id);
     if (t) startNewProject(buildTemplateSections(t, useStore.getState().userEmail));
   };
-  const handleNewFromRoteiro = (text: string, mode: RoteiroMode) => {
+  const handleNewFromRoteiro = (text: string, mode: RoteiroMode, caption?: string) => {
     setCurrentProjectId(null);
-    updateConfig({ caption: '' });
+    updateConfig({ caption: caption ?? '' });
+    useStore.getState().setActiveSlide(0);
     processText(text, mode);
     openEditor();
   };

@@ -90,8 +90,12 @@ export function buildSectionsFromText(raw: string, mode: TextMode = 'feed', emai
     if (keys.length === 0) return [];
     const out: Section[] = [];
     if (dataMap[1]) {
+      // linha "Fontes: …" debaixo da capa vira o texto de apoio dela
+      const coverLines = dataMap[1].split('\n');
+      const sources = coverLines.filter(l => /^fontes?\s*:/i.test(l)).join(' ');
+      const coverTitle = coverLines.filter(l => !/^fontes?\s*:/i.test(l)).join('\n');
       out.push({
-        ...BASE, id: `s-1-${stamp}`, title: dataMap[1], content: '', imagePrompt: dataMap[1],
+        ...BASE, id: `s-1-${stamp}`, title: coverTitle, content: sources, imagePrompt: coverTitle,
         titleFont, bodyFont, titleColor, alignment: 'center', titleSize: 30, bodySize: 10, textPosY: 70,
       });
     }

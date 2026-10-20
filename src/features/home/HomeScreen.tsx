@@ -21,7 +21,7 @@ interface HomeScreenProps {
   isProcessing: boolean;
   onOpenProject: (p: Project) => void;
   onNewBlank: () => void;
-  onNewFromRoteiro: (text: string, mode: RoteiroMode) => void;
+  onNewFromRoteiro: (text: string, mode: RoteiroMode, caption?: string) => void;
   onNewFromTemplate: (templateId: string) => void;
   onOpenAnalytics: () => void;
   onLogout: () => void;
@@ -196,7 +196,7 @@ export function HomeScreen(props: HomeScreenProps) {
       </main>
 
       <NewCarouselDialog open={newOpen} first={firstOpen} busy={isProcessing} onClose={closeNew}
-        onCreate={(text, mode) => { closeNew(); props.onNewFromRoteiro(text, mode); }}
+        onCreate={(text, mode, caption) => { closeNew(); props.onNewFromRoteiro(text, mode, caption); }}
         onBlank={() => { closeNew(); props.onNewBlank(); }}
         onTemplates={() => { closeNew(); setTemplatesOpen(true); }} />
 
