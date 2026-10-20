@@ -73,6 +73,7 @@ export const buildTemplateSections = (template: CarouselStarterTemplate, userEma
     overlayOpacity: slide.overlayOpacity ?? 0,
     textPosY: slide.textPosY ?? 85,
     showSocialImage: slide.showSocialImage ?? false,
+    postTitleBold: slide.postTitleBold,
   }));
 };
 

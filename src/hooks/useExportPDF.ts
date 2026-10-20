@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { jsPDF } from 'jspdf';
 import { toast } from 'react-hot-toast';
 
 /**
@@ -26,6 +25,8 @@ export function useExportPDF() {
             const W = formatWidth;
             const H = formatHeight;
             const orientation = H >= W ? 'portrait' : 'landscape';
+            // jsPDF é pesado: só carrega quando alguém exporta em PDF
+            const { jsPDF } = await import('jspdf');
             const pdf = new jsPDF({
                 orientation,
                 unit: 'px',

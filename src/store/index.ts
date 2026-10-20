@@ -31,6 +31,7 @@ export const useStore = create<StoreState>()(
           carouselTemplates: state.carouselTemplates,
           brandKits: state.brandKits,
           exportFormat: state.exportFormat,
+          brandDefaults: state.brandDefaults,
         }),
       }
     ),

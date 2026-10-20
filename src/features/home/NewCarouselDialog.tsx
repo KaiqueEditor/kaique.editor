@@ -53,8 +53,9 @@ export function NewCarouselDialog({ open, first, busy, onClose, onCreate, onBlan
   const [mode, setMode] = useState<TextMode>('feed');
   const [text, setText] = useState('');
   const email = useStore(s => s.userEmail);
+  const brand = useStore(s => s.brandDefaults);
   const deferred = useDeferredValue(text);
-  const slides = useMemo(() => buildSectionsFromText(deferred, mode, email), [deferred, mode, email]);
+  const slides = useMemo(() => buildSectionsFromText(deferred, mode, email, brand), [deferred, mode, email, brand]);
 
   const create = () => {
     if (!slides.length) return;

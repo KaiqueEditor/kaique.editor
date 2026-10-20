@@ -1,8 +1,9 @@
 import type { RoteiroMode } from '../features/editor/ImportRoteiroDialog';
 import { plainText } from '../utils/formatters';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { Suspense, lazy, useRef, useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { AdminPage } from '../features/admin/AdminPage';
+// Telas pesadas e raras carregam só quando abertas
+const AdminPage = lazy(() => import('../features/admin/AdminPage').then(m => ({ default: m.AdminPage })));
 import { useAdmin } from '../hooks/useAdmin';
 import { CarouselSlide } from '../components/carousel/CarouselSlide';
 import { useStore } from '../store';
@@ -91,19 +92,29 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
 
   const handleOpenProject = (p: Project) => {
     useStore.getState().setSections(p.sections);
-    if (p.config) updateConfig(p.config);
+    // projeto antigo sem legenda não herda a do projeto anterior
+    updateConfig({ ...(p.config ?? {}), caption: p.config?.caption ?? '' });
+    useStore.getState().setActiveSlide(0);
     setCurrentProjectId(p.id);
     openEditor();
     markClean();
   };
   const startNewProject = (slides: Section[]) => {
     useStore.getState().setSections(slides);
+    useStore.getState().setActiveSlide(0);
+    updateConfig({ caption: '' });
     setCurrentProjectId(null);
     openEditor();
   };
   const blankSlides = () => {
-    const email = useStore.getState().userEmail;
-    return [0, 1, 2].map(i => createDefaultSection(i, email));
+    const { userEmail: email, brandDefaults: b } = useStore.getState();
+    // fonte e cor da marca (Minha marca) valem para o carrossel em branco
+    return [0, 1, 2].map(i => ({
+      ...createDefaultSection(i, email),
+      ...(b.titleFont ? { titleFont: b.titleFont } : {}),
+      ...(b.bodyFont ? { bodyFont: b.bodyFont } : {}),
+      ...(b.titleColor ? { titleColor: b.titleColor } : {}),
+    }));
   };
   const handleNewFromTemplate = (id: string) => {
     const t = STARTER_TEMPLATES.find(x => x.id === id);
@@ -111,6 +122,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
   };
   const handleNewFromRoteiro = (text: string, mode: RoteiroMode) => {
     setCurrentProjectId(null);
+    updateConfig({ caption: '' });
     processText(text, mode);
     openEditor();
   };
@@ -188,7 +200,13 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     if (node && s) await downloadSlide(node, s, `slide-${idx + 1}`);
   };
 
-  if (showAnalytics && isAdmin) return <AdminPage onBack={() => setShowAnalytics(false)} />;
+  if (showAnalytics && isAdmin) {
+    return (
+      <Suspense fallback={<div className="fixed inset-0 bg-bg" />}>
+        <AdminPage onBack={() => setShowAnalytics(false)} />
+      </Suspense>
+    );
+  }
 
   const T = getTheme(theme);
   const fmt = EXPORT_FORMATS.find(f => f.key === exportFormat) ?? EXPORT_FORMATS[0];
@@ -207,7 +225,7 @@ export function CarrosselApp({ session, onLogout }: { session: any; onLogout: ()
     onOpenAssets: () => setIsAssetsOpen(true),
     onOpenSettings: () => setIsSettingsOpen(true),
     onLogout,
-    onProcessRoteiro: (text: string, mode: RoteiroMode) => { setCurrentProjectId(null); processText(text, mode); setActiveSlide(0); },
+    onProcessRoteiro: (text: string, mode: RoteiroMode) => { setCurrentProjectId(null); updateConfig({ caption: '' }); processText(text, mode); setActiveSlide(0); },
     onAvatarClick: () => avatarInputRef.current?.click(),
     onImageUpload: handleImageUpload,
     onVideoUpload: handleVideoUploadRequest,

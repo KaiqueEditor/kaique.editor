@@ -13,7 +13,8 @@ export const useProcessText = () => {
     if (!rawText.trim()) return;
     setIsProcessing(true);
     try {
-      setSections(buildSectionsFromText(rawText, mode, useStore.getState().userEmail));
+      const st = useStore.getState();
+      setSections(buildSectionsFromText(rawText, mode, st.userEmail, st.brandDefaults));
     } catch (error) {
       console.error('Text processing error:', error);
       toast.error('Falha ao processar o texto.');

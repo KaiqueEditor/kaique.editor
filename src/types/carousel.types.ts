@@ -54,6 +54,7 @@ export interface ProjectConfig {
   watermark: string;   // Marca d'água discreta no rodapé de todos os slides
   avatarUrl: string;
   numSlides: number;
+  caption?: string;    // legenda do post (salva junto com o projeto)
 }
 
 export interface Project {

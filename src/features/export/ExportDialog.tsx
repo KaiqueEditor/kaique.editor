@@ -3,6 +3,7 @@ import { Check, FileText, Images, Video } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button, Dialog, Segmented, cx } from '../../ui';
 import { SlideThumb, useFormat } from '../editor/shared';
+import { CaptionField } from './CaptionField';
 
 export type ExportKind = 'zip' | 'pdf';
 export type ExportQuality = 1 | 2;
@@ -104,6 +105,8 @@ export function ExportDialog({ open, onClose, busy, step, onExport }: ExportDial
           <p className="text-caption text-faint">{videos} {videos === 1 ? 'slide tem' : 'slides têm'} vídeo: no PDF entra o quadro parado.</p>
         )}
       </div>
+
+      <CaptionField rows={3} />
     </Dialog>
   );
 }

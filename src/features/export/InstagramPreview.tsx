@@ -3,6 +3,7 @@ import { Bookmark, ChevronLeft, ChevronRight, Download, Heart, MessageCircle, Mo
 import { useStore } from '../../store';
 import { Button, IconButton, Segmented, cx } from '../../ui';
 import { SlideThumb, useFormat } from '../editor/shared';
+import { plainText } from '../../utils/formatters';
 
 type Mode = 'post' | 'grade';
 
@@ -41,7 +42,7 @@ export function InstagramPreview({ open, onClose, onExport }: InstagramPreviewPr
 
   const mediaH = Math.round(cardW * (fmt.height / fmt.width));
   const handle = (config.handle || config.watermark || 'seuperfil').replace(/^@/, '');
-  const caption = sections[0]?.title?.replace(/\n/g, ' ') ?? '';
+  const caption = config.caption?.trim() || plainText(sections[0]?.title ?? '').replace(/\n/g, ' ');
 
   function go(delta: number) {
     const el = scroller.current;
@@ -107,9 +108,12 @@ export function InstagramPreview({ open, onClose, onExport }: InstagramPreviewPr
               </span>
               <Bookmark size={24} aria-hidden="true" />
             </div>
-            <p className="px-3 pb-4 text-footnote leading-snug">
+            <p className="px-3 pb-4 text-footnote leading-snug whitespace-pre-line line-clamp-3">
               <span className="font-semibold mr-1.5">{handle}</span>
-              <span className="text-fg-2">{caption}</span>
+              <span className="text-fg-2">
+                {caption.split(/(#[\p{L}\p{N}_]+)/u).map((part, i) =>
+                  part.startsWith('#') ? <span key={i} className="text-[#4f8fe8]">{part}</span> : part)}
+              </span>
             </p>
           </article>
 

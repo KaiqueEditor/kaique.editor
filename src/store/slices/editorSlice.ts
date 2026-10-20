@@ -2,6 +2,13 @@ import { StateCreator } from 'zustand';
 import { Theme } from '../../constants/theme';
 import { StylePreset, ExportFormatKey } from '../../types/carousel.types';
 
+/** Fonte e cor que todo carrossel de Feed novo usa. Vazio = padrão do app. */
+export interface BrandDefaults {
+  titleFont?: string;
+  bodyFont?: string;
+  titleColor?: string;
+}
+
 export interface EditorSlice {
   showExportPreview: boolean;
   isExporting: boolean;
@@ -39,6 +46,10 @@ export interface EditorSlice {
   // Export format
   exportFormat: ExportFormatKey;
   setExportFormat: (format: ExportFormatKey) => void;
+
+  // Padrões da marca para carrosséis novos (ficam neste aparelho)
+  brandDefaults: BrandDefaults;
+  setBrandDefaults: (patch: Partial<BrandDefaults>) => void;
 
   // Style Presets
   presets: StylePreset[];
@@ -92,6 +103,8 @@ export const createEditorSlice: StateCreator<EditorSlice> = (set) => ({
 
   exportFormat: 'carousel',
   setExportFormat: (format) => set({ exportFormat: format }),
+  brandDefaults: {},
+  setBrandDefaults: (patch) => set(state => ({ brandDefaults: { ...state.brandDefaults, ...patch } })),
 
   presets: [],
   savePreset: (preset) => set(state => ({ presets: [...state.presets, preset] })),

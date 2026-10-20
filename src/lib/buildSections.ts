@@ -1,5 +1,6 @@
 import type { Section } from '../types';
 import { splitThread } from './xPost';
+import type { BrandDefaults } from '../store/slices/editorSlice';
 
 export type TextMode = 'feed' | 'x';
 
@@ -27,6 +28,12 @@ const isTimePrimo = (email?: string | null) =>
 const isPro = (email?: string | null) =>
   ['kaiqueseditor@gmail.com', 'agente.kaique@gmail.com'].includes(email?.toLowerCase() ?? '');
 
+/** Fontes padrão da conta (antes da marca): algumas contas têm fontes próprias. */
+export const accountFonts = (email?: string | null) => ({
+  titleFont: isTimePrimo(email) ? 'filson-pro-bold' : isPro(email) ? 'wide' : 'bebas-neue',
+  bodyFont: isTimePrimo(email) ? 'open-sans' : isPro(email) ? 'montserrat' : 'sans',
+});
+
 /** Formato estruturado "texto 1", "texto 2"… (com ou sem traço). */
 export const isStructuredRoteiro = (text: string) => /^texto\s+\d+/im.test(text);
 
@@ -36,11 +43,13 @@ export const isStructuredRoteiro = (text: string) => /^texto\s+\d+/im.test(text)
  * - feed com "texto N": capa = texto 1; depois cada par vira título + apoio.
  * - feed livre: cada parágrafo vira um slide (1ª linha = título).
  */
-export function buildSectionsFromText(raw: string, mode: TextMode = 'feed', email?: string | null): Section[] {
+export function buildSectionsFromText(raw: string, mode: TextMode = 'feed', email?: string | null, brand: BrandDefaults = {}): Section[] {
   if (!raw.trim()) return [];
   const stamp = Date.now();
-  const titleFont = isTimePrimo(email) ? 'filson-pro-bold' : isPro(email) ? 'wide' : 'bebas-neue';
-  const bodyFont = isTimePrimo(email) ? 'open-sans' : isPro(email) ? 'montserrat' : 'sans';
+  // Ordem: fonte da marca (Minha marca) → fonte da conta → padrão do app
+  const titleFont = brand.titleFont || accountFonts(email).titleFont;
+  const bodyFont = brand.bodyFont || accountFonts(email).bodyFont;
+  const titleColor = brand.titleColor || BASE.titleColor;
 
   if (mode === 'x') {
     return splitThread(raw).map((post, idx) => ({
@@ -83,14 +92,14 @@ export function buildSectionsFromText(raw: string, mode: TextMode = 'feed', emai
     if (dataMap[1]) {
       out.push({
         ...BASE, id: `s-1-${stamp}`, title: dataMap[1], content: '', imagePrompt: dataMap[1],
-        titleFont, bodyFont, alignment: 'center', titleSize: 30, bodySize: 10, textPosY: 70,
+        titleFont, bodyFont, titleColor, alignment: 'center', titleSize: 30, bodySize: 10, textPosY: 70,
       });
     }
     for (let i = 2; i <= keys[keys.length - 1]; i += 2) {
       if (dataMap[i] || dataMap[i + 1]) {
         out.push({
           ...BASE, id: `s-${i}-${stamp}`, title: dataMap[i] || '', content: dataMap[i + 1] || '',
-          imagePrompt: `${dataMap[i]} ${dataMap[i + 1]}`, titleFont, bodyFont,
+          imagePrompt: `${dataMap[i]} ${dataMap[i + 1]}`, titleFont, bodyFont, titleColor,
         });
       }
     }
@@ -108,6 +117,7 @@ export function buildSectionsFromText(raw: string, mode: TextMode = 'feed', emai
       alignment: idx === 0 ? 'center' as const : 'left' as const,
       titleFont,
       bodyFont,
+      titleColor,
       titleSize: 30,
       ...(idx === 0 ? { bodySize: 10 } : {}),
     };

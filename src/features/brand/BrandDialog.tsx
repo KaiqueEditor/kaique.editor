@@ -2,11 +2,17 @@ import { useRef } from 'react';
 import { Camera } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button, Dialog, Field, Input } from '../../ui';
+import { ColorField, FontSelect } from '../editor/shared';
+import { accountFonts } from '../../lib/buildSections';
 
 /** "Minha marca": nome, @, marca d'água e avatar usados nos slides. */
 export function BrandDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const config = useStore(s => s.config);
   const updateConfig = useStore(s => s.updateConfig);
+  const brand = useStore(s => s.brandDefaults);
+  const setBrand = useStore(s => s.setBrandDefaults);
+  const fallback = accountFonts(useStore(s => s.userEmail));
+  const hasBrand = !!(brand.titleFont || brand.bodyFont || brand.titleColor);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +52,23 @@ export function BrandDialog({ open, onClose }: { open: boolean; onClose: () => v
       <Field label="Marca d'água" hint="Aparece discreta no rodapé de todos os slides.">
         {id => <Input id={id} value={config.watermark} onChange={e => updateConfig({ watermark: e.target.value })} placeholder="@seuperfil" />}
       </Field>
+
+      <div className="flex flex-col gap-3 pt-2 border-t border-fg/[0.08]">
+        <div className="flex items-center justify-between gap-3 pt-3">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-subhead font-medium">Carrosséis novos de Feed</span>
+            <span className="text-footnote text-muted">Começam com estas fontes e cor de título.</span>
+          </div>
+          {hasBrand && (
+            <Button size="sm" variant="ghost" onClick={() => setBrand({ titleFont: undefined, bodyFont: undefined, titleColor: undefined })}>Usar padrão</Button>
+          )}
+        </div>
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end">
+          <Field label="Fonte do título">{id => <FontSelect id={id} value={brand.titleFont ?? fallback.titleFont} onChange={v => setBrand({ titleFont: v })} />}</Field>
+          <Field label="Fonte do texto">{id => <FontSelect id={id} value={brand.bodyFont ?? fallback.bodyFont} onChange={v => setBrand({ bodyFont: v })} />}</Field>
+          <ColorField label="Título" value={brand.titleColor ?? '#ffffff'} onChange={v => setBrand({ titleColor: v })} />
+        </div>
+      </div>
     </Dialog>
   );
 }
