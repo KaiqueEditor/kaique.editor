@@ -19,7 +19,7 @@ export interface OrganizeEnv {
   OPENROUTER_MODEL?: string;
 }
 
-const DEFAULT_MODEL = 'poolside/laguna-s-2.1:free';
+const DEFAULT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free';
 const MAX_INPUT = 8000;
 
 const RULES_FEED = `Você organiza textos em carrosséis de Instagram, em português do Brasil.
@@ -109,7 +109,9 @@ export async function organizeText(text: string, mode: OrganizeMode, env: Organi
     body: JSON.stringify({
       model,
       temperature: 0.3,
-      max_tokens: 2500,
+      // modelo com raciocínio: pouco esforço e folga de tokens para sobrar resposta
+      max_tokens: 6000,
+      reasoning: { effort: 'low', exclude: true },
       messages: [
         { role: 'system', content: mode === 'x' ? RULES_X : RULES_FEED },
         { role: 'user', content: input },
