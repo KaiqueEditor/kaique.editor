@@ -71,9 +71,9 @@ export function MobileEditor(props: MobileEditorProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 844 });
   const [tab, setTab] = useState<Tab | null>(null);
-  useEffect(() => onEditRequest(target => {
+  useEffect(() => onEditRequest((target, focusPanel) => {
     setTab(target === 'media' ? 'imagem' : 'texto');
-    if (target !== 'media') focusTextField(target);
+    if (target !== 'media' && focusPanel) focusTextField(target);
   }), []);
   const [importOpen, setImportOpen] = useState(false);
   const touchX = useRef<number | null>(null);

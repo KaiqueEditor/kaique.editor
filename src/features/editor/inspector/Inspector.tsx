@@ -17,9 +17,9 @@ interface InspectorProps {
 
 export function Inspector(props: InspectorProps) {
   const [tab, setTab] = useState<Tab>('texto');
-  useEffect(() => onEditRequest(target => {
+  useEffect(() => onEditRequest((target, focusPanel) => {
     setTab(target === 'media' ? 'imagem' : 'texto');
-    if (target !== 'media') focusTextField(target);
+    if (target !== 'media' && focusPanel) focusTextField(target);
   }), []);
   const { index, sections } = useActiveSection();
   const label = index === 0 ? 'Capa' : index === sections.length - 1 ? 'Último slide' : `Slide ${index + 1}`;

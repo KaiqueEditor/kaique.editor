@@ -171,3 +171,7 @@
   outline-color: rgb(var(--c-accent) / 0.55);
 }
 .editable-slide [data-edit="media"] { cursor: pointer; }
+
+/* Editando direto no slide: o texto original some e fica só o campo */
+.editing-title [data-edit="title"],
+.editing-content [data-edit="content"] { visibility: hidden; }

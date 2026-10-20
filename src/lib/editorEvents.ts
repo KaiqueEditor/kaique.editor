@@ -9,11 +9,14 @@ export type EditorDialog = 'themes' | 'assets';
 const EDIT = 'cp:edit';
 const OPEN = 'cp:open';
 
-export const requestEdit = (target: EditTarget) =>
-  window.dispatchEvent(new CustomEvent<EditTarget>(EDIT, { detail: target }));
+type EditDetail = { target: EditTarget; focusPanel: boolean };
 
-export const onEditRequest = (fn: (target: EditTarget) => void) => {
-  const handler = (e: Event) => fn((e as CustomEvent<EditTarget>).detail);
+/** focusPanel=false: o texto está sendo editado direto no slide; o painel só acompanha. */
+export const requestEdit = (target: EditTarget, focusPanel = true) =>
+  window.dispatchEvent(new CustomEvent<EditDetail>(EDIT, { detail: { target, focusPanel } }));
+
+export const onEditRequest = (fn: (target: EditTarget, focusPanel: boolean) => void) => {
+  const handler = (e: Event) => { const d = (e as CustomEvent<EditDetail>).detail; fn(d.target, d.focusPanel); };
   window.addEventListener(EDIT, handler);
   return () => window.removeEventListener(EDIT, handler);
 };

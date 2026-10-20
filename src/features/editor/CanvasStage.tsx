@@ -5,7 +5,8 @@ import { EXPORT_FORMATS } from '../../types/carousel.types';
 import { CarouselSlide } from '../../components/carousel/CarouselSlide';
 import { IconButton, Segmented, cx } from '../../ui';
 import { useFormat } from './shared';
-import { handleSlideClick } from '../../lib/editorEvents';
+import { handleSlideClick, requestEdit } from '../../lib/editorEvents';
+import { InlineTextEditor, measureInlineTarget, type InlineEditTarget } from './InlineTextEditor';
 
 const TOP_RESERVE = 64;    // pílula de formato
 const BOTTOM_RESERVE = 76; // pílula de navegação
@@ -31,6 +32,11 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [playing, setPlaying] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [inline, setInline] = useState<InlineEditTarget | null>(null);
+
+  // Trocou de slide: fecha a edição no slide
+  useEffect(() => { setInline(null); }, [activeSlide]);
 
   // Encaixa o slide no espaço livre entre as barras de vidro.
   useLayoutEffect(() => {
@@ -64,6 +70,18 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
 
   const section = sections[activeSlide];
   if (!section) return null;
+
+  // Clique no título ou no texto: edita ali mesmo, com o cursor onde clicou
+  const onSlideClick = (e: React.MouseEvent) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-edit]');
+    const field = el?.dataset.edit;
+    if (el && stageRef.current && (field === 'title' || field === 'content')) {
+      setInline(measureInlineTarget(el, stageRef.current, scale, section[field] ?? '', e.clientX, e.clientY));
+      requestEdit(field, false);
+      return;
+    }
+    handleSlideClick(e);
+  };
 
   const go = (i: number) => { setPlaying(false); setActiveSlide(Math.max(0, Math.min(sections.length - 1, i))); };
 
@@ -108,7 +126,8 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
           height: fmt.height * scale,
         }}
       >
-        <div className="editable-slide" onClick={handleSlideClick} style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <div ref={stageRef} className={cx('editable-slide relative', inline && `editing-${inline.field}`)} onClick={onSlideClick}
+          style={{ width: fmt.width, height: fmt.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
           <CarouselSlide
             section={section}
             config={config}
@@ -120,6 +139,14 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
             formatWidth={fmt.width}
             formatHeight={fmt.height}
           />
+          {inline && (
+            <InlineTextEditor
+              target={inline}
+              value={section[inline.field] ?? ''}
+              onChange={v => updateSection(section.id, { [inline.field]: v })}
+              onDone={() => setInline(null)}
+            />
+          )}
         </div>
         {dragOver && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 backdrop-blur-sm text-white">
