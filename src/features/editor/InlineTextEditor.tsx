@@ -1,14 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bold, Eraser } from 'lucide-react';
-import { TEXT_COLORS, applyColor, clearMarks, toggleBold, type MarkResult } from '../../lib/textMarks';
+import { MarkToolbar, RichEditable, type RichEditableHandle } from './RichEditable';
 
 export type InlineField = 'title' | 'content';
 
 export interface InlineEditTarget {
   field: InlineField;
-  /** Posição do cursor no texto bruto (com as marcações **, ==…). */
-  caret: number;
+  /** Posição do cursor no texto visível (sem os códigos). */
+  caret: number | 'end';
   /** Geometria no espaço do slide (px de 1080), já descontado o zoom da tela. */
   left: number;
   top: number;
@@ -16,23 +15,6 @@ export interface InlineEditTarget {
   /** Escala extra do bloco (posts que encolhem para caber). */
   localScale: number;
   style: React.CSSProperties;
-}
-
-// Marcações que o renderFormattedText esconde (=1=, ==, **, *, _, ~, ^, { })
-const MARKER = /^(=\d=|==|\*\*|\*|_|~|\^|\{|\})/;
-
-/** Converte a posição no texto visível do slide para a posição no texto bruto. */
-export function rawIndexFromVisible(raw: string, visible: number) {
-  let v = 0;
-  let i = 0;
-  while (i < raw.length) {
-    const m = raw.slice(i).match(MARKER);
-    if (m) { i += m[0].length; continue; }
-    if (v === visible) return i;
-    v++;
-    i++;
-  }
-  return raw.length;
 }
 
 /** Quantos caracteres visíveis existem antes do ponto clicado dentro de `el`. */
@@ -68,7 +50,7 @@ const COPIED = [
  * Mede o texto clicado e devolve onde abrir o campo de edição por cima dele.
  * `stage` é o contêiner do slide em escala 1080; `zoom` é a escala da tela.
  */
-export function measureInlineTarget(el: HTMLElement, stage: HTMLElement, zoom: number, raw: string, x: number, y: number): InlineEditTarget {
+export function measureInlineTarget(el: HTMLElement, stage: HTMLElement, zoom: number, x: number, y: number): InlineEditTarget {
   const field = el.dataset.edit as InlineField;
   const box = el.parentElement ?? el;
   const stageRect = stage.getBoundingClientRect();
@@ -87,7 +69,7 @@ export function measureInlineTarget(el: HTMLElement, stage: HTMLElement, zoom: n
   const visible = visibleOffsetAt(el, x, y);
   return {
     field,
-    caret: visible == null ? raw.length : rawIndexFromVisible(raw, visible),
+    caret: visible ?? 'end',
     left: (boxRect.left - stageRect.left) / zoom + padL * localScale,
     top: (elRect.top - stageRect.top) / zoom,
     width: box.offsetWidth - padL - padR,
@@ -107,108 +89,45 @@ interface InlineTextEditorProps {
   toolbarAt?: { left: number; top: number };
 }
 
-/** Barra que aparece ao selecionar texto: cores, negrito e limpar. */
-function MarkToolbar({ onApply }: { onApply: (fn: (v: string, s: number, e: number) => MarkResult) => void }) {
-  // onMouseDown + preventDefault: o campo não perde o foco nem a seleção
-  const keep = (e: React.MouseEvent) => e.preventDefault();
-  return (
-    <div role="toolbar" aria-label="Formatar seleção" onMouseDown={keep}
-      className="glass-strong rounded-pill h-10 px-1.5 flex items-center gap-1 shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
-      {TEXT_COLORS.map(c => (
-        <button key={c.code} type="button" title={c.name} aria-label={`Pintar de ${c.name.toLowerCase()}`}
-          onMouseDown={keep} onClick={() => onApply((v, s, e) => applyColor(v, s, e, c.code))}
-          className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-          <span className="w-5 h-5 rounded-full shadow-[inset_0_0_0_1.5px_rgba(128,128,128,0.55)]" style={{ background: c.hex }} />
-        </button>
-      ))}
-      <span className="w-px h-5 bg-fg/15 mx-0.5" aria-hidden="true" />
-      <button type="button" title="Negrito" aria-label="Negrito" onMouseDown={keep} onClick={() => onApply(toggleBold)}
-        className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Bold size={16} /></button>
-      <button type="button" title="Limpar formatação" aria-label="Limpar formatação" onMouseDown={keep} onClick={() => onApply(clearMarks)}
-        className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Eraser size={16} /></button>
-    </div>
-  );
-}
-
-/** Campo transparente posicionado sobre o texto do slide, com a mesma tipografia. */
+/** Campo posicionado sobre o texto do slide, com a mesma tipografia e as cores já aplicadas. */
 export function InlineTextEditor({ target, value, onChange, onDone, toolbarHost, toolbarAt }: InlineTextEditorProps) {
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const editor = useRef<RichEditableHandle>(null);
   const [hasSelection, setHasSelection] = useState(false);
-  const pendingSel = useRef<{ start: number; end: number } | null>(null);
-
-  const readSelection = () => {
-    const el = ref.current;
-    setHasSelection(!!el && el.selectionEnd > el.selectionStart);
-  };
-
-  // Aplica cor/negrito/limpar na seleção e mantém o trecho selecionado
-  const applyMark = (fn: (v: string, s: number, e: number) => MarkResult) => {
-    const el = ref.current;
-    if (!el || el.selectionEnd <= el.selectionStart) return;
-    const r = fn(value, el.selectionStart, el.selectionEnd);
-    if (r.value === value) return;
-    pendingSel.current = { start: r.start, end: r.end };
-    onChange(r.value);
-  };
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    const sel = pendingSel.current;
-    if (!el || !sel) return;
-    pendingSel.current = null;
-    el.focus({ preventScroll: true });
-    el.setSelectionRange(sel.start, sel.end);
-    readSelection();
-  }, [value]);
 
   // Abre com o cursor exatamente onde a pessoa clicou
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.focus({ preventScroll: true });
-    el.setSelectionRange(target.caret, target.caret);
-  }, [target]);
-
-  // Altura acompanha o texto
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = '0px';
-    el.style.height = `${el.scrollHeight}px`;
-  }, [value, target]);
+  useEffect(() => { editor.current?.focusAt(target.caret); }, [target]);
 
   return (
     <>
-    <textarea
-      ref={ref}
-      onSelect={readSelection}
-      aria-label={target.field === 'title' ? 'Título do slide' : 'Texto de apoio do slide'}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      onBlur={onDone}
-      onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); onDone(); } }}
-      onClick={e => e.stopPropagation()}
-      spellCheck
-      className="absolute z-20 m-0 p-0 border-0 bg-transparent resize-none overflow-hidden outline-none"
-      style={{
-        ...target.style,
-        left: target.left,
-        top: target.top,
-        width: target.width,
-        transform: target.localScale !== 1 ? `scale(${target.localScale})` : undefined,
-        transformOrigin: 'top left',
-        caretColor: target.style.color,
-        outline: '4px dashed rgb(var(--c-accent) / 0.7)',
-        outlineOffset: 10,
-        borderRadius: 8,
-      }}
-    />
-    {hasSelection && toolbarHost && toolbarAt && createPortal(
-      <div className="absolute z-40 -translate-y-full pb-3" style={{ left: toolbarAt.left, top: toolbarAt.top }}>
-        <MarkToolbar onApply={applyMark} />
-      </div>,
-      toolbarHost,
-    )}
+      <RichEditable
+        ref={editor}
+        value={value}
+        onChange={onChange}
+        onSelectionChange={setHasSelection}
+        ariaLabel={target.field === 'title' ? 'Título do slide' : 'Texto de apoio do slide'}
+        onBlur={onDone}
+        onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); onDone(); } }}
+        onClick={e => e.stopPropagation()}
+        className="absolute z-20 m-0 p-0 border-0 bg-transparent outline-none"
+        style={{
+          ...target.style,
+          left: target.left,
+          top: target.top,
+          width: target.width,
+          transform: target.localScale !== 1 ? `scale(${target.localScale})` : undefined,
+          transformOrigin: 'top left',
+          caretColor: target.style.color,
+          outline: '4px dashed rgb(var(--c-accent) / 0.7)',
+          outlineOffset: 10,
+          borderRadius: 8,
+        }}
+      />
+      {hasSelection && toolbarHost && toolbarAt && createPortal(
+        <div className="absolute z-40 -translate-y-full pb-3" style={{ left: toolbarAt.left, top: toolbarAt.top }}>
+          <MarkToolbar editor={editor} />
+        </div>,
+        toolbarHost,
+      )}
     </>
   );
 }

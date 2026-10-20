@@ -1,13 +1,44 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
 import { useStore } from '../../../store';
 import type { Section } from '../../../types/carousel.types';
-import { Button, Field, Input, Segmented, Slider, Textarea, cx } from '../../../ui';
+import { Button, Field, Input, Segmented, Slider, cx } from '../../../ui';
+import { MarkToolbar, RichEditable, type RichEditableHandle } from '../RichEditable';
 import { FontSelect, Group, useActiveSection } from '../shared';
 import { useFileUpload } from '../../../hooks/useFileUpload';
 import { TWEET_LIMIT, tweetLength } from '../../../lib/xPost';
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
+/** Campo do painel com a formatação visível; a barra de cores aparece ao selecionar. */
+function RichField({ id, field, value, onChange, placeholder, minRows }: {
+  id: string; field: 'title' | 'content'; value: string; onChange: (v: string) => void; placeholder: string; minRows: number;
+}) {
+  const editor = useRef<RichEditableHandle>(null);
+  const [selecting, setSelecting] = useState(false);
+  return (
+    <div className="relative">
+      {selecting && (
+        <div className="absolute z-30 left-0 bottom-full pb-2">
+          <MarkToolbar editor={editor} />
+        </div>
+      )}
+      <RichEditable
+        ref={editor}
+        value={value}
+        onChange={onChange}
+        onSelectionChange={setSelecting}
+        panel
+        ariaLabel={field === 'title' ? 'Título' : 'Texto de apoio'}
+        dataField={field}
+        placeholder={placeholder}
+        className="rich-field w-full bg-fg/[0.07] text-fg text-subhead leading-relaxed rounded-ui-sm px-3 py-2.5 outline-none transition-[background-color,box-shadow] duration-200 hover:bg-fg/[0.09] focus:bg-fg/[0.05] focus:ring-4 focus:ring-accent/30"
+        style={{ minHeight: `${minRows * 1.6 + 1.25}em` }}
+      />
+      <span id={id} className="sr-only" />
+    </div>
+  );
+}
 
 export function TextPanel() {
   const { section: s, update } = useActiveSection();
@@ -23,10 +54,10 @@ export function TextPanel() {
     <div className="flex flex-col gap-6">
       <Group>
         <Field label="Título">
-          {id => <Textarea id={id} data-field="title" rows={3} value={s.title} onChange={e => update({ title: e.target.value })} placeholder="Uma frase que prende" />}
+          {id => <RichField id={id} field="title" minRows={3} value={s.title} onChange={title => update({ title })} placeholder="Uma frase que prende" />}
         </Field>
-        <Field label="Texto de apoio" hint="Para colorir, selecione a palavra direto no slide.">
-          {id => <Textarea id={id} data-field="content" rows={isSocial ? 5 : 3} value={s.content} onChange={e => update({ content: e.target.value })} placeholder="Contexto, fontes ou subtítulo" />}
+        <Field label="Texto de apoio" hint="Para colorir, selecione a palavra (aqui ou no slide).">
+          {id => <RichField id={id} field="content" minRows={isSocial ? 5 : 3} value={s.content} onChange={content => update({ content })} placeholder="Contexto, fontes ou subtítulo" />}
         </Field>
         {isSocial && (
           <p className={cx('text-caption tabular-nums text-right -mt-1', length > TWEET_LIMIT ? 'text-danger' : 'text-faint')} aria-live="polite">

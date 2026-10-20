@@ -175,3 +175,10 @@
 /* Editando direto no slide: o texto original some e fica só o campo */
 .editing-title [data-edit="title"],
 .editing-content [data-edit="content"] { visibility: hidden; }
+
+/* Campo formatado do painel: dica quando está vazio */
+.rich-field:empty::before {
+  content: attr(data-placeholder);
+  color: rgb(var(--c-faint, 128 128 128));
+  pointer-events: none;
+}

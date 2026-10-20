@@ -76,7 +76,7 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-edit]');
     const field = el?.dataset.edit;
     if (el && stageRef.current && (field === 'title' || field === 'content')) {
-      const t = measureInlineTarget(el, stageRef.current, scale, section[field] ?? '', e.clientX, e.clientY);
+      const t = measureInlineTarget(el, stageRef.current, scale, e.clientX, e.clientY);
       // barra de cores fica fora do slide reduzido, logo acima do texto
       const boxRect = boxRef.current!.getBoundingClientRect();
       const stageRect = stageRef.current.getBoundingClientRect();

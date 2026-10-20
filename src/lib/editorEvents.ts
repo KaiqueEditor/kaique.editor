@@ -33,14 +33,24 @@ export const onOpenEditorDialog = (fn: (dialog: EditorDialog) => void) => {
 /** Foca o campo do painel de texto depois que ele aparecer na tela. */
 export const focusTextField = (target: Exclude<EditTarget, 'media'>, tries = 12) => {
   // Editor de computador e de celular ficam ambos na página; vale o que está visível
-  const el = [...document.querySelectorAll<HTMLTextAreaElement>(`[data-field="${target}"]`)]
+  const el = [...document.querySelectorAll<HTMLTextAreaElement & HTMLElement>(`[data-field="${target}"]`)]
     .find(f => f.offsetParent !== null);
   if (!el) {
     if (tries > 0) setTimeout(() => focusTextField(target, tries - 1), 50);
     return;
   }
   el.focus({ preventScroll: true });
-  el.setSelectionRange(el.value.length, el.value.length);
+  if (el.isContentEditable) {
+    // campo formatado: cursor no fim do texto
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = document.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  } else {
+    el.setSelectionRange(el.value.length, el.value.length);
+  }
   el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 };
 
