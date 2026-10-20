@@ -1,6 +1,4 @@
 import { ArrowRight, Cloud, Eye, Film, ImageIcon, LayoutGrid, Palette } from 'lucide-react';
-import type { ProjectConfig, Section } from '../../types';
-import { CarouselSlide } from '../../components/carousel/CarouselSlide';
 import { Button, cx } from '../../ui';
 
 interface LandingPageProps {
@@ -8,49 +6,24 @@ interface LandingPageProps {
   onLogin: () => void;
 }
 
-// Fotos de exemplo feitas só com gradiente (sem depender de imagens externas)
-const svgPhoto = (a: string, b: string, c: string) =>
-  `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1440"><defs><radialGradient id="g" cx="30%" cy="25%" r="90%"><stop offset="0" stop-color="${a}"/><stop offset="0.55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient></defs><rect width="1080" height="1440" fill="url(#g)"/></svg>`)}`;
-
-const DEMO_CONFIG: ProjectConfig = {
-  branding: 'Carrossel.Pro',
-  handle: '@procarrossel',
-  watermark: '@procarrossel',
-  avatarUrl: `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset="0.35" stop-color="#FA7E1E"/><stop offset="0.6" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="40" height="40" fill="url(#g)"/><text x="20" y="27" font-family="Arial" font-weight="700" font-size="18" fill="#fff" text-anchor="middle">C</text></svg>`)}`,
-  numSlides: 3,
-};
-
-const base = {
-  alignment: 'center', titleFont: 'bebas-neue', bodyFont: 'sans', titleColor: '#ffffff', bodyColor: '#e5e5e5',
-  bgColor: '#0a0a0a', brandingColor: '#ffffff', titleSize: 44, bodySize: 16, imagePosX: 50, imagePosY: 50,
-  imageScale: 1, overlayOpacity: 0, textPosY: 70, showSocialImage: false, gradientIntensity: 1,
+// Posts reais feitos no Carrossel.Pro (@kaique.editor)
+const POSTS = {
+  robotaxi: { src: '/landing/robotaxi.jpg', alt: 'Carrossel de feed: Elon Musk lança carro sem motorista que lucra com robotáxi 24h' },
+  ia: { src: '/landing/ia-40-posts.jpg', alt: 'Carrossel de feed: Fiz 40 posts só com IA em 30 dias, 6,5 milhões de views' },
+  instagram: { src: '/landing/instagram-2026.jpg', alt: 'Carrossel de feed: O Instagram atualizou tudo em 2026' },
+  gta: { src: '/landing/gta-vi.jpg', alt: 'Carrossel de feed: O Brasil bloqueou a Rockstar, GTA VI pode não ser vendido aqui' },
+  pokemon: { src: '/landing/pokemon.jpg', alt: 'Carrossel de feed: Uma carta Pokémon vendida por mais de R$ 95 milhões' },
+  banco: { src: '/landing/banco-cdi.jpg', alt: 'Post do X: O banco que prometia 140% do CDI quebrou e levou R$ 51 bilhões' },
 } as const;
+type PostKey = keyof typeof POSTS;
 
-const FEED_COVER: Section = {
-  ...base, id: 'demo-1', layoutType: 'storytelling', imageHeight: 62,
-  title: '3 erros que travam o seu perfil', content: 'Arrasta pro lado e confere',
-  imageUrl: svgPhoto('#FA7E1E', '#D62976', '#2a0f3a'),
-};
-const FEED_SLIDE: Section = {
-  ...base, id: 'demo-2', layoutType: 'storytelling', alignment: 'left', imageHeight: 55, titleSize: 36,
-  title: 'Postar sem constância', content: 'O algoritmo entrega mais para quem aparece toda semana.',
-  imageUrl: svgPhoto('#4F5BD5', '#962FBF', '#0b0b1a'),
-};
-const X_POST: Section = {
-  ...base, id: 'demo-3', layoutType: 'social-post', alignment: 'left', bgColor: '#ffffff', titleColor: '#0f1419',
-  bodyColor: '#0f1419', brandingColor: '#0f1419', titleFont: 'sans', titleSize: 26, bodySize: 24, textPosY: 85,
-  title: 'Ninguém te conta isso sobre consistência:', content: 'Ela não é sobre motivação.\n\nÉ sobre aparecer nos dias em que ninguém está olhando.',
-};
-
-/** Slide de verdade, renderizado pelo mesmo componente do editor e reduzido. */
-function DemoSlide({ section, width, index = 0, className, style }: { section: Section; width: number; index?: number; className?: string; style?: React.CSSProperties }) {
-  const scale = width / 1080;
+/** Post real (imagem 3:4) com sombra. */
+function PostImage({ post, width, className, style, eager }: { post: PostKey; width: number; className?: string; style?: React.CSSProperties; eager?: boolean }) {
+  const { src, alt } = POSTS[post];
   return (
-    <div className={cx('overflow-hidden rounded-[10px] shadow-[0_30px_80px_rgba(0,0,0,0.45)]', className?.includes('absolute') ? '' : 'relative', className)} style={{ width, height: 1440 * scale, ...style }} aria-hidden="true">
-      <div style={{ position: 'absolute', inset: 0, width: 1080, height: 1440, transform: `scale(${scale})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
-        <CarouselSlide section={section} config={DEMO_CONFIG} index={index} total={5} isExport />
-      </div>
-    </div>
+    <img src={src} alt={alt} width={width} height={Math.round(width * 4 / 3)} loading={eager ? 'eager' : 'lazy'} decoding="async"
+      className={cx('rounded-[10px] shadow-[0_30px_80px_rgba(0,0,0,0.45)] object-cover bg-surface', className)}
+      style={{ width, height: Math.round(width * 4 / 3), ...style }} />
   );
 }
 
@@ -106,15 +79,30 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
           </div>
 
           <div className="relative h-[400px] sm:h-[470px]" aria-hidden="true">
-            {[
-              { s: FEED_SLIDE, i: 1, w: 230, x: -140, y: 26, r: -8, extra: 'hidden sm:block' },
-              { s: X_POST, i: 2, w: 230, x: 130, y: 28, r: 7, extra: '' },
-              { s: FEED_COVER, i: 0, w: 260, x: -10, y: -4, r: 0, extra: '' },
-            ].map(({ s, i, w, x, y, r, extra }) => (
-              <DemoSlide key={s.id} section={s} index={i} width={w} className={cx('absolute left-1/2 top-1/2', extra)}
+            {([
+              { p: 'instagram', w: 230, x: -150, y: 26, r: -8, extra: 'hidden sm:block' },
+              { p: 'banco', w: 230, x: 140, y: 28, r: 7, extra: '' },
+              { p: 'ia', w: 265, x: -6, y: -4, r: 0, extra: '' },
+            ] as const).map(({ p, w, x, y, r, extra }) => (
+              <PostImage key={p} post={p} width={w} eager className={cx('absolute left-1/2 top-1/2', extra)}
                 style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${r}deg)` }} />
             ))}
           </div>
+        </section>
+
+        {/* Vitrine: posts reais */}
+        <section className="border-t border-fg/[0.06]" aria-labelledby="vitrine">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-8 pt-16 pb-4 flex flex-col gap-2 text-center items-center">
+            <h2 id="vitrine" className="font-display font-light text-title1 tracking-tight">Feito no Carrossel.Pro</h2>
+            <p className="text-body text-muted">Posts reais publicados por @kaique.editor.</p>
+          </div>
+          <ul className="flex gap-4 overflow-x-auto no-scrollbar px-4 sm:px-8 pt-6 pb-16 snap-x snap-mandatory lg:justify-center">
+            {(Object.keys(POSTS) as PostKey[]).map(p => (
+              <li key={p} className="snap-center flex-shrink-0">
+                <PostImage post={p} width={200} className="shadow-[0_16px_40px_rgba(0,0,0,0.35)]" />
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* Como funciona */}
@@ -142,8 +130,8 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { title: 'Feed', text: 'Título forte, foto de fundo e texto de apoio. O clássico que prende no arrastar.', slides: [FEED_COVER, FEED_SLIDE] },
-                { title: 'Post do X', text: 'Visual de tweet com seu nome, @ e selo. Ideal para opinião, dicas e threads.', slides: [X_POST] },
+                { title: 'Feed', text: 'Título forte, foto de fundo e texto de apoio. O clássico que prende no arrastar.', posts: ['robotaxi', 'pokemon'] as PostKey[] },
+                { title: 'Post do X', text: 'Visual de tweet com seu nome, @ e selo. Ideal para opinião, notícia e threads.', posts: ['banco'] as PostKey[] },
               ].map(card => (
                 <article key={card.title} className="p-6 sm:p-8 rounded-ui-xl bg-surface flex flex-col gap-6">
                   <div className="flex flex-col gap-2">
@@ -151,7 +139,7 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
                     <p className="text-subhead text-muted leading-relaxed">{card.text}</p>
                   </div>
                   <div className="flex gap-3 justify-center">
-                    {card.slides.map((s, i) => <DemoSlide key={s.id} section={s} index={i} width={170} className="shadow-[0_16px_40px_rgba(0,0,0,0.35)]" />)}
+                    {card.posts.map(p => <PostImage key={p} post={p} width={170} className="shadow-[0_16px_40px_rgba(0,0,0,0.35)]" />)}
                   </div>
                 </article>
               ))}
