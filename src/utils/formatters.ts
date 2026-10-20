@@ -10,6 +10,8 @@ import React from 'react';
  *   =5=texto=5= → roxo/purple (#A855F7)
  *   =6=texto=6= → pink (#FF6B9D)
  *   =7=texto=7= → branco puro (#FFFFFF)
+ *   =8=texto=8= → preto (#0F1419), para fundo claro
+ *   =9=texto=9= → azul (#1D9BF0)
  *   **texto**   → negrito forte (900)
  *   *texto*     → negrito (700)
  *   _texto_     → itálico
@@ -18,7 +20,7 @@ import React from 'react';
  *   {texto}     → gradiente animado
  */
 
-const COLOR_MAP: Record<string, string> = {
+export const COLOR_MAP: Record<string, string> = {
   '=1=': '#ff0000',    // Vermelho
   '=2=': '#FAA72B',    // Amarelo/Laranja
   '=3=': '#00ff33',    // Verde
@@ -26,12 +28,14 @@ const COLOR_MAP: Record<string, string> = {
   '=5=': '#A855F7',    // Roxo/Purple
   '=6=': '#FF6B9D',    // Pink/Rosa
   '=7=': '#FFFFFF',    // Branco puro
+  '=8=': '#0F1419',    // Preto (fundo claro)
+  '=9=': '#1D9BF0',    // Azul
 };
 
 export const renderFormattedText = (text: string, highlightColor?: string) => {
   if (!text) return null;
 
-  const parts = text.split(/(=1=.*?=1=|=2=.*?=2=|=3=.*?=3=|=4=.*?=4=|=5=.*?=5=|=6=.*?=6=|=7=.*?=7=|==.*?==|\*\*.*?\*\*|\*.*?\*|_.*?_|~.*?~|\^.*?\^|\{.*?\})/gs);
+  const parts = text.split(/(=1=.*?=1=|=2=.*?=2=|=3=.*?=3=|=4=.*?=4=|=5=.*?=5=|=6=.*?=6=|=7=.*?=7=|=8=.*?=8=|=9=.*?=9=|==.*?==|\*\*.*?\*\*|\*.*?\*|_.*?_|~.*?~|\^.*?\^|\{.*?\})/gs);
 
   return parts.map((part, i) => {
     // =N= color codes
@@ -40,7 +44,7 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
         return React.createElement(
           'span',
           { key: i, style: { color, fontWeight: 900 } },
-          part.slice(tag.length, -tag.length)
+          renderFormattedText(part.slice(tag.length, -tag.length), highlightColor)
         );
       }
     }
@@ -56,7 +60,7 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
             fontWeight: 900,
           }
         },
-        part.slice(2, -2)
+        renderFormattedText(part.slice(2, -2), highlightColor)
       );
     }
 
@@ -65,7 +69,7 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
       return React.createElement(
         'strong',
         { key: i, className: 'font-black', style: { fontWeight: 900 } },
-        part.slice(2, -2)
+        renderFormattedText(part.slice(2, -2), highlightColor)
       );
     }
 
@@ -74,7 +78,7 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
       return React.createElement(
         'strong',
         { key: i, style: { fontWeight: 700 } },
-        part.slice(1, -1)
+        renderFormattedText(part.slice(1, -1), highlightColor)
       );
     }
 

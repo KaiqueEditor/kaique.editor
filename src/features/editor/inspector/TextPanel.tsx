@@ -25,7 +25,7 @@ export function TextPanel() {
         <Field label="Título">
           {id => <Textarea id={id} data-field="title" rows={3} value={s.title} onChange={e => update({ title: e.target.value })} placeholder="Uma frase que prende" />}
         </Field>
-        <Field label="Texto de apoio" hint="Use *negrito*, _itálico_ e ==destaque==.">
+        <Field label="Texto de apoio" hint="Para colorir, selecione a palavra direto no slide.">
           {id => <Textarea id={id} data-field="content" rows={isSocial ? 5 : 3} value={s.content} onChange={e => update({ content: e.target.value })} placeholder="Contexto, fontes ou subtítulo" />}
         </Field>
         {isSocial && (

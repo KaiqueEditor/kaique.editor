@@ -33,7 +33,7 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
   const [playing, setPlaying] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
-  const [inline, setInline] = useState<InlineEditTarget | null>(null);
+  const [inline, setInline] = useState<(InlineEditTarget & { toolbarAt: { left: number; top: number } }) | null>(null);
 
   // Trocou de slide: fecha a edição no slide
   useEffect(() => { setInline(null); }, [activeSlide]);
@@ -76,7 +76,12 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-edit]');
     const field = el?.dataset.edit;
     if (el && stageRef.current && (field === 'title' || field === 'content')) {
-      setInline(measureInlineTarget(el, stageRef.current, scale, section[field] ?? '', e.clientX, e.clientY));
+      const t = measureInlineTarget(el, stageRef.current, scale, section[field] ?? '', e.clientX, e.clientY);
+      // barra de cores fica fora do slide reduzido, logo acima do texto
+      const boxRect = boxRef.current!.getBoundingClientRect();
+      const stageRect = stageRef.current.getBoundingClientRect();
+      const toolbarAt = { left: stageRect.left - boxRect.left + t.left * scale, top: stageRect.top - boxRect.top + t.top * scale - 8 };
+      setInline({ ...t, toolbarAt });
       requestEdit(field, false);
       return;
     }
@@ -145,6 +150,8 @@ export function CanvasStage({ onAvatarClick, onVideoUpload }: CanvasStageProps) 
               value={section[inline.field] ?? ''}
               onChange={v => updateSection(section.id, { [inline.field]: v })}
               onDone={() => setInline(null)}
+              toolbarHost={boxRef.current}
+              toolbarAt={inline.toolbarAt}
             />
           )}
         </div>

@@ -1,4 +1,7 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Bold, Eraser } from 'lucide-react';
+import { TEXT_COLORS, applyColor, clearMarks, toggleBold, type MarkResult } from '../../lib/textMarks';
 
 export type InlineField = 'title' | 'content';
 
@@ -98,11 +101,65 @@ interface InlineTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   onDone: () => void;
+  /** Onde desenhar a barra de cores (fora do slide, que fica reduzido na tela). */
+  toolbarHost?: HTMLElement | null;
+  /** Canto superior esquerdo do texto, em px do `toolbarHost`. */
+  toolbarAt?: { left: number; top: number };
+}
+
+/** Barra que aparece ao selecionar texto: cores, negrito e limpar. */
+function MarkToolbar({ onApply }: { onApply: (fn: (v: string, s: number, e: number) => MarkResult) => void }) {
+  // onMouseDown + preventDefault: o campo não perde o foco nem a seleção
+  const keep = (e: React.MouseEvent) => e.preventDefault();
+  return (
+    <div role="toolbar" aria-label="Formatar seleção" onMouseDown={keep}
+      className="glass-strong rounded-pill h-10 px-1.5 flex items-center gap-1 shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
+      {TEXT_COLORS.map(c => (
+        <button key={c.code} type="button" title={c.name} aria-label={`Pintar de ${c.name.toLowerCase()}`}
+          onMouseDown={keep} onClick={() => onApply((v, s, e) => applyColor(v, s, e, c.code))}
+          className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+          <span className="w-5 h-5 rounded-full shadow-[inset_0_0_0_1.5px_rgba(128,128,128,0.55)]" style={{ background: c.hex }} />
+        </button>
+      ))}
+      <span className="w-px h-5 bg-fg/15 mx-0.5" aria-hidden="true" />
+      <button type="button" title="Negrito" aria-label="Negrito" onMouseDown={keep} onClick={() => onApply(toggleBold)}
+        className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Bold size={16} /></button>
+      <button type="button" title="Limpar formatação" aria-label="Limpar formatação" onMouseDown={keep} onClick={() => onApply(clearMarks)}
+        className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Eraser size={16} /></button>
+    </div>
+  );
 }
 
 /** Campo transparente posicionado sobre o texto do slide, com a mesma tipografia. */
-export function InlineTextEditor({ target, value, onChange, onDone }: InlineTextEditorProps) {
+export function InlineTextEditor({ target, value, onChange, onDone, toolbarHost, toolbarAt }: InlineTextEditorProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const [hasSelection, setHasSelection] = useState(false);
+  const pendingSel = useRef<{ start: number; end: number } | null>(null);
+
+  const readSelection = () => {
+    const el = ref.current;
+    setHasSelection(!!el && el.selectionEnd > el.selectionStart);
+  };
+
+  // Aplica cor/negrito/limpar na seleção e mantém o trecho selecionado
+  const applyMark = (fn: (v: string, s: number, e: number) => MarkResult) => {
+    const el = ref.current;
+    if (!el || el.selectionEnd <= el.selectionStart) return;
+    const r = fn(value, el.selectionStart, el.selectionEnd);
+    if (r.value === value) return;
+    pendingSel.current = { start: r.start, end: r.end };
+    onChange(r.value);
+  };
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const sel = pendingSel.current;
+    if (!el || !sel) return;
+    pendingSel.current = null;
+    el.focus({ preventScroll: true });
+    el.setSelectionRange(sel.start, sel.end);
+    readSelection();
+  }, [value]);
 
   // Abre com o cursor exatamente onde a pessoa clicou
   useEffect(() => {
@@ -121,8 +178,10 @@ export function InlineTextEditor({ target, value, onChange, onDone }: InlineText
   }, [value, target]);
 
   return (
+    <>
     <textarea
       ref={ref}
+      onSelect={readSelection}
       aria-label={target.field === 'title' ? 'Título do slide' : 'Texto de apoio do slide'}
       value={value}
       onChange={e => onChange(e.target.value)}
@@ -144,5 +203,12 @@ export function InlineTextEditor({ target, value, onChange, onDone }: InlineText
         borderRadius: 8,
       }}
     />
+    {hasSelection && toolbarHost && toolbarAt && createPortal(
+      <div className="absolute z-40 -translate-y-full pb-3" style={{ left: toolbarAt.left, top: toolbarAt.top }}>
+        <MarkToolbar onApply={applyMark} />
+      </div>,
+      toolbarHost,
+    )}
+    </>
   );
 }
