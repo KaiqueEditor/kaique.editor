@@ -1,11 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
-import { Bold, Eraser } from 'lucide-react';
+import { Bold, Eraser, Italic, Strikethrough } from 'lucide-react';
 import { TEXT_COLORS } from '../../lib/textMarks';
-import { boldSelection, clearSelection, paintSelection, placeCaret, renderInto, serialize } from './richText';
+import { clearSelection, paintSelection, placeCaret, renderInto, serialize, toggleMarkSelection } from './richText';
 
 export interface RichEditableHandle {
   paint: (code: number) => void;
-  bold: () => void;
+  /** Liga/desliga negrito (**), itálico (_) ou riscado (~). */
+  toggle: (mark: '**' | '_' | '~') => void;
   clear: () => void;
   focusAt: (offset: number | 'end') => void;
 }
@@ -58,7 +59,7 @@ export const RichEditable = forwardRef<RichEditableHandle, RichEditableProps>(fu
 
   useImperativeHandle(ref, () => ({
     paint: code => { if (el.current && paintSelection(el.current, code, panel)) emit(); },
-    bold: () => { if (el.current && boldSelection(el.current, panel)) emit(); },
+    toggle: mark => { if (el.current && toggleMarkSelection(el.current, mark, panel)) emit(); },
     clear: () => { if (el.current && clearSelection(el.current)) emit(); },
     focusAt: offset => { if (el.current) { el.current.focus({ preventScroll: true }); placeCaret(el.current, offset); } },
   }));
@@ -111,8 +112,14 @@ export function MarkToolbar({ editor }: { editor: React.RefObject<RichEditableHa
         </button>
       ))}
       <span className="w-px h-5 bg-fg/15 mx-0.5" aria-hidden="true" />
-      <button type="button" title="Negrito" aria-label="Negrito" onMouseDown={keep} onClick={() => editor.current?.bold()}
-        className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Bold size={16} /></button>
+      {([
+        { mark: '**', label: 'Negrito', icon: <Bold size={16} /> },
+        { mark: '_', label: 'Itálico', icon: <Italic size={16} /> },
+        { mark: '~', label: 'Riscado', icon: <Strikethrough size={16} /> },
+      ] as const).map(b => (
+        <button key={b.mark} type="button" title={b.label} aria-label={b.label} onMouseDown={keep} onClick={() => editor.current?.toggle(b.mark)}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10">{b.icon}</button>
+      ))}
       <button type="button" title="Limpar formatação" aria-label="Limpar formatação" onMouseDown={keep} onClick={() => editor.current?.clear()}
         className="w-8 h-8 rounded-full flex items-center justify-center text-fg hover:bg-fg/10"><Eraser size={16} /></button>
     </div>

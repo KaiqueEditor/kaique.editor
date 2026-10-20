@@ -87,7 +87,7 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
       return React.createElement(
         'em',
         { key: i, style: { fontStyle: 'italic' } },
-        part.slice(1, -1)
+        renderFormattedText(part.slice(1, -1), highlightColor)
       );
     }
 
@@ -96,7 +96,7 @@ export const renderFormattedText = (text: string, highlightColor?: string) => {
       return React.createElement(
         'span',
         { key: i, style: { textDecoration: 'line-through', opacity: 0.6 } },
-        part.slice(1, -1)
+        renderFormattedText(part.slice(1, -1), highlightColor)
       );
     }
 

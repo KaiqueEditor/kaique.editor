@@ -183,18 +183,21 @@ function overlaps(range: Range, t: Text) {
   return !clip.collapsed && clip.toString().length > 0 && t.parentNode !== null && nr.intersectsNode(t);
 }
 
-/** Liga/desliga o negrito forte: se tudo já está em negrito, tira; senão, aplica. */
-export function boldSelection(root: HTMLElement, panel: boolean) {
+/**
+ * Liga/desliga uma marcação de estilo (** negrito, _ itálico, ~ riscado):
+ * se todo o trecho já tem, tira; senão, aplica.
+ */
+export function toggleMarkSelection(root: HTMLElement, mark: '**' | '_' | '~', panel: boolean) {
   const range = currentRange(root);
   if (!range) return false;
-  const isBold = (m: string) => m === '**';
+  const isBold = (m: string) => m === mark;
   const texts: Text[] = [];
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   for (let t = walker.nextNode() as Text | null; t; t = walker.nextNode() as Text | null) {
     if (t.textContent && overlaps(range, t)) texts.push(t);
   }
   const allBold = texts.length > 0 && texts.every(t => markAncestors(t, root, isBold).length > 0);
-  if (!allBold) return wrapSelection(root, '**', isBold, panel);
+  if (!allBold) return wrapSelection(root, mark, isBold, panel);
   const start = visibleOffset(root, range.startContainer, range.startOffset);
   const end = start + range.toString().length;
   new Set(texts.flatMap(t => markAncestors(t, root, isBold))).forEach(unwrap);
