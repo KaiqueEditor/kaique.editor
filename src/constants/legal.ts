@@ -10,7 +10,7 @@ export const LEGAL = {
   /** CNPJ (empresa) ou deixe vazio se for pessoa física. Não publique CPF. */
   document: '',
   /** E-mail para contato e pedidos sobre dados pessoais (LGPD). */
-  email: '',
+  email: 'contato@procarrossel.com.br',
   /** Cidade/UF para o foro e o endereço de contato. */
   city: '',
   /** Data da última atualização dos documentos. */
