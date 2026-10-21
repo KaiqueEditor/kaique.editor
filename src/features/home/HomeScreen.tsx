@@ -101,6 +101,7 @@ export function HomeScreen(props: HomeScreenProps) {
             { label: 'Minha marca', icon: <UserRound size={15} />, onSelect: () => setBrandOpen(true) },
             ...(isAdmin ? [{ label: 'Analytics', icon: <BarChart3 size={15} />, onSelect: props.onOpenAnalytics }] : []),
             { label: theme === 'dark' ? 'Modo claro' : 'Modo escuro', icon: theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />, onSelect: toggleTheme, separated: true },
+            { label: 'Privacidade e termos', icon: <FileText size={15} />, onSelect: () => { window.location.href = '/privacidade'; }, separated: true },
             { label: 'Sair', icon: <LogOut size={15} />, onSelect: props.onLogout, danger: true, hint: handle },
           ]}
           trigger={t => (
@@ -124,6 +125,10 @@ export function HomeScreen(props: HomeScreenProps) {
 
         <div className="mt-auto flex flex-col gap-2">
           <NavItem icon={theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />} label={theme === 'dark' ? 'Modo claro' : 'Modo escuro'} onClick={toggleTheme} />
+          <div className="px-3 flex gap-4 text-caption text-faint">
+            <a href="/privacidade" className="hover:text-fg">Privacidade</a>
+            <a href="/termos" className="hover:text-fg">Termos</a>
+          </div>
           <div className="flex items-center gap-3 p-3 rounded-ui-lg bg-surface">
             {config.avatarUrl
               ? <img src={config.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover" />

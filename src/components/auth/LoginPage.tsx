@@ -174,6 +174,11 @@ export const LoginPage = ({ onLogin, initialSignUp = false, onBack }: { onLogin:
                         <Button type="submit" variant="primary" size="lg" loading={loading} block className="mt-2">
                             {isSignUp ? 'Criar conta' : 'Entrar'}
                         </Button>
+                        <p className="text-caption text-faint leading-relaxed">
+                            {isSignUp ? 'Ao criar a conta' : 'Ao entrar'}, você concorda com os{' '}
+                            <a href="/termos" className="underline underline-offset-2 hover:text-fg">Termos de Uso</a> e a{' '}
+                            <a href="/privacidade" className="underline underline-offset-2 hover:text-fg">Política de Privacidade</a>.
+                        </p>
                     </form>
 
                     <div className="flex items-center gap-3 text-caption text-faint">
@@ -193,7 +198,11 @@ export const LoginPage = ({ onLogin, initialSignUp = false, onBack }: { onLogin:
                     </p>
                 </div>
 
-                <p className="text-caption text-faint tabular-nums">v{APP_VERSION}</p>
+                <p className="text-caption text-faint flex flex-wrap gap-x-4 gap-y-1">
+                    <span className="tabular-nums">v{APP_VERSION}</span>
+                    <a href="/privacidade" className="hover:text-fg">Privacidade</a>
+                    <a href="/termos" className="hover:text-fg">Termos</a>
+                </p>
             </main>
 
             <aside className="hidden lg:flex w-[46%] max-w-[720px] bg-[#0A0A0A] items-center justify-center relative overflow-hidden" aria-hidden="true">

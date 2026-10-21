@@ -1,5 +1,6 @@
 import { ArrowRight, Cloud, Eye, Film, ImageIcon, LayoutGrid, Palette } from 'lucide-react';
 import { Button, cx } from '../../ui';
+import { LEGAL } from '../../constants/legal';
 
 interface LandingPageProps {
   onSignUp: () => void;
@@ -50,6 +51,9 @@ function Logo() {
 export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
   return (
     <div className="fixed inset-0 overflow-y-auto overflow-x-hidden bg-bg text-fg font-sans">
+      <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-3 focus:left-3 focus:px-4 focus:py-2 focus:rounded-pill focus:bg-fg focus:text-bg">
+        Pular para o conteúdo
+      </a>
       <header className="sticky top-0 z-20 glass-strong">
         <div className="max-w-[1180px] mx-auto h-16 px-4 sm:px-8 flex items-center justify-between gap-4">
           <Logo />
@@ -60,7 +64,7 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
         </div>
       </header>
 
-      <main>
+      <main id="conteudo">
         {/* Hero */}
         <section className="max-w-[1180px] mx-auto px-4 sm:px-8 pt-12 pb-20 lg:pt-20 lg:pb-28 grid lg:grid-cols-[1.05fr_1fr] gap-14 lg:gap-8 items-center">
           <div className="flex flex-col gap-6 text-center lg:text-left items-center lg:items-start">
@@ -175,9 +179,16 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
       </main>
 
       <footer className="border-t border-fg/[0.06]">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between text-footnote text-faint">
-          <span>© {new Date().getFullYear()} Carrossel.Pro</span>
-          <button type="button" onClick={onLogin} className="hover:text-fg">Entrar</button>
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-6 flex flex-col sm:flex-row gap-3 sm:items-center justify-between text-footnote text-faint">
+          <div className="flex flex-col gap-0.5">
+            <span>© {new Date().getFullYear()} {LEGAL.brand} · {LEGAL.responsible}{LEGAL.document ? ` · CNPJ ${LEGAL.document}` : ''}</span>
+            {LEGAL.email && <a href={`mailto:${LEGAL.email}`} className="hover:text-fg">{LEGAL.email}</a>}
+          </div>
+          <nav className="flex gap-5" aria-label="Rodapé">
+            <a href="/privacidade" className="hover:text-fg">Privacidade</a>
+            <a href="/termos" className="hover:text-fg">Termos</a>
+            <button type="button" onClick={onLogin} className="hover:text-fg">Entrar</button>
+          </nav>
         </div>
       </footer>
     </div>

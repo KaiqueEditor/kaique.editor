@@ -4,6 +4,8 @@ import { clearAdminCache, fetchRole } from './hooks/useAdmin';
 import { Toaster } from 'react-hot-toast';
 import { LoginPage } from './components/auth/LoginPage';
 import { LandingPage } from './features/landing/LandingPage';
+import { LegalPage, legalDocFromPath } from './features/legal/LegalPage';
+import { StorageNotice } from './features/legal/StorageNotice';
 import { supabase } from './lib/supabase';
 import { useStore } from './store';
 import { cloudStorage } from './services/storage/cloudStorage';
@@ -111,6 +113,10 @@ export default function App() {
     }
   }, [session]);
 
+  // Páginas públicas: /privacidade e /termos (abrem logado ou não)
+  const legalDoc = legalDocFromPath();
+  if (legalDoc) return <LegalPage doc={legalDoc} />;
+
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('kit')) {
     return <UIKit />;
   }
@@ -143,6 +149,7 @@ export default function App() {
           }}
         />
         <PublicSite onLogin={(user) => setSession({ user })} />
+        <StorageNotice />
       </>
     );
   }
@@ -150,7 +157,7 @@ export default function App() {
   // Endereço antigo: leva projetos e sessão para procarrossel.com.br (só quando ele já responde)
   if (moveReady) return <DomainMove userId={session.user.id} />;
 
-  return <CarrosselApp session={session} onLogout={async () => {
+  return <><StorageNotice /><CarrosselApp session={session} onLogout={async () => {
     clearAdminCache();
     try {
       await supabase.auth.signOut();
@@ -159,5 +166,5 @@ export default function App() {
     }
     // Força reload para limpar qualquer estado residual
     window.location.reload();
-  }} />;
+  }} /></>;
 }
