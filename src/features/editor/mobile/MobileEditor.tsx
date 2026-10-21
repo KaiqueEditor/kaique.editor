@@ -117,7 +117,7 @@ export function MobileEditor(props: MobileEditorProps) {
   };
 
   return (
-    <div ref={rootRef} className="lg:hidden fixed inset-0 bg-canvas text-fg font-sans overflow-hidden">
+    <div ref={rootRef} className="lg:hidden fixed inset-0 safe-inset bg-canvas text-fg font-sans overflow-hidden">
       {/* Slide */}
       {section && (
         <div

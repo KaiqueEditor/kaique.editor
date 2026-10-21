@@ -50,7 +50,7 @@ function Logo() {
 /** Página pública de procarrossel.com.br para quem ainda não entrou. */
 export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
   return (
-    <div className="fixed inset-0 overflow-y-auto overflow-x-hidden bg-bg text-fg font-sans">
+    <div className="fixed inset-0 safe-inset overflow-y-auto overflow-x-hidden bg-bg text-fg font-sans">
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-3 focus:left-3 focus:px-4 focus:py-2 focus:rounded-pill focus:bg-fg focus:text-bg">
         Pular para o conteúdo
       </a>
@@ -68,11 +68,11 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
         {/* Hero */}
         <section className="max-w-[1180px] mx-auto px-4 sm:px-8 pt-12 pb-20 lg:pt-20 lg:pb-28 grid lg:grid-cols-[1.05fr_1fr] gap-14 lg:gap-8 items-center">
           <div className="flex flex-col gap-6 text-center lg:text-left items-center lg:items-start">
-            <span className="h-7 px-3 rounded-pill bg-fg/[0.07] text-footnote text-muted flex items-center">Para quem cria conteúdo no Instagram</span>
             <h1 className="font-display font-light text-[34px] sm:text-[46px] lg:text-[56px] leading-[1.08] tracking-tight">
-              Do texto ao carrossel em <span className="text-brand font-normal">1 minuto</span>.
+              Do texto ao carrossel em{' '}
+              <span className="relative whitespace-nowrap">1 minuto<span aria-hidden="true" className="absolute left-0 right-0 -bottom-1.5 h-[3px] rounded-full bg-story" /></span>.
             </h1>
-            <p className="text-body sm:text-title3 text-muted max-w-[520px] leading-relaxed">
+            <p className="text-body sm:text-title3 text-muted max-w-[520px] leading-relaxed sm:leading-relaxed">
               Cole o seu roteiro, escolha entre Feed ou Post do X e exporte pronto para postar. Sem precisar saber design.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -100,12 +100,14 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
             <h2 id="vitrine" className="font-display font-light text-title1 tracking-tight">Feito no Carrossel.Pro</h2>
             <p className="text-body text-muted">Posts reais publicados por @kaique.editor.</p>
           </div>
-          <ul className="flex gap-4 overflow-x-auto no-scrollbar px-4 sm:px-8 pt-6 pb-16 snap-x snap-mandatory lg:justify-center">
+          <ul className="flex gap-4 overflow-x-auto no-scrollbar px-4 sm:px-8 pt-6 pb-16 snap-x snap-mandatory scroll-px-4 sm:scroll-px-8">
             {(Object.keys(POSTS) as PostKey[]).map(p => (
               <li key={p} className="snap-center flex-shrink-0">
                 <PostImage post={p} width={200} className="shadow-[0_16px_40px_rgba(0,0,0,0.35)]" />
               </li>
             ))}
+            {/* respiro no fim da rolagem (o Safari ignora o padding da direita) */}
+            <li aria-hidden="true" className="w-px flex-shrink-0" />
           </ul>
         </section>
 
@@ -130,7 +132,7 @@ export function LandingPage({ onSignUp, onLogin }: LandingPageProps) {
           <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-20 flex flex-col gap-10">
             <div className="flex flex-col gap-3 text-center items-center">
               <h2 className="font-display font-light text-title1 tracking-tight">Dois formatos, um clique</h2>
-              <p className="text-body text-muted max-w-[560px]">O mesmo texto vira um carrossel de feed com fotos ou uma sequência de posts no estilo do X.</p>
+              <p className="text-body text-muted max-w-[560px] leading-relaxed">O mesmo texto vira um carrossel de feed com fotos ou uma sequência de posts no estilo do X.</p>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               {[

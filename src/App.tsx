@@ -43,6 +43,8 @@ export default function App() {
   const theme = useStore(state => state.theme);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    // barra de status do celular acompanha o tema escolhido no app (não só o do sistema)
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', theme === 'light' ? '#ffffff' : '#000000'));
   }, [theme]);
 
   const [session, setSession] = useState<any>(null);

@@ -133,7 +133,7 @@ export const LoginPage = ({ onLogin, initialSignUp = false, onBack }: { onLogin:
     };
 
     return (
-        <div className="fixed inset-0 bg-bg text-fg font-sans flex overflow-y-auto">
+        <div className="fixed inset-0 safe-inset bg-bg text-fg font-sans flex overflow-y-auto">
             <main className="flex-1 flex flex-col px-6 sm:px-12 lg:px-20 py-8 min-h-full">
                 <div className="flex items-center justify-between gap-4">
                     <div className="text-subhead font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</div>

@@ -90,7 +90,7 @@ export function HomeScreen(props: HomeScreenProps) {
   const handle = config.handle || config.watermark || userEmail?.split('@')[0] || 'Você';
 
   return (
-    <div className="fixed inset-0 bg-bg text-fg font-sans flex flex-col lg:flex-row">
+    <div className="fixed inset-0 safe-inset bg-bg text-fg font-sans flex flex-col lg:flex-row">
       {/* Celular: cabeçalho com menu no lugar da barra lateral */}
       <header className="lg:hidden flex-shrink-0 h-14 px-4 flex items-center justify-between border-b border-fg/[0.06]">
         <span className="text-title3 font-semibold tracking-tight">Carrossel<span className="text-brand">.</span>Pro</span>

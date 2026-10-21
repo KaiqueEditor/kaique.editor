@@ -36,7 +36,7 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
   return (
     // Altura/posição da área visível (sem o teclado no iPhone): ver lib/visualViewport
     <div className="fixed inset-x-0 z-[300] flex items-center justify-center p-3 sm:p-4"
-      style={{ top: 'var(--vvt, 0px)', height: 'var(--vvh, 100dvh)' }}>
+      style={{ top: 'var(--vvt, 0px)', height: 'var(--vvh, 100dvh)', paddingTop: 'max(12px, env(safe-area-inset-top, 0px))', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}

@@ -15,7 +15,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-title3 font-semibold">{title}</h2>
-      <div className="flex flex-col gap-3 text-body text-fg-2 leading-relaxed">{children}</div>
+      <div className="flex flex-col gap-3 text-body text-fg-2 leading-relaxed max-w-[62ch]">{children}</div>
     </section>
   );
 }
@@ -210,7 +210,7 @@ function Terms() {
 export function LegalPage({ doc }: { doc: LegalDoc }) {
   const title = doc === 'privacidade' ? 'Política de Privacidade' : 'Termos de Uso';
   return (
-    <div className="fixed inset-0 overflow-y-auto bg-bg text-fg font-sans">
+    <div className="fixed inset-0 safe-inset overflow-y-auto bg-bg text-fg font-sans">
       <header className="sticky top-0 z-10 glass-strong">
         <div className="max-w-[760px] mx-auto h-14 px-4 sm:px-6 flex items-center justify-between">
           <a href="/" className="inline-flex items-center gap-2 text-subhead font-medium hover:underline underline-offset-4">

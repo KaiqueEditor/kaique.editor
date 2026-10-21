@@ -2,6 +2,8 @@
 const token = (name) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
 export default {
+  // hover só onde há mouse: no iPhone o hover "gruda" depois do toque (mobile-native)
+  future: { hoverOnlyWhenSupported: true },
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
